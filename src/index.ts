@@ -1,0 +1,57 @@
+// Main client
+export { MarketFeed } from "./client.js";
+export type { MarketFeedOptions } from "./client.js";
+
+// Providers
+export { YahooProvider } from "./providers/yahoo/index.js";
+export type { YahooProviderOptions } from "./providers/yahoo/index.js";
+
+export { AlphaVantageProvider } from "./providers/alpha-vantage/index.js";
+export type { AlphaVantageProviderOptions } from "./providers/alpha-vantage/index.js";
+
+export { PolygonProvider } from "./providers/polygon/index.js";
+export type { PolygonProviderOptions } from "./providers/polygon/index.js";
+
+// Cache
+export { MemoryCacheDriver } from "./cache/memory.js";
+export type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";
+
+// Errors
+export {
+  AllProvidersFailedError,
+  MarketFeedError,
+  ProviderError,
+  RateLimitError,
+  UnsupportedOperationError,
+} from "./errors.js";
+
+// Types
+export type {
+  AssetType,
+  CompanyOptions,
+  CompanyProfile,
+  HistoricalBar,
+  HistoricalInterval,
+  HistoricalOptions,
+  MarketProvider,
+  MarketStatus,
+  MarketStatusOptions,
+  NewsItem,
+  NewsOptions,
+  Quote,
+  QuoteOptions,
+  SearchOptions,
+  SearchResult,
+  TradingSession,
+} from "./types/index.js";
+
+// Utilities (useful for custom provider implementations)
+export {
+  dedupeSymbols,
+  normalise,
+  stripExchange,
+  toAlphaVantageSymbol,
+  toPolygonSymbol,
+  toYahooSymbol,
+} from "./utils/symbol.js";
+export { RateLimiter } from "./utils/rate-limiter.js";
