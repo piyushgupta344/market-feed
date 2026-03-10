@@ -1,0 +1,77 @@
+{
+  "name": "market-feed",
+  "version": "0.1.0",
+  "description": "Unified TypeScript client for financial market data — wraps Yahoo Finance, Alpha Vantage, and Polygon.io under one consistent interface with caching and fallback.",
+  "keywords": [
+    "finance",
+    "stock",
+    "market",
+    "yahoo-finance",
+    "alpha-vantage",
+    "polygon",
+    "typescript",
+    "api",
+    "stock-market",
+    "financial-data"
+  ],
+  "homepage": "https://github.com/piyushgupta344/market-feed#readme",
+  "bugs": {
+    "url": "https://github.com/piyushgupta344/market-feed/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piyushgupta344/market-feed.git"
+  },
+  "license": "MIT",
+  "author": "",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "biome check src tests",
+    "lint:fix": "biome check --write src tests",
+    "format": "biome format --write src tests",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "INTEGRATION=true vitest run tests/integration",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "prepublishOnly": "pnpm build && pnpm typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@changesets/cli": "^2.27.10",
+    "@vitest/coverage-v8": "^2.1.8",
+    "tsup": "^8.3.5",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.2",
+    "vitepress": "^1.6.4",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
