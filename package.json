@@ -23,7 +23,7 @@
     "url": "git+https://github.com/piyushgupta344/market-feed.git"
   },
   "license": "MIT",
-  "author": "",
+  "author": "piyushgupta344",
   "type": "module",
   "exports": {
     ".": {
