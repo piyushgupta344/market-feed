@@ -1,6 +1,6 @@
 {
   "name": "market-feed",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Unified TypeScript client for financial market data — wraps Yahoo Finance, Alpha Vantage, and Polygon.io under one consistent interface with caching and fallback.",
   "keywords": [
     "finance",
@@ -30,6 +30,21 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./calendar": {
+      "types": "./dist/calendar.d.ts",
+      "import": "./dist/calendar.js",
+      "require": "./dist/calendar.cjs"
+    },
+    "./stream": {
+      "types": "./dist/stream.d.ts",
+      "import": "./dist/stream.js",
+      "require": "./dist/stream.cjs"
+    },
+    "./consensus": {
+      "types": "./dist/consensus.d.ts",
+      "import": "./dist/consensus.js",
+      "require": "./dist/consensus.cjs"
     }
   },
   "main": "./dist/index.cjs",

@@ -1,7 +1,7 @@
-import type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";
 import { MemoryCacheDriver } from "./cache/memory.js";
-import { YahooProvider } from "./providers/yahoo/index.js";
+import type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";
 import { AllProvidersFailedError, MarketFeedError, UnsupportedOperationError } from "./errors.js";
+import { YahooProvider } from "./providers/yahoo/index.js";
 import type { CompanyOptions, CompanyProfile } from "./types/company.js";
 import type { HistoricalBar, HistoricalOptions } from "./types/historical.js";
 import type { MarketStatus, MarketStatusOptions } from "./types/market.js";
@@ -55,16 +55,19 @@ const DEFAULT_TTLS: Record<CacheMethod, number> = {
  * ```
  */
 export class MarketFeed {
-  private readonly providers: MarketProvider[];
+  private readonly _providers: MarketProvider[];
   private readonly cache: CacheDriver | null;
   private readonly fallback: boolean;
   private readonly ttls: Record<CacheMethod, number>;
 
+  /** Read-only view of the configured provider adapters. */
+  get providers(): readonly MarketProvider[] {
+    return this._providers;
+  }
+
   constructor(options: MarketFeedOptions = {}) {
-    this.providers =
-      options.providers && options.providers.length > 0
-        ? options.providers
-        : [new YahooProvider()];
+    this._providers =
+      options.providers && options.providers.length > 0 ? options.providers : [new YahooProvider()];
 
     this.fallback = options.fallback ?? true;
 
@@ -98,10 +101,7 @@ export class MarketFeed {
     const cached = await this.getCache<Quote[]>(cacheKey);
     if (cached) return isSingle ? (cached[0] as Quote) : cached;
 
-    const result = await this.withFallback(
-      "quote",
-      (provider) => provider.quote(symbols, options),
-    );
+    const result = await this.withFallback("quote", (provider) => provider.quote(symbols, options));
 
     await this.setCache(cacheKey, result, "quote");
     return isSingle ? (result[0] as Quote) : result;
@@ -120,9 +120,8 @@ export class MarketFeed {
     const cached = await this.getCache<HistoricalBar[]>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.withFallback(
-      "historical",
-      (provider) => provider.historical(symbol, options),
+    const result = await this.withFallback("historical", (provider) =>
+      provider.historical(symbol, options),
     );
 
     await this.setCache(cacheKey, result, "historical");
@@ -138,10 +137,7 @@ export class MarketFeed {
     const cached = await this.getCache<SearchResult[]>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.withFallback(
-      "search",
-      (provider) => provider.search(query, options),
-    );
+    const result = await this.withFallback("search", (provider) => provider.search(query, options));
 
     await this.setCache(cacheKey, result, "search");
     return result;
@@ -227,7 +223,7 @@ export class MarketFeed {
   ): Promise<T> {
     const errors: MarketFeedError[] = [];
 
-    for (const provider of this.providers) {
+    for (const provider of this._providers) {
       try {
         return await fn(provider);
       } catch (err) {

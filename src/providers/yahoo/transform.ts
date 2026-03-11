@@ -3,11 +3,7 @@ import type { HistoricalBar } from "../../types/historical.js";
 import type { Quote } from "../../types/quote.js";
 import type { SearchResult } from "../../types/search.js";
 import type { AssetType } from "../../types/search.js";
-import type {
-  YahooChartResult,
-  YahooQuoteSummaryResult,
-  YahooSearchQuote,
-} from "./types.js";
+import type { YahooChartResult, YahooQuoteSummaryResult, YahooSearchQuote } from "./types.js";
 
 const PROVIDER = "yahoo";
 
@@ -96,14 +92,14 @@ export function transformCompany(
   const price = result.price;
 
   const officers = profile?.companyOfficers ?? [];
-  const ceo = officers.find((o) =>
-    (o.title ?? "").toLowerCase().includes("chief executive"),
-  )?.name;
+  const ceo = officers.find((o) => (o.title ?? "").toLowerCase().includes("chief executive"))?.name;
 
   return {
     symbol,
     name: price?.longName ?? price?.shortName ?? symbol,
-    ...(profile?.longBusinessSummary !== undefined ? { description: profile.longBusinessSummary } : {}),
+    ...(profile?.longBusinessSummary !== undefined
+      ? { description: profile.longBusinessSummary }
+      : {}),
     ...(profile?.sector !== undefined ? { sector: profile.sector } : {}),
     ...(profile?.industry !== undefined ? { industry: profile.industry } : {}),
     ...(profile?.country !== undefined ? { country: profile.country } : {}),
@@ -114,10 +110,16 @@ export function transformCompany(
     ...(summary?.trailingPE?.raw !== undefined ? { peRatio: summary.trailingPE.raw } : {}),
     ...(summary?.forwardPE?.raw !== undefined ? { forwardPE: summary.forwardPE.raw } : {}),
     ...(summary?.priceToBook?.raw !== undefined ? { priceToBook: summary.priceToBook.raw } : {}),
-    ...(summary?.dividendYield?.raw !== undefined ? { dividendYield: summary.dividendYield.raw } : {}),
+    ...(summary?.dividendYield?.raw !== undefined
+      ? { dividendYield: summary.dividendYield.raw }
+      : {}),
     ...(summary?.beta?.raw !== undefined ? { beta: summary.beta.raw } : {}),
     ...(price?.exchangeName !== undefined ? { exchange: price.exchangeName } : {}),
-    ...(price?.currency !== undefined ? { currency: price.currency } : summary?.currency !== undefined ? { currency: summary.currency } : {}),
+    ...(price?.currency !== undefined
+      ? { currency: price.currency }
+      : summary?.currency !== undefined
+        ? { currency: summary.currency }
+        : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };

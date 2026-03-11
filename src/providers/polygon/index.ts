@@ -1,20 +1,13 @@
 import { ProviderError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
-import { RateLimiter } from "../../utils/rate-limiter.js";
-import { normalise } from "../../utils/symbol.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { NewsItem, NewsOptions } from "../../types/news.js";
 import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
 import type { SearchOptions, SearchResult } from "../../types/search.js";
-import type {
-  PolygonAggregatesResponse,
-  PolygonNewsResponse,
-  PolygonSnapshotResponse,
-  PolygonTickerDetailsResponse,
-  PolygonTickersResponse,
-} from "./types.js";
+import { RateLimiter } from "../../utils/rate-limiter.js";
+import { normalise } from "../../utils/symbol.js";
 import {
   transformCompany,
   transformHistoricalBar,
@@ -22,6 +15,13 @@ import {
   transformQuote,
   transformSearch,
 } from "./transform.js";
+import type {
+  PolygonAggregatesResponse,
+  PolygonNewsResponse,
+  PolygonSnapshotResponse,
+  PolygonTickerDetailsResponse,
+  PolygonTickersResponse,
+} from "./types.js";
 
 export interface PolygonProviderOptions {
   apiKey: string;
@@ -141,10 +141,9 @@ export class PolygonProvider implements MarketProvider {
     this.limiter.consume();
 
     const s = normalise(symbol);
-    const data = await this.http.get<PolygonTickerDetailsResponse>(
-      `/v3/reference/tickers/${s}`,
-      { params: { apiKey: this.options.apiKey } },
-    );
+    const data = await this.http.get<PolygonTickerDetailsResponse>(`/v3/reference/tickers/${s}`, {
+      params: { apiKey: this.options.apiKey },
+    });
 
     this.assertSuccess(data as { status: string; error?: string });
 

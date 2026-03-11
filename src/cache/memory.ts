@@ -44,9 +44,7 @@ export class MemoryCacheDriver implements CacheDriver {
     }
 
     const expiresAt =
-      ttlSeconds !== undefined && ttlSeconds > 0
-        ? Date.now() + ttlSeconds * 1_000
-        : 0;
+      ttlSeconds !== undefined && ttlSeconds > 0 ? Date.now() + ttlSeconds * 1_000 : 0;
 
     this.store.set(key, { value, expiresAt });
   }

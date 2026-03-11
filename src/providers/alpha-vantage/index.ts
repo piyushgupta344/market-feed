@@ -1,25 +1,25 @@
 import { ProviderError, RateLimitError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
-import { RateLimiter } from "../../utils/rate-limiter.js";
-import { normalise } from "../../utils/symbol.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
 import type { SearchOptions, SearchResult } from "../../types/search.js";
-import type {
-  AVGlobalQuoteResponse,
-  AVOverviewResponse,
-  AVSearchResponse,
-  AVTimeSeriesDailyResponse,
-  AVDailyAdjBar,
-} from "./types.js";
+import { RateLimiter } from "../../utils/rate-limiter.js";
+import { normalise } from "../../utils/symbol.js";
 import {
   transformCompany,
   transformHistoricalBars,
   transformQuote,
   transformSearch,
 } from "./transform.js";
+import type {
+  AVDailyAdjBar,
+  AVGlobalQuoteResponse,
+  AVOverviewResponse,
+  AVSearchResponse,
+  AVTimeSeriesDailyResponse,
+} from "./types.js";
 
 export interface AlphaVantageProviderOptions {
   apiKey: string;
@@ -56,8 +56,7 @@ export class AlphaVantageProvider implements MarketProvider {
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
     });
     // Default: 5 requests/minute burst capacity
-    this.limiter =
-      options.rateLimiter ?? new RateLimiter("alpha-vantage", 5, 5 / 60);
+    this.limiter = options.rateLimiter ?? new RateLimiter("alpha-vantage", 5, 5 / 60);
   }
 
   // ---------------------------------------------------------------------------
@@ -116,7 +115,11 @@ export class AlphaVantageProvider implements MarketProvider {
 
     const period1 = options?.period1
       ? new Date(options.period1)
-      : (() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d; })();
+      : (() => {
+          const d = new Date();
+          d.setFullYear(d.getFullYear() - 1);
+          return d;
+        })();
     const period2 = options?.period2 ? new Date(options.period2) : new Date();
 
     return transformHistoricalBars(

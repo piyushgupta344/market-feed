@@ -1,12 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { MarketFeed } from "../../src/client.js";
+import { AllProvidersFailedError, ProviderError } from "../../src/errors.js";
 import type { MarketProvider } from "../../src/types/provider.js";
 import type { Quote } from "../../src/types/quote.js";
-import {
-  AllProvidersFailedError,
-  ProviderError,
-  UnsupportedOperationError,
-} from "../../src/errors.js";
 
 // ---------------------------------------------------------------------------
 // Test helpers

@@ -10,14 +10,14 @@ const PROVIDER = "alpha-vantage";
 // Quote
 // ---------------------------------------------------------------------------
 export function transformQuote(raw: AVGlobalQuote, includeRaw?: unknown): Quote {
-  const price = parseFloat(raw["05. price"]);
-  const open = parseFloat(raw["02. open"]);
-  const high = parseFloat(raw["03. high"]);
-  const low = parseFloat(raw["04. low"]);
-  const previousClose = parseFloat(raw["08. previous close"]);
-  const change = parseFloat(raw["09. change"]);
-  const changePercent = parseFloat(raw["10. change percent"].replace("%", ""));
-  const volume = parseInt(raw["06. volume"], 10);
+  const price = Number.parseFloat(raw["05. price"]);
+  const open = Number.parseFloat(raw["02. open"]);
+  const high = Number.parseFloat(raw["03. high"]);
+  const low = Number.parseFloat(raw["04. low"]);
+  const previousClose = Number.parseFloat(raw["08. previous close"]);
+  const change = Number.parseFloat(raw["09. change"]);
+  const changePercent = Number.parseFloat(raw["10. change percent"].replace("%", ""));
+  const volume = Number.parseInt(raw["06. volume"], 10);
   const latestDay = raw["07. latest trading day"];
 
   return {
@@ -56,16 +56,18 @@ export function transformHistoricalBars(
       if (period2 && d > period2) return false;
       return true;
     })
-    .map(([dateStr, bar]): HistoricalBar => ({
-      date: new Date(dateStr),
-      open: parseFloat(bar["1. open"]),
-      high: parseFloat(bar["2. high"]),
-      low: parseFloat(bar["3. low"]),
-      close: parseFloat(bar["4. close"]),
-      adjClose: parseFloat(bar["5. adjusted close"]),
-      volume: parseInt(bar["6. volume"], 10),
-      ...(raw !== undefined ? { raw } : {}),
-    }))
+    .map(
+      ([dateStr, bar]): HistoricalBar => ({
+        date: new Date(dateStr),
+        open: Number.parseFloat(bar["1. open"]),
+        high: Number.parseFloat(bar["2. high"]),
+        low: Number.parseFloat(bar["3. low"]),
+        close: Number.parseFloat(bar["4. close"]),
+        adjClose: Number.parseFloat(bar["5. adjusted close"]),
+        volume: Number.parseInt(bar["6. volume"], 10),
+        ...(raw !== undefined ? { raw } : {}),
+      }),
+    )
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
@@ -105,14 +107,16 @@ export function transformCompany(data: AVOverviewResponse, raw?: unknown): Compa
     ...(data.Sector ? { sector: data.Sector } : {}),
     ...(data.Industry ? { industry: data.Industry } : {}),
     ...(data.Country ? { country: data.Country } : {}),
-    ...(data.FullTimeEmployees ? { employees: parseInt(data.FullTimeEmployees, 10) } : {}),
+    ...(data.FullTimeEmployees ? { employees: Number.parseInt(data.FullTimeEmployees, 10) } : {}),
     ...(data.OfficialSite ? { website: data.OfficialSite } : {}),
-    ...(data.MarketCapitalization ? { marketCap: parseFloat(data.MarketCapitalization) } : {}),
-    ...(data.TrailingPE ? { peRatio: parseFloat(data.TrailingPE) } : {}),
-    ...(data.ForwardPE ? { forwardPE: parseFloat(data.ForwardPE) } : {}),
-    ...(data.PriceToBookRatio ? { priceToBook: parseFloat(data.PriceToBookRatio) } : {}),
-    ...(data.DividendYield ? { dividendYield: parseFloat(data.DividendYield) } : {}),
-    ...(data.Beta ? { beta: parseFloat(data.Beta) } : {}),
+    ...(data.MarketCapitalization
+      ? { marketCap: Number.parseFloat(data.MarketCapitalization) }
+      : {}),
+    ...(data.TrailingPE ? { peRatio: Number.parseFloat(data.TrailingPE) } : {}),
+    ...(data.ForwardPE ? { forwardPE: Number.parseFloat(data.ForwardPE) } : {}),
+    ...(data.PriceToBookRatio ? { priceToBook: Number.parseFloat(data.PriceToBookRatio) } : {}),
+    ...(data.DividendYield ? { dividendYield: Number.parseFloat(data.DividendYield) } : {}),
+    ...(data.Beta ? { beta: Number.parseFloat(data.Beta) } : {}),
     ...(data.Exchange ? { exchange: data.Exchange } : {}),
     ...(data.Currency ? { currency: data.Currency } : {}),
     ...(data.IPODate ? { ipoDate: new Date(data.IPODate) } : {}),
