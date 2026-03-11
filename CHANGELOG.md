@@ -1,5 +1,78 @@
 # market-feed Changelog
 
+## 0.3.0 — 2026-03-11
+
+### New provider
+
+**`FinnhubProvider`** — Finnhub.io (free tier: real-time US stock data, 60 calls/minute).
+- `quote`, `historical` (candles), `search`, `company`, `news`
+- API key required — get one free at https://finnhub.io
+- Uses `X-Finnhub-Token` header; rate-limited client-side at 60 req/min
+- `historical` maps standard intervals to Finnhub resolutions (1m→"1", 1d→"D", 1wk→"W", 1mo→"M")
+- `news` fetches articles from the last 30 days by default
+
+### New modules
+
+**`market-feed/indicators`** — Technical indicators as pure functions over `HistoricalBar[]`.
+- `sma(bars, period)` — Simple Moving Average (O(1) sliding window)
+- `ema(bars, period)` — Exponential Moving Average (k = 2/(period+1), SMA-seeded)
+- `rsi(bars, period?)` — Relative Strength Index via Wilder's smoothing (default period: 14)
+- `macd(bars, fast?, slow?, signal?)` — MACD line, signal line, histogram (default 12/26/9)
+- `bollingerBands(bars, period?, stdDevMult?)` — upper/middle/lower bands (default 20/2)
+- `atr(bars, period?)` — Average True Range via Wilder's smoothing (default period: 14)
+- `vwap(bars)` — Volume-Weighted Average Price (cumulative from first bar)
+- `stochastic(bars, kPeriod?, dPeriod?)` — %K and %D oscillator (default 14/3)
+- Zero dependencies, no network, tree-shakeable per indicator
+- All functions return typed result arrays (`IndicatorPoint[]`, `MACDPoint[]`, `BollingerPoint[]`, `StochasticPoint[]`)
+
+**`market-feed/portfolio`** — Track positions and compute live P&L.
+- `new Portfolio(positions?)` — construct with an array of `Position` objects
+- `portfolio.add(position)` / `portfolio.remove(symbol)` — mutable, chainable
+- `portfolio.snapshot(feed)` — fetches live quotes and returns `PortfolioSnapshot` with per-position and aggregate P&L
+- `PositionSnapshot` includes: `marketValue`, `costBasis`, `unrealizedPnl`, `unrealizedPnlPct`, `dayChange`, `dayChangePct`, `quote`
+- `PortfolioSnapshot` includes aggregate totals: `totalMarketValue`, `totalCostBasis`, `totalUnrealizedPnl`, `totalDayChange`
+- Supports long and short positions (negative `quantity`)
+- Uses `QuoteFetcher` duck-type interface — accepts any object with a `quote(symbols)` method, including `MarketFeed`
+
+### CLI (`npx market-feed`)
+
+A zero-install CLI that uses Yahoo Finance by default (no API key needed).
+
+```
+market-feed quote AAPL MSFT GOOGL
+market-feed historical AAPL --interval 1wk --period1 2024-01-01
+market-feed search "apple inc"
+market-feed company AAPL
+market-feed news AAPL --limit 5 --json
+```
+
+Flags: `--av-key`, `--polygon-key`, `--finnhub-key`, `--json`, `--limit`, `--interval`, `--period1`, `--period2`
+
+### Crypto / Forex support
+
+- `isCrypto(symbol)` — detects `"BTC-USD"`, `"BTC/USD"`, `"X:BTCUSD"` using a known-crypto-bases set
+- `isForex(symbol)` — detects `"EURUSD=X"`, `"C:EURUSD"`, `"OANDA:EUR_USD"`, `"EUR/USD"`
+- `toFinnhubSymbol(symbol)` — normalises symbol for Finnhub
+- `CRYPTO` exchange added to the calendar — `alwaysOpen: true`, no holidays, no session boundaries
+  - `isMarketOpen("CRYPTO")` → always `true`
+  - `getSession("CRYPTO")` → always `"regular"`
+  - `isHoliday("CRYPTO")` → always `false`
+  - `nextSessionOpen("CRYPTO")` → returns `from` (already open)
+  - `nextSessionClose("CRYPTO")` → returns `from + 24h` (rolling window)
+
+### Breaking changes
+
+None. All v0.2.0 imports continue to work unchanged.
+
+### Other changes
+
+- `isCrypto`, `isForex`, `toFinnhubSymbol` exported from main `market-feed` entry point
+- `FinnhubProvider` and `FinnhubProviderOptions` exported from main `market-feed` entry point
+- 94 new unit tests (314 total across 17 test files)
+- 6 library tsup entry points + 1 CLI binary: `index`, `calendar`, `stream`, `consensus`, `indicators`, `portfolio`, `cli`
+
+---
+
 ## 0.2.0 — 2026-03-11
 
 ### New modules

@@ -1,7 +1,7 @@
 # market-feed
 
 > Unified TypeScript client for financial market data.
-> Wraps Yahoo Finance, Alpha Vantage, and Polygon.io under one consistent interface — with caching and automatic fallback built in.
+> Wraps Yahoo Finance, Alpha Vantage, Polygon.io, and Finnhub under one consistent interface — with caching and automatic fallback built in.
 
 [![CI](https://github.com/piyushgupta344/market-feed/actions/workflows/ci.yml/badge.svg)](https://github.com/piyushgupta344/market-feed/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/market-feed.svg)](https://www.npmjs.com/package/market-feed)
@@ -39,7 +39,7 @@ const quote = await feed.quote("AAPL");
 console.log(quote.price); // always a number, always the same key
 ```
 
-One interface. Three providers. Zero API key required for Yahoo Finance.
+One interface. Four providers. Zero API key required for Yahoo Finance.
 
 ---
 
@@ -53,15 +53,19 @@ One interface. Three providers. Zero API key required for Yahoo Finance.
 - **Strict TypeScript** — no `any`, full autocomplete, compile-time safety
 - **Multi-runtime** — Node 18+, Bun 1+, Deno 2+, Cloudflare Workers
 - **Escape hatch** — pass `{ raw: true }` to get the original provider response
-- **Exchange calendar** — synchronous, offline-capable holiday and session detection for 8 exchanges
+- **Exchange calendar** — synchronous, offline-capable holiday and session detection for 8 exchanges + crypto (24/7)
 - **Observable stream** — market-hours-aware polling that pauses overnight and on weekends
 - **Price consensus** — query all providers in parallel, get a weighted mean with confidence score
+- **Technical indicators** — SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic — pure functions, zero deps
+- **Portfolio tracking** — live P&L, unrealised gains, day change across all positions
+- **CLI** — `npx market-feed quote AAPL` — no install required
+- **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
 
 ---
 
 ## Subpath modules
 
-`market-feed` ships three optional subpath modules alongside the core client.
+`market-feed` ships five optional subpath modules alongside the core client.
 
 ### `market-feed/calendar`
 
@@ -103,7 +107,7 @@ getExchangeInfo("LSE");
 //   timezone: "Europe/London", openTime: "08:00", closeTime: "16:30", ... }
 ```
 
-Supports **NYSE, NASDAQ, LSE, TSX, ASX, XETRA, NSE, BSE**. Holiday rules are computed from first principles — Easter via the Meeus/Jones/Butcher algorithm, all NYSE-specific rules (MLK Day, Presidents' Day, Juneteenth, Memorial Day, Labor Day, Thanksgiving, Good Friday), UK bank holidays, Canadian, Australian, German, and Indian exchanges. DST is handled via `Intl.DateTimeFormat` — no manual offset arithmetic.
+Supports **NYSE, NASDAQ, LSE, TSX, ASX, XETRA, NSE, BSE**, and **CRYPTO** (always open — no sessions, no holidays). Holiday rules are computed from first principles — Easter via the Meeus/Jones/Butcher algorithm, all NYSE-specific rules (MLK Day, Presidents' Day, Juneteenth, Memorial Day, Labor Day, Thanksgiving, Good Friday), UK bank holidays, Canadian, Australian, German, and Indian exchanges. DST is handled via `Intl.DateTimeFormat` — no manual offset arithmetic.
 
 ---
 
@@ -226,6 +230,147 @@ console.log(result.providers);
 
 ---
 
+### `market-feed/indicators`
+
+Technical indicators as pure functions over `HistoricalBar[]`. No network, no async, tree-shakeable.
+
+```ts
+import {
+  sma, ema, rsi, macd, bollingerBands, atr, vwap, stochastic,
+} from "market-feed/indicators";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+const bars = await feed.historical("AAPL", { period1: "2024-01-01", interval: "1d" });
+
+// Simple / Exponential Moving Average
+const sma20  = sma(bars, 20);   // IndicatorPoint[] — { date, value }[]
+const ema12  = ema(bars, 12);
+
+// Relative Strength Index
+const rsi14  = rsi(bars, 14);   // values in [0, 100]
+
+// MACD
+const macdResult = macd(bars);  // MACDPoint[] — { date, macd, signal, histogram }[]
+
+// Bollinger Bands
+const bb = bollingerBands(bars, 20, 2);  // BollingerPoint[] — { date, upper, middle, lower }[]
+
+// Average True Range
+const atr14 = atr(bars, 14);
+
+// VWAP (cumulative from first bar)
+const vwapPoints = vwap(bars);
+
+// Stochastic Oscillator
+const stoch = stochastic(bars, 14, 3);  // StochasticPoint[] — { date, k, d }[]
+```
+
+All functions return typed arrays starting from the first bar where enough data exists. They never throw for insufficient data — they return an empty array instead.
+
+| Function | Output type | Default params |
+|----------|------------|----------------|
+| `sma(bars, period)` | `IndicatorPoint[]` | — |
+| `ema(bars, period)` | `IndicatorPoint[]` | — |
+| `rsi(bars, period?)` | `IndicatorPoint[]` | period: 14 |
+| `macd(bars, fast?, slow?, signal?)` | `MACDPoint[]` | 12, 26, 9 |
+| `bollingerBands(bars, period?, stdDevMult?)` | `BollingerPoint[]` | 20, 2 |
+| `atr(bars, period?)` | `IndicatorPoint[]` | period: 14 |
+| `vwap(bars)` | `IndicatorPoint[]` | — |
+| `stochastic(bars, kPeriod?, dPeriod?)` | `StochasticPoint[]` | 14, 3 |
+
+---
+
+### `market-feed/portfolio`
+
+Track a collection of positions and compute live P&L against current market prices.
+
+```ts
+import { Portfolio } from "market-feed/portfolio";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+
+const portfolio = new Portfolio([
+  { symbol: "AAPL", quantity: 10, avgCost: 150.00 },
+  { symbol: "MSFT", quantity:  5, avgCost: 280.00 },
+  { symbol: "TSLA", quantity: -3, avgCost: 250.00 }, // short position
+]);
+
+// Fetch live quotes and compute P&L in one call
+const snap = await portfolio.snapshot(feed);
+
+console.log(`Total value:       $${snap.totalMarketValue.toFixed(2)}`);
+console.log(`Unrealised P&L:    $${snap.totalUnrealizedPnl.toFixed(2)}`);
+console.log(`Today's change:    $${snap.totalDayChange.toFixed(2)}`);
+
+for (const pos of snap.positions) {
+  const pct = (pos.unrealizedPnlPct * 100).toFixed(2);
+  console.log(`${pos.symbol}: $${pos.marketValue.toFixed(2)} (${pct}%)`);
+}
+```
+
+#### `Position`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `symbol` | `string` | Ticker symbol |
+| `quantity` | `number` | Units held. Negative = short. |
+| `avgCost` | `number` | Average cost per unit |
+| `currency` | `string?` | Defaults to "USD" |
+| `openedAt` | `Date?` | When the position was opened |
+| `notes` | `string?` | Free-form notes |
+
+#### `Portfolio` API
+
+```ts
+portfolio.add(position)          // add or replace a position (chainable)
+portfolio.remove(symbol)         // remove a position (chainable)
+portfolio.get(symbol)            // Position | undefined
+portfolio.list()                 // readonly Position[]
+portfolio.size                   // number
+portfolio.snapshot(feed)         // Promise<PortfolioSnapshot>
+```
+
+---
+
+### CLI (`npx market-feed`)
+
+A zero-config CLI powered by Yahoo Finance (no API key needed). Add keys to unlock more providers.
+
+```bash
+# Quotes
+npx market-feed quote AAPL MSFT GOOGL
+
+# Historical data
+npx market-feed historical AAPL --interval 1wk --period1 2024-01-01
+
+# Symbol search
+npx market-feed search "apple inc"
+
+# Company profile
+npx market-feed company AAPL
+
+# News (JSON output)
+npx market-feed news AAPL --limit 5 --json
+```
+
+#### Options
+
+| Flag | Description |
+|------|-------------|
+| `--av-key <key>` | Alpha Vantage API key |
+| `--polygon-key <key>` | Polygon.io API key |
+| `--finnhub-key <key>` | Finnhub API key |
+| `--json` | Output raw JSON instead of formatted tables |
+| `--limit <n>` | Limit results (default: 10) |
+| `--interval <i>` | Historical interval: `1m` `5m` `15m` `30m` `1h` `1d` `1wk` `1mo` (default: `1d`) |
+| `--period1 <date>` | Historical start date (ISO 8601) |
+| `--period2 <date>` | Historical end date (ISO 8601) |
+| `-h`, `--help` | Show help |
+
+---
+
 ## Install
 
 ```bash
@@ -277,8 +422,9 @@ console.log(profile.sector); // "Technology"
 | **Yahoo Finance** | Not required | ✓ | ✓ | ✓ | ✓ | — | — |
 | **Alpha Vantage** | Free (25/day) | ✓ | ✓ | ✓ | ✓ | — | — |
 | **Polygon.io** | Free (delayed) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| **Finnhub** | Free (60/min) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
 
-Get free keys: [Alpha Vantage](https://www.alphavantage.co/support/#api-key) · [Polygon.io](https://polygon.io/)
+Get free keys: [Alpha Vantage](https://www.alphavantage.co/support/#api-key) · [Polygon.io](https://polygon.io/) · [Finnhub](https://finnhub.io/)
 
 ### Using multiple providers
 
@@ -288,6 +434,7 @@ import {
   YahooProvider,
   AlphaVantageProvider,
   PolygonProvider,
+  FinnhubProvider,
 } from "market-feed";
 
 const feed = new MarketFeed({
@@ -295,6 +442,7 @@ const feed = new MarketFeed({
     new YahooProvider(),
     new AlphaVantageProvider({ apiKey: process.env.AV_KEY }),
     new PolygonProvider({ apiKey: process.env.POLYGON_KEY }),
+    new FinnhubProvider({ apiKey: process.env.FINNHUB_KEY }),
   ],
   fallback: true, // auto-try next provider on failure
 });
@@ -493,7 +641,7 @@ pnpm test
 
 ## Disclaimer
 
-This library is not affiliated with or endorsed by Yahoo Finance, Alpha Vantage, or Polygon.io. Data is provided for informational purposes only and should not be used as the sole basis for investment decisions.
+This library is not affiliated with or endorsed by Yahoo Finance, Alpha Vantage, Polygon.io, or Finnhub. Data is provided for informational purposes only and should not be used as the sole basis for investment decisions.
 
 ---
 
