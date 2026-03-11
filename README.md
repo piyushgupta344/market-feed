@@ -53,6 +53,176 @@ One interface. Three providers. Zero API key required for Yahoo Finance.
 - **Strict TypeScript** — no `any`, full autocomplete, compile-time safety
 - **Multi-runtime** — Node 18+, Bun 1+, Deno 2+, Cloudflare Workers
 - **Escape hatch** — pass `{ raw: true }` to get the original provider response
+- **Exchange calendar** — synchronous, offline-capable holiday and session detection for 8 exchanges
+- **Observable stream** — market-hours-aware polling that pauses overnight and on weekends
+- **Price consensus** — query all providers in parallel, get a weighted mean with confidence score
+
+---
+
+## Subpath modules
+
+`market-feed` ships three optional subpath modules alongside the core client.
+
+### `market-feed/calendar`
+
+Synchronous exchange calendar — no network, no async, works offline.
+
+```ts
+import {
+  isMarketOpen,
+  getSession,
+  nextSessionOpen,
+  nextSessionClose,
+  isHoliday,
+  isEarlyClose,
+  getHolidayDates,
+  getExchangeInfo,
+} from "market-feed/calendar";
+
+// Is NYSE open right now?
+isMarketOpen("NYSE");  // true | false
+
+// What session is it?
+getSession("NYSE");    // "pre" | "regular" | "post" | "closed"
+
+// When does it next open?
+nextSessionOpen("NYSE");   // Date (UTC)
+nextSessionClose("NYSE");  // Date (UTC)
+
+// Holiday checks
+isHoliday("LSE");                          // false
+isHoliday("NYSE", new Date("2025-04-18")); // true — Good Friday
+isEarlyClose("NYSE");                      // true on day before Thanksgiving
+
+// All holidays for a year
+getHolidayDates("NYSE", 2026);  // Date[]
+
+// Exchange metadata
+getExchangeInfo("LSE");
+// { id: "LSE", name: "London Stock Exchange", mic: "XLON",
+//   timezone: "Europe/London", openTime: "08:00", closeTime: "16:30", ... }
+```
+
+Supports **NYSE, NASDAQ, LSE, TSX, ASX, XETRA, NSE, BSE**. Holiday rules are computed from first principles — Easter via the Meeus/Jones/Butcher algorithm, all NYSE-specific rules (MLK Day, Presidents' Day, Juneteenth, Memorial Day, Labor Day, Thanksgiving, Good Friday), UK bank holidays, Canadian, Australian, German, and Indian exchanges. DST is handled via `Intl.DateTimeFormat` — no manual offset arithmetic.
+
+---
+
+### `market-feed/stream`
+
+Market-hours-aware async generator. Polls during open hours, pauses when the market is closed.
+
+```ts
+import { watch } from "market-feed/stream";
+import { MarketFeed, YahooProvider, PolygonProvider } from "market-feed";
+
+const feed = new MarketFeed({
+  providers: [
+    new YahooProvider(),
+    new PolygonProvider({ apiKey: process.env.POLYGON_KEY }),
+  ],
+});
+
+const controller = new AbortController();
+
+for await (const event of watch(feed, ["AAPL", "MSFT"], {
+  exchange: "NYSE",
+  interval: {
+    open:    5_000,   // poll every 5s during regular hours
+    prepost: 30_000,  // every 30s pre/post market
+    closed:  60_000,  // check every 60s for session open
+  },
+  divergenceThreshold: 0.5,  // % spread between providers
+  signal: controller.signal,
+})) {
+  switch (event.type) {
+    case "quote":
+      console.log(`${event.symbol}: $${event.quote.price}`);
+      break;
+    case "market-open":
+      console.log(`${event.exchange} session started: ${event.session}`);
+      break;
+    case "market-close":
+      console.log(`${event.exchange} session ended`);
+      break;
+    case "divergence":
+      console.log(`${event.symbol} providers disagree: ${event.spreadPct.toFixed(2)}%`);
+      break;
+    case "error":
+      if (!event.recoverable) throw event.error;
+      break;
+  }
+}
+
+// Stop the stream
+controller.abort();
+```
+
+When `marketHoursAware: true` (default), the stream pauses completely during closed sessions — no wasted API calls overnight or on weekends. It emits `market-open` / `market-close` events at session boundaries. When the feed has multiple providers, it detects price divergence across them and emits `divergence` events.
+
+#### `WatchOptions`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `exchange` | `ExchangeId` | `"NYSE"` | Calendar to use for session detection |
+| `interval.open` | `number` | `5000` | Poll interval (ms) during regular hours |
+| `interval.prepost` | `number` | `30000` | Poll interval (ms) during pre/post market |
+| `interval.closed` | `number` | `60000` | Check interval (ms) when market is closed |
+| `marketHoursAware` | `boolean` | `true` | Pause during closed sessions |
+| `divergenceThreshold` | `number` | `0.5` | % spread that triggers a divergence event |
+| `maxErrors` | `number` | `5` | Consecutive errors before the generator throws |
+| `signal` | `AbortSignal` | — | Cancel the stream |
+
+---
+
+### `market-feed/consensus`
+
+Queries all configured providers simultaneously and returns a statistically-weighted price consensus.
+
+Unlike `feed.quote()` which stops at the first successful provider, `consensus()` fires all providers in parallel and combines their results.
+
+```ts
+import { consensus } from "market-feed/consensus";
+import { MarketFeed, YahooProvider, AlphaVantageProvider, PolygonProvider } from "market-feed";
+
+const feed = new MarketFeed({
+  providers: [
+    new YahooProvider(),
+    new AlphaVantageProvider({ apiKey: process.env.AV_KEY }),
+    new PolygonProvider({ apiKey: process.env.POLYGON_KEY }),
+  ],
+});
+
+const result = await consensus(feed.providers, "AAPL");
+
+console.log(result.price);       // 189.82 — weighted mean
+console.log(result.confidence);  // 0.97   — 0=no agreement, 1=perfect
+console.log(result.spread);      // 0.08   — max - min across providers
+console.log(result.spreadPct);   // 0.042  — spread as % of price
+console.log(result.flags);       // [] or ["HIGH_DIVERGENCE", "STALE_DATA", ...]
+console.log(result.providers);
+// {
+//   yahoo:          { price: 189.84, weight: 0.33, stale: false, included: true },
+//   polygon:        { price: 189.80, weight: 0.33, stale: false, included: true },
+//   "alpha-vantage": { price: 189.82, weight: 0.33, stale: false, included: true },
+// }
+```
+
+#### `ConsensusOptions`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `stalenessThreshold` | `number` | `60` | Seconds before a quote is stale. Stale providers get half weight. |
+| `divergenceThreshold` | `number` | `2.0` | % deviation from median that marks a provider as an outlier |
+| `weights` | `Record<string, number>` | equal | Custom weights per provider name (normalized automatically) |
+
+#### Flags
+
+| Flag | Meaning |
+|------|---------|
+| `HIGH_DIVERGENCE` | `spreadPct` exceeds `divergenceThreshold` |
+| `STALE_DATA` | At least one provider returned a quote older than `stalenessThreshold` |
+| `SINGLE_SOURCE` | Only one provider responded successfully |
+| `OUTLIER_EXCLUDED` | At least one provider was excluded as a price outlier |
 
 ---
 
