@@ -1,5 +1,102 @@
 # market-feed Changelog
 
+## 0.4.0 — 2026-03-11
+
+### New module
+
+**`market-feed/ws`** — True WebSocket streaming for tick-by-tick trade data.
+
+Unlike `market-feed/stream` (which is HTTP polling), `market-feed/ws` opens a
+persistent WebSocket connection and yields individual trade executions in real time.
+
+```ts
+import { connect } from "market-feed/ws";
+import { FinnhubProvider } from "market-feed";
+
+const provider = new FinnhubProvider({ apiKey: process.env.FINNHUB_KEY! });
+const controller = new AbortController();
+
+for await (const event of connect(provider, ["AAPL", "MSFT"], { signal: controller.signal })) {
+  switch (event.type) {
+    case "trade":
+      console.log(`${event.trade.symbol}: $${event.trade.price} × ${event.trade.size}`);
+      break;
+    case "connected":
+      console.log(`Connected to ${event.provider}`);
+      break;
+    case "disconnected":
+      console.log(`Disconnected (reconnecting: ${event.reconnecting})`);
+      break;
+    case "error":
+      if (!event.recoverable) throw event.error;
+      break;
+  }
+}
+```
+
+#### Provider support
+
+| Provider | WebSocket | Notes |
+|----------|-----------|-------|
+| **PolygonProvider** | Native WS | `wss://socket.polygon.io/stocks` — auth via JSON handshake, subscribes to `T.*` trade channel |
+| **FinnhubProvider** | Native WS | `wss://ws.finnhub.io?token=KEY` — per-symbol subscribe, batched trade messages |
+| **YahooProvider** | Polling fallback | Polls `provider.quote()` every 5 s; emits `WsTrade` from quote data |
+| **AlphaVantageProvider** | Polling fallback | Same as Yahoo |
+
+The `connect()` function detects provider capability automatically — no configuration required.
+
+#### `WsEvent` union
+
+| `type` | Payload | When |
+|--------|---------|------|
+| `"connected"` | `provider: string` | WS opened (and after each reconnect) |
+| `"trade"` | `trade: WsTrade` | Each trade tick |
+| `"disconnected"` | `provider`, `reconnecting`, `attempt` | WS closed unexpectedly |
+| `"error"` | `error`, `recoverable` | Protocol or network error |
+
+#### `WsTrade`
+
+```ts
+interface WsTrade {
+  symbol: string;
+  price: number;
+  size: number;         // shares / units
+  timestamp: Date;
+  conditions?: number[]; // provider-specific condition codes
+}
+```
+
+#### `WsOptions`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `wsImpl` | `typeof globalThis.WebSocket` | `globalThis.WebSocket` | Custom WS constructor for Node 18–20 |
+| `maxReconnectAttempts` | `number` | `10` | Reconnect attempts before closing |
+| `reconnectDelayMs` | `number` | `1000` | Base delay (doubles per attempt, max 30 s) |
+| `signal` | `AbortSignal` | — | Stop the stream |
+
+#### Node 18–20 compatibility
+
+Node 21+ exposes `WebSocket` globally. For Node 18/20, install the `ws` package and inject it:
+
+```ts
+import WebSocket from "ws";
+connect(provider, ["AAPL"], { wsImpl: WebSocket as unknown as typeof globalThis.WebSocket })
+```
+
+### Other changes
+
+- `PolygonProvider` now exposes `get wsApiKey(): string` (used internally by `market-feed/ws`)
+- `FinnhubProvider` now exposes `get wsApiKey(): string` (used internally by `market-feed/ws`)
+- 27 new unit tests (368 total across 18 test files)
+- 7 tsup library entry points + 1 CLI binary: `index`, `calendar`, `stream`, `consensus`, `indicators`, `portfolio`, `ws`, `cli`
+
+### Breaking changes
+
+None. All v0.3.0 imports continue to work unchanged.
+
+---
+
 ## 0.3.0 — 2026-03-11
 
 ### New provider

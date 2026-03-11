@@ -48,6 +48,11 @@ export class PolygonProvider implements MarketProvider {
   private readonly http: HttpClient;
   private readonly limiter: RateLimiter;
 
+  /** API key exposed for WebSocket authentication in `market-feed/ws`. */
+  get wsApiKey(): string {
+    return this.options.apiKey;
+  }
+
   constructor(private readonly options: PolygonProviderOptions) {
     this.http = new HttpClient("polygon", {
       baseUrl: "https://api.polygon.io",
