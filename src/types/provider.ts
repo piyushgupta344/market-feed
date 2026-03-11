@@ -1,9 +1,12 @@
 import type { CompanyOptions, CompanyProfile } from "./company.js";
+import type { DividendEvent, DividendOptions } from "./dividends.js";
+import type { EarningsEvent, EarningsOptions } from "./earnings.js";
 import type { HistoricalBar, HistoricalOptions } from "./historical.js";
 import type { MarketStatus, MarketStatusOptions } from "./market.js";
 import type { NewsItem, NewsOptions } from "./news.js";
 import type { Quote, QuoteOptions } from "./quote.js";
 import type { SearchOptions, SearchResult } from "./search.js";
+import type { SplitEvent, SplitOptions } from "./splits.js";
 
 /**
  * The contract every provider adapter must satisfy.
@@ -46,4 +49,19 @@ export interface MarketProvider {
    * Optional.
    */
   marketStatus?(market?: string, options?: MarketStatusOptions): Promise<MarketStatus>;
+
+  /**
+   * Fetch historical earnings (EPS actuals vs. estimates). Optional.
+   */
+  earnings?(symbol: string, options?: EarningsOptions): Promise<EarningsEvent[]>;
+
+  /**
+   * Fetch historical cash dividends. Optional.
+   */
+  dividends?(symbol: string, options?: DividendOptions): Promise<DividendEvent[]>;
+
+  /**
+   * Fetch historical stock splits. Optional.
+   */
+  splits?(symbol: string, options?: SplitOptions): Promise<SplitEvent[]>;
 }

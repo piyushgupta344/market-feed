@@ -139,6 +139,48 @@ export interface PolygonTickerDetails {
 }
 
 // ---------------------------------------------------------------------------
+// Dividends
+// ---------------------------------------------------------------------------
+export interface PolygonDividendsResponse {
+  status: string;
+  results?: PolygonDividend[];
+  next_url?: string;
+  error?: string;
+  message?: string;
+}
+
+export interface PolygonDividend {
+  ticker: string;
+  ex_dividend_date: string;
+  pay_date?: string;
+  declaration_date?: string;
+  record_date?: string;
+  cash_amount: number;
+  currency?: string;
+  /** 1=annual, 2=semi-annual, 4=quarterly, 12=monthly */
+  frequency?: number;
+  dividend_type?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Splits
+// ---------------------------------------------------------------------------
+export interface PolygonSplitsResponse {
+  status: string;
+  results?: PolygonSplit[];
+  next_url?: string;
+  error?: string;
+  message?: string;
+}
+
+export interface PolygonSplit {
+  ticker: string;
+  execution_date: string;
+  split_from: number;
+  split_to: number;
+}
+
+// ---------------------------------------------------------------------------
 // News
 // ---------------------------------------------------------------------------
 export interface PolygonNewsResponse {

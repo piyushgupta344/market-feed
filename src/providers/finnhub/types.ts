@@ -75,3 +75,17 @@ export interface FinnhubNewsArticle {
   summary: string;
   url: string;
 }
+
+export interface FinnhubEarningsEntry {
+  actual: number | null;
+  estimate: number | null;
+  /** Period end date, e.g. "2024-06-30" */
+  period: string;
+  quarter: number;
+  surprise: number | null;
+  surprisePercent: number | null;
+  symbol: string;
+  year: number;
+}
+
+export type FinnhubEarningsResponse = FinnhubEarningsEntry[];

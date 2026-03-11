@@ -1,16 +1,22 @@
 import { ProviderError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
+import type { DividendEvent, DividendOptions } from "../../types/dividends.js";
+import type { EarningsEvent, EarningsOptions } from "../../types/earnings.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
 import type { SearchOptions, SearchResult } from "../../types/search.js";
+import type { SplitEvent, SplitOptions } from "../../types/splits.js";
 import { toYahooSymbol } from "../../utils/symbol.js";
 import {
   transformCompany,
+  transformDividends,
+  transformEarnings,
   transformHistorical,
   transformQuote,
   transformSearch,
+  transformSplits,
 } from "./transform.js";
 import type {
   YahooChartResponse,
@@ -158,6 +164,81 @@ export class YahooProvider implements MarketProvider {
 
     return transformCompany(symbol, result, options?.raw ? data : undefined);
   }
+
+  // ---------------------------------------------------------------------------
+  // Earnings
+  // ---------------------------------------------------------------------------
+  async earnings(symbol: string, options?: EarningsOptions): Promise<EarningsEvent[]> {
+    const s = toYahooSymbol(symbol);
+    const limit = options?.limit ?? 10;
+
+    const data = await this.http2.get<YahooQuoteSummaryResponse>(`/v10/finance/quoteSummary/${s}`, {
+      params: { modules: "earningsHistory" },
+    });
+
+    const result = data.quoteSummary.result?.[0];
+    if (!result) {
+      const err = data.quoteSummary.error;
+      throw new ProviderError(
+        err?.description ?? `No earnings data for symbol "${s}"`,
+        this.name,
+      );
+    }
+
+    return transformEarnings(symbol, result, options?.raw ? data : undefined).slice(0, limit);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Dividends
+  // ---------------------------------------------------------------------------
+  async dividends(symbol: string, options?: DividendOptions): Promise<DividendEvent[]> {
+    const s = toYahooSymbol(symbol);
+    const limit = options?.limit ?? 50;
+
+    const period1 = options?.from ? toEpoch(options.from) : toEpoch(subtractYears(10));
+    const period2 = options?.to ? toEpoch(options.to) : toEpoch(new Date());
+
+    const data = await this.http1.get<YahooChartResponse>(`/v8/finance/chart/${s}`, {
+      params: { interval: "1d", period1, period2, events: "div" },
+    });
+
+    const result = data.chart.result?.[0];
+    if (!result) {
+      const err = data.chart.error;
+      throw new ProviderError(
+        err?.description ?? `No dividend data for symbol "${s}"`,
+        this.name,
+      );
+    }
+
+    return transformDividends(symbol, result, options?.raw ? data : undefined).slice(0, limit);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Splits
+  // ---------------------------------------------------------------------------
+  async splits(symbol: string, options?: SplitOptions): Promise<SplitEvent[]> {
+    const s = toYahooSymbol(symbol);
+    const limit = options?.limit ?? 50;
+
+    const period1 = options?.from ? toEpoch(options.from) : toEpoch(subtractYears(10));
+    const period2 = options?.to ? toEpoch(options.to) : toEpoch(new Date());
+
+    const data = await this.http1.get<YahooChartResponse>(`/v8/finance/chart/${s}`, {
+      params: { interval: "1d", period1, period2, events: "split" },
+    });
+
+    const result = data.chart.result?.[0];
+    if (!result) {
+      const err = data.chart.error;
+      throw new ProviderError(
+        err?.description ?? `No split data for symbol "${s}"`,
+        this.name,
+      );
+    }
+
+    return transformSplits(symbol, result, options?.raw ? data : undefined).slice(0, limit);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -171,5 +252,11 @@ function toEpoch(date: string | Date): number {
 function subtractOneYear(): Date {
   const d = new Date();
   d.setFullYear(d.getFullYear() - 1);
+  return d;
+}
+
+function subtractYears(n: number): Date {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() - n);
   return d;
 }

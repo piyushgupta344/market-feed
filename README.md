@@ -59,6 +59,9 @@ One interface. Four providers. Zero API key required for Yahoo Finance.
 - **Price consensus** — query all providers in parallel, get a weighted mean with confidence score
 - **Technical indicators** — SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic — pure functions, zero deps
 - **Portfolio tracking** — live P&L, unrealised gains, day change across all positions
+- **Backtesting** — pure-function engine: total return, CAGR, Sharpe ratio, max drawdown, win rate, profit factor
+- **Price alerts** — async generator that fires `AlertEvent` on price/volume/change conditions, with debounce
+- **Earnings, dividends, splits** — structured historical corporate action data from Yahoo, Polygon, and Finnhub
 - **CLI** — `npx market-feed quote AAPL` — no install required
 - **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
 
@@ -66,7 +69,7 @@ One interface. Four providers. Zero API key required for Yahoo Finance.
 
 ## Subpath modules
 
-`market-feed` ships six optional subpath modules alongside the core client.
+`market-feed` ships eight optional subpath modules alongside the core client.
 
 ### `market-feed/ws`
 
@@ -404,6 +407,117 @@ portfolio.snapshot(feed)         // Promise<PortfolioSnapshot>
 
 ---
 
+### `market-feed/backtest`
+
+Pure-function backtesting engine over `HistoricalBar[]`. No network, no side effects.
+
+```ts
+import { backtest } from "market-feed/backtest";
+import type { EntrySignal, ExitSignal } from "market-feed/backtest";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+const bars = await feed.historical("AAPL", { period1: "2020-01-01", interval: "1d" });
+
+// Buy when today's close > yesterday's close (momentum)
+const entry: EntrySignal = (bars, i) => i > 0 && bars[i]!.close > bars[i - 1]!.close;
+
+// Sell when today's close < yesterday's close
+const exit: ExitSignal = (bars, i, _entryPrice) => i > 0 && bars[i]!.close < bars[i - 1]!.close;
+
+const result = backtest("AAPL", bars, entry, exit, {
+  initialCapital: 10_000,
+  quantity: 10,
+  commission: 1,
+});
+
+console.log(`Total return:    ${(result.totalReturn * 100).toFixed(2)}%`);
+console.log(`Annualised CAGR: ${(result.annualizedReturn * 100).toFixed(2)}%`);
+console.log(`Sharpe ratio:    ${result.sharpeRatio.toFixed(2)}`);
+console.log(`Max drawdown:    ${(result.maxDrawdown * 100).toFixed(2)}%`);
+console.log(`Win rate:        ${(result.winRate * 100).toFixed(1)}%`);
+console.log(`Trades:          ${result.totalTrades}`);
+```
+
+Signals fire at bar[i].close. Any open position is closed at the last bar. At most one position is held at a time.
+
+#### `BacktestOptions`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `initialCapital` | `number` | `100_000` | Starting capital |
+| `quantity` | `number` | `1` | Shares per trade |
+| `commission` | `number` | `0` | One-way commission per trade |
+
+#### `BacktestResult`
+
+| Field | Description |
+|-------|-------------|
+| `totalReturn` | Fraction — e.g. `0.25` = 25% |
+| `annualizedReturn` | CAGR as a fraction |
+| `sharpeRatio` | Annualised Sharpe (risk-free rate = 0) |
+| `maxDrawdown` | Positive fraction — peak-to-trough |
+| `winRate` | Fraction of profitable trades |
+| `profitFactor` | Gross profit / gross loss (`Infinity` = no losses) |
+| `totalTrades` | Completed round-trip trades |
+| `trades` | `BacktestTrade[]` ledger |
+
+---
+
+### `market-feed/alerts`
+
+Poll a quote feed and yield `AlertEvent` whenever a configured condition is met.
+
+```ts
+import { watchAlerts } from "market-feed/alerts";
+import type { AlertConfig } from "market-feed/alerts";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+const controller = new AbortController();
+
+const alerts: AlertConfig[] = [
+  // Fire once when AAPL crosses $200
+  { symbol: "AAPL", condition: { type: "price_above", threshold: 200 }, once: true },
+  // Alert on TSLA intraday crash; debounce 5 min to avoid spam
+  { symbol: "TSLA", condition: { type: "change_pct_below", threshold: -5 }, debounceMs: 300_000 },
+  // Unusual volume spike on MSFT
+  { symbol: "MSFT", condition: { type: "volume_above", threshold: 100_000_000 } },
+];
+
+for await (const event of watchAlerts(feed, alerts, {
+  intervalMs: 5_000,
+  signal: controller.signal,
+})) {
+  console.log(
+    `[${event.triggeredAt.toISOString()}] ${event.alert.symbol} triggered: $${event.quote.price}`,
+  );
+}
+```
+
+#### Alert conditions
+
+| `type` | Fires when |
+|--------|-----------|
+| `price_above` | `quote.price > threshold` |
+| `price_below` | `quote.price < threshold` |
+| `change_pct_above` | `quote.changePercent > threshold` |
+| `change_pct_below` | `quote.changePercent < threshold` |
+| `volume_above` | `quote.volume > threshold` |
+
+#### `AlertConfig`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `symbol` | `string` | Ticker to watch |
+| `condition` | `AlertCondition` | Trigger condition |
+| `once` | `boolean?` | Remove after first fire. Default: `false` |
+| `debounceMs` | `number?` | Suppress re-fires within this window. Default: `0` |
+
+When all `once` alerts have fired, the generator terminates automatically. Permanent alerts (`once: false`) run until `signal.abort()` is called. Transient fetch errors are silently retried.
+
+---
+
 ### CLI (`npx market-feed`)
 
 A zero-config CLI powered by Yahoo Finance (no API key needed). Add keys to unlock more providers.
@@ -611,6 +725,15 @@ feed.news(symbol: string, options?: NewsOptions): Promise<NewsItem[]>
 
 // Market status
 feed.marketStatus(market?: string): Promise<MarketStatus>
+
+// Earnings history (EPS actuals vs. estimates)
+feed.earnings(symbol: string, options?: EarningsOptions): Promise<EarningsEvent[]>
+
+// Cash dividend history
+feed.dividends(symbol: string, options?: DividendOptions): Promise<DividendEvent[]>
+
+// Stock split history
+feed.splits(symbol: string, options?: SplitOptions): Promise<SplitEvent[]>
 
 // Cache management
 feed.clearCache(): Promise<void>

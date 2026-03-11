@@ -33,6 +33,11 @@ export type {
   AssetType,
   CompanyOptions,
   CompanyProfile,
+  DividendEvent,
+  DividendFrequency,
+  DividendOptions,
+  EarningsEvent,
+  EarningsOptions,
   HistoricalBar,
   HistoricalInterval,
   HistoricalOptions,
@@ -45,6 +50,8 @@ export type {
   QuoteOptions,
   SearchOptions,
   SearchResult,
+  SplitEvent,
+  SplitOptions,
   TradingSession,
 } from "./types/index.js";
 

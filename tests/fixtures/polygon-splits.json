@@ -1,0 +1,18 @@
+{
+  "status": "OK",
+  "request_id": "test-request-id",
+  "results": [
+    {
+      "ticker": "AAPL",
+      "execution_date": "2020-08-31",
+      "split_from": 1,
+      "split_to": 4
+    },
+    {
+      "ticker": "AAPL",
+      "execution_date": "2014-06-09",
+      "split_from": 1,
+      "split_to": 7
+    }
+  ]
+}

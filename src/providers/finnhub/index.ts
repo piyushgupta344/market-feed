@@ -1,6 +1,7 @@
 import { ProviderError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
+import type { EarningsEvent, EarningsOptions } from "../../types/earnings.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { NewsItem, NewsOptions } from "../../types/news.js";
 import type { MarketProvider } from "../../types/provider.js";
@@ -10,6 +11,7 @@ import { RateLimiter } from "../../utils/rate-limiter.js";
 import { normalise } from "../../utils/symbol.js";
 import {
   transformCompany,
+  transformEarnings,
   transformHistorical,
   transformNews,
   transformQuote,
@@ -17,6 +19,7 @@ import {
 } from "./transform.js";
 import type {
   FinnhubCandlesResponse,
+  FinnhubEarningsResponse,
   FinnhubNewsArticle,
   FinnhubProfileResponse,
   FinnhubQuoteResponse,
@@ -172,6 +175,25 @@ export class FinnhubProvider implements MarketProvider {
     return data
       .slice(0, limit)
       .map((article) => transformNews(article, options?.raw ? article : undefined));
+  }
+  // ---------------------------------------------------------------------------
+  // Earnings
+  // ---------------------------------------------------------------------------
+
+  async earnings(symbol: string, options?: EarningsOptions): Promise<EarningsEvent[]> {
+    this.limiter.consume();
+    const s = normalise(symbol);
+    const limit = options?.limit ?? 10;
+
+    const data = await this.http.get<FinnhubEarningsResponse>("/api/v1/stock/earnings", {
+      params: { symbol: s, limit },
+    });
+
+    if (!Array.isArray(data)) {
+      throw new ProviderError(`Unexpected earnings response for "${s}"`, this.name);
+    }
+
+    return data.map((entry) => transformEarnings(entry, options?.raw ? entry : undefined));
   }
 }
 

@@ -3,12 +3,15 @@ import type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";
 import { AllProvidersFailedError, MarketFeedError, UnsupportedOperationError } from "./errors.js";
 import { YahooProvider } from "./providers/yahoo/index.js";
 import type { CompanyOptions, CompanyProfile } from "./types/company.js";
+import type { DividendEvent, DividendOptions } from "./types/dividends.js";
+import type { EarningsEvent, EarningsOptions } from "./types/earnings.js";
 import type { HistoricalBar, HistoricalOptions } from "./types/historical.js";
 import type { MarketStatus, MarketStatusOptions } from "./types/market.js";
 import type { NewsItem, NewsOptions } from "./types/news.js";
 import type { MarketProvider } from "./types/provider.js";
 import type { Quote, QuoteOptions } from "./types/quote.js";
 import type { SearchOptions, SearchResult } from "./types/search.js";
+import type { SplitEvent, SplitOptions } from "./types/splits.js";
 
 export interface MarketFeedOptions {
   /**
@@ -37,6 +40,9 @@ const DEFAULT_TTLS: Record<CacheMethod, number> = {
   news: 300,
   search: 600,
   marketStatus: 60,
+  earnings: 3600,
+  dividends: 86400,
+  splits: 86400,
 };
 
 /**
@@ -196,6 +202,65 @@ export class MarketFeed {
     });
 
     await this.setCache(cacheKey, result, "marketStatus");
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // earnings
+  // ---------------------------------------------------------------------------
+
+  async earnings(symbol: string, options?: EarningsOptions): Promise<EarningsEvent[]> {
+    const limit = options?.limit ?? 10;
+    const cacheKey = `earnings:${symbol}:${limit}`;
+    const cached = await this.getCache<EarningsEvent[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.withFallback("earnings", (provider) => {
+      if (!provider.earnings) throw new UnsupportedOperationError(provider.name, "earnings");
+      return provider.earnings(symbol, options);
+    });
+
+    await this.setCache(cacheKey, result, "earnings");
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // dividends
+  // ---------------------------------------------------------------------------
+
+  async dividends(symbol: string, options?: DividendOptions): Promise<DividendEvent[]> {
+    const from = normaliseDate(options?.from);
+    const to = normaliseDate(options?.to ?? new Date());
+    const cacheKey = `dividends:${symbol}:${from}:${to}`;
+    const cached = await this.getCache<DividendEvent[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.withFallback("dividends", (provider) => {
+      if (!provider.dividends) throw new UnsupportedOperationError(provider.name, "dividends");
+      return provider.dividends(symbol, options);
+    });
+
+    await this.setCache(cacheKey, result, "dividends");
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // splits
+  // ---------------------------------------------------------------------------
+
+  async splits(symbol: string, options?: SplitOptions): Promise<SplitEvent[]> {
+    const from = normaliseDate(options?.from);
+    const to = normaliseDate(options?.to ?? new Date());
+    const cacheKey = `splits:${symbol}:${from}:${to}`;
+    const cached = await this.getCache<SplitEvent[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.withFallback("splits", (provider) => {
+      if (!provider.splits) throw new UnsupportedOperationError(provider.name, "splits");
+      return provider.splits(symbol, options);
+    });
+
+    await this.setCache(cacheKey, result, "splits");
     return result;
   }
 

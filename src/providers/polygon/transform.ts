@@ -1,12 +1,16 @@
 import type { CompanyProfile } from "../../types/company.js";
+import type { DividendEvent, DividendFrequency } from "../../types/dividends.js";
 import type { HistoricalBar } from "../../types/historical.js";
 import type { NewsItem } from "../../types/news.js";
 import type { Quote } from "../../types/quote.js";
 import type { AssetType, SearchResult } from "../../types/search.js";
+import type { SplitEvent } from "../../types/splits.js";
 import type {
   PolygonAggBar,
+  PolygonDividend,
   PolygonNewsArticle,
   PolygonSnapshotTicker,
+  PolygonSplit,
   PolygonTicker,
   PolygonTickerDetails,
 } from "./types.js";
@@ -104,6 +108,55 @@ export function transformCompany(details: PolygonTickerDetails, raw?: unknown): 
     ...(details.market_cap !== undefined ? { marketCap: details.market_cap } : {}),
     ...(details.primary_exchange ? { exchange: details.primary_exchange } : {}),
     ...(details.list_date ? { ipoDate: new Date(details.list_date) } : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Dividends
+// ---------------------------------------------------------------------------
+function toFrequency(n?: number): DividendFrequency | undefined {
+  switch (n) {
+    case 1:
+      return "annual";
+    case 2:
+      return "semi-annual";
+    case 4:
+      return "quarterly";
+    case 12:
+      return "monthly";
+    default:
+      return n !== undefined ? "irregular" : undefined;
+  }
+}
+
+export function transformDividend(dividend: PolygonDividend, raw?: unknown): DividendEvent {
+  const freq = toFrequency(dividend.frequency);
+  return {
+    symbol: dividend.ticker,
+    exDate: new Date(dividend.ex_dividend_date),
+    ...(dividend.pay_date !== undefined ? { payDate: new Date(dividend.pay_date) } : {}),
+    ...(dividend.declaration_date !== undefined
+      ? { declaredDate: new Date(dividend.declaration_date) }
+      : {}),
+    amount: dividend.cash_amount,
+    currency: dividend.currency ?? "USD",
+    ...(freq !== undefined ? { frequency: freq } : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Splits
+// ---------------------------------------------------------------------------
+export function transformSplit(split: PolygonSplit, raw?: unknown): SplitEvent {
+  return {
+    symbol: split.ticker,
+    date: new Date(split.execution_date),
+    ratio: split.split_from > 0 ? split.split_to / split.split_from : split.split_to,
+    description: `${split.split_to}:${split.split_from}`,
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };
