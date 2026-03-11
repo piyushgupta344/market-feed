@@ -23,6 +23,7 @@ export default defineConfig([
       calendar:   "src/calendar/index.ts",
       indicators: "src/indicators/index.ts",
       portfolio:  "src/portfolio/index.ts",
+      ws:         "src/ws/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

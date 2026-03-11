@@ -60,12 +60,82 @@ One interface. Four providers. Zero API key required for Yahoo Finance.
 - **Portfolio tracking** — live P&L, unrealised gains, day change across all positions
 - **CLI** — `npx market-feed quote AAPL` — no install required
 - **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
+- **True WebSocket streaming** — `market-feed/ws` opens a persistent WS connection (Polygon, Finnhub), polling fallback for other providers
 
 ---
 
 ## Subpath modules
 
-`market-feed` ships five optional subpath modules alongside the core client.
+`market-feed` ships six optional subpath modules alongside the core client.
+
+### `market-feed/ws`
+
+True WebSocket streaming — tick-by-tick trade data from Polygon and Finnhub, with automatic polling fallback for other providers.
+
+```ts
+import { connect } from "market-feed/ws";
+import { MarketFeed, FinnhubProvider, PolygonProvider } from "market-feed";
+
+// Finnhub — real-time WebSocket
+const provider = new FinnhubProvider({ apiKey: process.env.FINNHUB_KEY! });
+
+// Polygon — real-time WebSocket (requires paid plan for true real-time)
+// const provider = new PolygonProvider({ apiKey: process.env.POLYGON_KEY! });
+
+const controller = new AbortController();
+
+for await (const event of connect(provider, ["AAPL", "MSFT", "TSLA"], {
+  signal: controller.signal,
+})) {
+  switch (event.type) {
+    case "trade":
+      console.log(`${event.trade.symbol}: $${event.trade.price} × ${event.trade.size} shares`);
+      break;
+    case "connected":
+      console.log(`Connected to ${event.provider}`);
+      break;
+    case "disconnected":
+      console.log(`Disconnected (attempt ${event.attempt}, reconnecting: ${event.reconnecting})`);
+      break;
+    case "error":
+      if (!event.recoverable) throw event.error;
+      break;
+  }
+}
+
+controller.abort(); // stop the stream
+```
+
+Unlike `market-feed/stream` (which is HTTP polling), `market-feed/ws` opens a persistent WebSocket connection and yields individual trade executions in real time.
+
+#### Provider support
+
+| Provider | WebSocket | Notes |
+|----------|-----------|-------|
+| `PolygonProvider` | Native WS | Auth via JSON handshake, subscribes to `T.*` trades |
+| `FinnhubProvider` | Native WS | Token in URL, per-symbol subscribe |
+| `YahooProvider` | Polling fallback | Polls `quote()` every 5 s |
+| `AlphaVantageProvider` | Polling fallback | Same as Yahoo |
+
+#### `WsOptions`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `wsImpl` | `typeof WebSocket` | `globalThis.WebSocket` | Custom WS constructor for Node 18–20 |
+| `maxReconnectAttempts` | `number` | `10` | Reconnects before closing |
+| `reconnectDelayMs` | `number` | `1000` | Base delay (doubles per attempt, max 30 s) |
+| `signal` | `AbortSignal` | — | Stop the stream |
+
+#### Node 18–20
+
+Node 21+, Bun, Deno, and Cloudflare Workers expose `WebSocket` globally. For Node 18–20, install the `ws` package and inject it:
+
+```ts
+import WebSocket from "ws";
+connect(provider, ["AAPL"], { wsImpl: WebSocket as unknown as typeof globalThis.WebSocket })
+```
+
+---
 
 ### `market-feed/calendar`
 

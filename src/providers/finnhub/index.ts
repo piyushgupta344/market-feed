@@ -48,6 +48,11 @@ export class FinnhubProvider implements MarketProvider {
   private readonly http: HttpClient;
   private readonly limiter: RateLimiter;
 
+  /** API key exposed for WebSocket authentication in `market-feed/ws`. */
+  get wsApiKey(): string {
+    return this.options.apiKey;
+  }
+
   constructor(private readonly options: FinnhubProviderOptions) {
     this.http = new HttpClient("finnhub", {
       baseUrl: "https://finnhub.io",

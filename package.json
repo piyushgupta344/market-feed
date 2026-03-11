@@ -1,7 +1,7 @@
 {
   "name": "market-feed",
-  "version": "0.2.0",
-  "description": "Unified TypeScript client for financial market data — wraps Yahoo Finance, Alpha Vantage, and Polygon.io under one consistent interface with caching and fallback.",
+  "version": "0.4.0",
+  "description": "Unified TypeScript client for financial market data — wraps Yahoo Finance, Alpha Vantage, Polygon.io, and Finnhub under one consistent interface with caching, fallback, and real-time WebSocket streaming.",
   "keywords": [
     "finance",
     "stock",
@@ -18,6 +18,8 @@
     "api",
     "stock-market",
     "financial-data",
+    "websocket",
+    "realtime",
     "cli"
   ],
   "homepage": "https://github.com/piyushgupta344/market-feed#readme",
@@ -61,6 +63,11 @@
       "types": "./dist/portfolio.d.ts",
       "import": "./dist/portfolio.js",
       "require": "./dist/portfolio.cjs"
+    },
+    "./ws": {
+      "types": "./dist/ws.d.ts",
+      "import": "./dist/ws.js",
+      "require": "./dist/ws.cjs"
     }
   },
   "bin": {
