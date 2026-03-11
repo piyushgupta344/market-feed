@@ -6,13 +6,19 @@
     "finance",
     "stock",
     "market",
+    "crypto",
+    "forex",
     "yahoo-finance",
     "alpha-vantage",
     "polygon",
+    "finnhub",
+    "technical-indicators",
+    "portfolio",
     "typescript",
     "api",
     "stock-market",
-    "financial-data"
+    "financial-data",
+    "cli"
   ],
   "homepage": "https://github.com/piyushgupta344/market-feed#readme",
   "bugs": {
@@ -45,7 +51,20 @@
       "types": "./dist/consensus.d.ts",
       "import": "./dist/consensus.js",
       "require": "./dist/consensus.cjs"
+    },
+    "./indicators": {
+      "types": "./dist/indicators.d.ts",
+      "import": "./dist/indicators.js",
+      "require": "./dist/indicators.cjs"
+    },
+    "./portfolio": {
+      "types": "./dist/portfolio.d.ts",
+      "import": "./dist/portfolio.js",
+      "require": "./dist/portfolio.cjs"
     }
+  },
+  "bin": {
+    "market-feed": "./dist/cli.js"
   },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

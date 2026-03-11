@@ -1,4 +1,13 @@
-export type ExchangeId = "NYSE" | "NASDAQ" | "LSE" | "TSX" | "ASX" | "XETRA" | "NSE" | "BSE";
+export type ExchangeId =
+  | "NYSE"
+  | "NASDAQ"
+  | "LSE"
+  | "TSX"
+  | "ASX"
+  | "XETRA"
+  | "NSE"
+  | "BSE"
+  | "CRYPTO";
 
 export interface ExchangeInfo {
   id: ExchangeId;
@@ -18,6 +27,11 @@ export interface ExchangeInfo {
   postCloseTime: string;
   /** Primary trading currency */
   currency: string;
+  /**
+   * When `true` the market is open 24/7 — no weekends, holidays, or session boundaries.
+   * Used for CRYPTO and other always-on markets.
+   */
+  alwaysOpen?: boolean;
 }
 
 /** Parts of a local date/time in an arbitrary timezone */

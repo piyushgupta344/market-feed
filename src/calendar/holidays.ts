@@ -250,6 +250,8 @@ export function getHolidayDates(exchange: ExchangeId, year: number): Date[] {
     case "NSE":
     case "BSE":
       return nseHolidays(year);
+    case "CRYPTO":
+      return [];
   }
 }
 

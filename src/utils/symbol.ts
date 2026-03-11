@@ -47,3 +47,75 @@ export function toPolygonSymbol(symbol: string): string {
 export function dedupeSymbols(symbols: string[]): string[] {
   return [...new Set(symbols.map(normalise))];
 }
+
+// ---------------------------------------------------------------------------
+// Asset-class detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Well-known crypto base currencies.
+ * Used to distinguish BTC/USD (crypto) from EUR/USD (forex) in slash-separated pairs.
+ */
+const KNOWN_CRYPTO_BASES = new Set([
+  "BTC", "ETH", "ADA", "SOL", "XRP", "DOGE", "DOT", "AVAX", "MATIC", "LINK",
+  "LTC", "BCH", "UNI", "ATOM", "BNB", "TRX", "SHIB", "NEAR", "APT", "ARB",
+]);
+
+/** Quote currencies that, combined with a known crypto base, confirm a crypto pair */
+const CRYPTO_QUOTE_CURRENCIES = new Set([
+  "USD", "EUR", "BTC", "ETH", "USDT", "USDC", "GBP", "BUSD",
+]);
+
+/**
+ * Returns `true` if the symbol looks like a cryptocurrency pair.
+ *
+ * Handles:
+ * - Yahoo-style:   "BTC-USD", "ETH-USD"
+ * - Slash-style:   "BTC/USD", "ETH/BTC"
+ * - Polygon-style: "X:BTCUSD"
+ */
+export function isCrypto(symbol: string): boolean {
+  const s = normalise(symbol);
+  if (s.startsWith("X:")) return true; // Polygon crypto prefix
+  if (s.includes("/")) {
+    const [base, quote] = s.split("/");
+    return (
+      KNOWN_CRYPTO_BASES.has(base ?? "") && CRYPTO_QUOTE_CURRENCIES.has(quote ?? "")
+    );
+  }
+  if (s.includes("-") && !s.endsWith("=X")) {
+    const [base, quote] = s.split("-");
+    return (
+      (KNOWN_CRYPTO_BASES.has(base ?? "") || (quote?.length === 3 && KNOWN_CRYPTO_BASES.has(base ?? ""))) &&
+      CRYPTO_QUOTE_CURRENCIES.has(quote ?? "")
+    );
+  }
+  return false;
+}
+
+/**
+ * Returns `true` if the symbol looks like a forex pair.
+ *
+ * Handles:
+ * - Yahoo-style:   "EURUSD=X", "GBPUSD=X"
+ * - Polygon-style: "C:EURUSD"
+ * - OANDA-style:   "OANDA:EUR_USD"
+ * - Standard:      "EUR/USD", "GBP/JPY" (when not also a crypto pair)
+ */
+export function isForex(symbol: string): boolean {
+  const s = normalise(symbol);
+  if (s.startsWith("C:")) return true;      // Polygon forex prefix
+  if (s.startsWith("OANDA:")) return true;  // OANDA format
+  if (/^[A-Z]{6}=X$/.test(s)) return true; // Yahoo forex (e.g. "EURUSD=X")
+  // Standard three-letter pair — only if not already classified as crypto
+  if (/^[A-Z]{3}\/[A-Z]{3}$/.test(s) && !isCrypto(s)) return true;
+  return false;
+}
+
+/**
+ * Convert a symbol to Finnhub format.
+ * Finnhub uses plain uppercase tickers for US stocks (e.g. "AAPL").
+ */
+export function toFinnhubSymbol(symbol: string): string {
+  return normalise(stripExchange(symbol));
+}
