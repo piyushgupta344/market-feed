@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { YahooProvider } from "../../../src/providers/yahoo/index.js";
 import { ProviderError } from "../../../src/errors.js";
+import { YahooProvider } from "../../../src/providers/yahoo/index.js";
 import yahooQuoteFixture from "../../fixtures/yahoo-quote.json";
 
 function mockFetch(fixture: unknown, ok = true, status = 200) {
@@ -90,7 +90,9 @@ describe("YahooProvider", () => {
     });
 
     it("throws ProviderError when chart result is null", async () => {
-      mockFetch({ chart: { result: null, error: { code: "Not Found", description: "No data for symbol" } } });
+      mockFetch({
+        chart: { result: null, error: { code: "Not Found", description: "No data for symbol" } },
+      });
       const provider = new YahooProvider();
       await expect(provider.quote(["INVALID"])).rejects.toThrow(ProviderError);
 
@@ -248,7 +250,11 @@ describe("YahooProvider", () => {
 
   describe("search()", () => {
     it("maps EQUITY quoteType to stock", async () => {
-      mockFetch({ quotes: [{ symbol: "AAPL", longname: "Apple Inc.", quoteType: "EQUITY", exchDisp: "NASDAQ" }] });
+      mockFetch({
+        quotes: [
+          { symbol: "AAPL", longname: "Apple Inc.", quoteType: "EQUITY", exchDisp: "NASDAQ" },
+        ],
+      });
       const provider = new YahooProvider();
       const [result] = await provider.search("Apple");
       expect(result?.type).toBe("stock");
@@ -264,7 +270,9 @@ describe("YahooProvider", () => {
     });
 
     it("maps CRYPTOCURRENCY to crypto", async () => {
-      mockFetch({ quotes: [{ symbol: "BTC-USD", longname: "Bitcoin USD", quoteType: "CRYPTOCURRENCY" }] });
+      mockFetch({
+        quotes: [{ symbol: "BTC-USD", longname: "Bitcoin USD", quoteType: "CRYPTOCURRENCY" }],
+      });
       const provider = new YahooProvider();
       const [result] = await provider.search("bitcoin");
       expect(result?.type).toBe("crypto");
@@ -381,7 +389,12 @@ describe("YahooProvider", () => {
     });
 
     it("throws ProviderError when quoteSummary result is null", async () => {
-      mockFetch({ quoteSummary: { result: null, error: { code: "Not Found", description: "No company data" } } });
+      mockFetch({
+        quoteSummary: {
+          result: null,
+          error: { code: "Not Found", description: "No company data" },
+        },
+      });
       const provider = new YahooProvider();
       await expect(provider.company("INVALID")).rejects.toThrow(ProviderError);
       vi.unstubAllGlobals();

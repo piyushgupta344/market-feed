@@ -6,12 +6,17 @@ import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
 import type { SearchOptions, SearchResult } from "../../types/search.js";
 import { toYahooSymbol } from "../../utils/symbol.js";
+import {
+  transformCompany,
+  transformHistorical,
+  transformQuote,
+  transformSearch,
+} from "./transform.js";
 import type {
   YahooChartResponse,
   YahooQuoteSummaryResponse,
   YahooSearchResponse,
 } from "./types.js";
-import { transformCompany, transformHistorical, transformQuote, transformSearch } from "./transform.js";
 
 export interface YahooProviderOptions {
   /** Request timeout in milliseconds. Defaults to 10 000. */
@@ -37,7 +42,7 @@ export class YahooProvider implements MarketProvider {
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
       headers: {
-        "Accept": "application/json",
+        Accept: "application/json",
         "Accept-Language": "en-US,en;q=0.9",
       },
     };
@@ -74,10 +79,7 @@ export class YahooProvider implements MarketProvider {
     const result = data.chart.result?.[0];
     if (!result) {
       const err = data.chart.error;
-      throw new ProviderError(
-        err?.description ?? `No data returned for symbol "${s}"`,
-        this.name,
-      );
+      throw new ProviderError(err?.description ?? `No data returned for symbol "${s}"`, this.name);
     }
 
     return transformQuote(result, options?.raw ? data : undefined);
@@ -142,22 +144,16 @@ export class YahooProvider implements MarketProvider {
   async company(symbol: string, options?: CompanyOptions): Promise<CompanyProfile> {
     const s = toYahooSymbol(symbol);
 
-    const data = await this.http2.get<YahooQuoteSummaryResponse>(
-      `/v10/finance/quoteSummary/${s}`,
-      {
-        params: {
-          modules: "assetProfile,summaryDetail,price",
-        },
+    const data = await this.http2.get<YahooQuoteSummaryResponse>(`/v10/finance/quoteSummary/${s}`, {
+      params: {
+        modules: "assetProfile,summaryDetail,price",
       },
-    );
+    });
 
     const result = data.quoteSummary.result?.[0];
     if (!result) {
       const err = data.quoteSummary.error;
-      throw new ProviderError(
-        err?.description ?? `No company data for symbol "${s}"`,
-        this.name,
-      );
+      throw new ProviderError(err?.description ?? `No company data for symbol "${s}"`, this.name);
     }
 
     return transformCompany(symbol, result, options?.raw ? data : undefined);

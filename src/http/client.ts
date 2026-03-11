@@ -49,10 +49,13 @@ export class HttpClient {
   private readonly retries: number;
   private readonly retryDelayMs: number;
 
-  constructor(private readonly providerName: string, options: HttpClientOptions = {}) {
+  constructor(
+    private readonly providerName: string,
+    options: HttpClientOptions = {},
+  ) {
     this.baseUrl = options.baseUrl ?? "";
     this.defaultHeaders = {
-      "Accept": "application/json",
+      Accept: "application/json",
       "User-Agent": "market-feed/0.1.0 (+https://github.com/piyushgupta344/market-feed)",
       ...options.headers,
     };

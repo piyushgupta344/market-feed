@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { RateLimiter } from "../../../src/utils/rate-limiter.js";
 import { RateLimitError } from "../../../src/errors.js";
+import { RateLimiter } from "../../../src/utils/rate-limiter.js";
 
 describe("RateLimiter", () => {
   describe("consume()", () => {

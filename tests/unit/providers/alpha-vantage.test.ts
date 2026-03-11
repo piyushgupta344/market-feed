@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { AlphaVantageProvider } from "../../../src/providers/alpha-vantage/index.js";
 import { ProviderError, RateLimitError } from "../../../src/errors.js";
+import { AlphaVantageProvider } from "../../../src/providers/alpha-vantage/index.js";
 import { RateLimiter } from "../../../src/utils/rate-limiter.js";
 import avQuoteFixture from "../../fixtures/alpha-vantage-quote.json";
 
@@ -77,14 +77,19 @@ describe("AlphaVantageProvider", () => {
     });
 
     it("throws RateLimitError on Information message", async () => {
-      mockFetch({ Information: "Thank you for using Alpha Vantage! Our standard API rate limit is 25 requests per day." });
+      mockFetch({
+        Information:
+          "Thank you for using Alpha Vantage! Our standard API rate limit is 25 requests per day.",
+      });
       const provider = new AlphaVantageProvider({ apiKey: "demo", rateLimiter: unlimitedLimiter });
       await expect(provider.quote(["AAPL"])).rejects.toThrow(RateLimitError);
       vi.unstubAllGlobals();
     });
 
     it("throws RateLimitError on Note message", async () => {
-      mockFetch({ Note: "Thank you for using Alpha Vantage! Our standard API call frequency is 5 calls per minute." });
+      mockFetch({
+        Note: "Thank you for using Alpha Vantage! Our standard API call frequency is 5 calls per minute.",
+      });
       const provider = new AlphaVantageProvider({ apiKey: "demo", rateLimiter: unlimitedLimiter });
       await expect(provider.quote(["AAPL"])).rejects.toThrow(RateLimitError);
       vi.unstubAllGlobals();
@@ -108,11 +113,44 @@ describe("AlphaVantageProvider", () => {
   describe("historical()", () => {
     it("returns sorted bars within the date range", async () => {
       mockFetch({
-        "Meta Data": { "1. Information": "Daily Adjusted", "2. Symbol": "AAPL", "3. Last Refreshed": "2024-03-06", "4. Output Size": "Full", "5. Time Zone": "US/Eastern" },
+        "Meta Data": {
+          "1. Information": "Daily Adjusted",
+          "2. Symbol": "AAPL",
+          "3. Last Refreshed": "2024-03-06",
+          "4. Output Size": "Full",
+          "5. Time Zone": "US/Eastern",
+        },
         "Time Series (Daily Adjusted)": {
-          "2024-03-06": { "1. open": "188.5", "2. high": "190.32", "3. low": "188.19", "4. close": "189.84", "5. adjusted close": "189.84", "6. volume": "52279800", "7. dividend amount": "0.0000", "8. split coefficient": "1.0" },
-          "2024-03-05": { "1. open": "187.0", "2. high": "188.5", "3. low": "186.5", "4. close": "187.9", "5. adjusted close": "187.9", "6. volume": "48000000", "7. dividend amount": "0.0000", "8. split coefficient": "1.0" },
-          "2024-01-01": { "1. open": "180.0", "2. high": "181.0", "3. low": "179.0", "4. close": "180.5", "5. adjusted close": "180.5", "6. volume": "30000000", "7. dividend amount": "0.0000", "8. split coefficient": "1.0" },
+          "2024-03-06": {
+            "1. open": "188.5",
+            "2. high": "190.32",
+            "3. low": "188.19",
+            "4. close": "189.84",
+            "5. adjusted close": "189.84",
+            "6. volume": "52279800",
+            "7. dividend amount": "0.0000",
+            "8. split coefficient": "1.0",
+          },
+          "2024-03-05": {
+            "1. open": "187.0",
+            "2. high": "188.5",
+            "3. low": "186.5",
+            "4. close": "187.9",
+            "5. adjusted close": "187.9",
+            "6. volume": "48000000",
+            "7. dividend amount": "0.0000",
+            "8. split coefficient": "1.0",
+          },
+          "2024-01-01": {
+            "1. open": "180.0",
+            "2. high": "181.0",
+            "3. low": "179.0",
+            "4. close": "180.5",
+            "5. adjusted close": "180.5",
+            "6. volume": "30000000",
+            "7. dividend amount": "0.0000",
+            "8. split coefficient": "1.0",
+          },
         },
       });
 
@@ -127,7 +165,9 @@ describe("AlphaVantageProvider", () => {
       expect(bars[0]?.date.getDate()).toBe(5);
       expect(bars[1]?.date.getDate()).toBe(6);
       // Jan 1 should be filtered out
-      expect(bars.some(b => b.date.getFullYear() === 2024 && b.date.getMonth() === 0)).toBe(false);
+      expect(bars.some((b) => b.date.getFullYear() === 2024 && b.date.getMonth() === 0)).toBe(
+        false,
+      );
 
       vi.unstubAllGlobals();
     });
@@ -178,8 +218,28 @@ describe("AlphaVantageProvider", () => {
     it("returns normalised SearchResults", async () => {
       mockFetch({
         bestMatches: [
-          { "1. symbol": "AAPL", "2. name": "Apple Inc.", "3. type": "Equity", "4. region": "United States", "5. marketOpen": "09:30", "6. marketClose": "16:00", "7. timezone": "UTC-05", "8. currency": "USD", "9. matchScore": "1.0000" },
-          { "1. symbol": "AAPL.TRT", "2. name": "Apple Inc.", "3. type": "Equity", "4. region": "Toronto", "5. marketOpen": "09:30", "6. marketClose": "16:00", "7. timezone": "UTC-05", "8. currency": "CAD", "9. matchScore": "0.8571" },
+          {
+            "1. symbol": "AAPL",
+            "2. name": "Apple Inc.",
+            "3. type": "Equity",
+            "4. region": "United States",
+            "5. marketOpen": "09:30",
+            "6. marketClose": "16:00",
+            "7. timezone": "UTC-05",
+            "8. currency": "USD",
+            "9. matchScore": "1.0000",
+          },
+          {
+            "1. symbol": "AAPL.TRT",
+            "2. name": "Apple Inc.",
+            "3. type": "Equity",
+            "4. region": "Toronto",
+            "5. marketOpen": "09:30",
+            "6. marketClose": "16:00",
+            "7. timezone": "UTC-05",
+            "8. currency": "CAD",
+            "9. matchScore": "0.8571",
+          },
         ],
       });
 
@@ -198,7 +258,19 @@ describe("AlphaVantageProvider", () => {
 
     it("maps ETF type correctly", async () => {
       mockFetch({
-        bestMatches: [{ "1. symbol": "SPY", "2. name": "SPDR S&P 500 ETF Trust", "3. type": "ETF", "4. region": "United States", "5. marketOpen": "09:30", "6. marketClose": "16:00", "7. timezone": "UTC-05", "8. currency": "USD", "9. matchScore": "1.0000" }],
+        bestMatches: [
+          {
+            "1. symbol": "SPY",
+            "2. name": "SPDR S&P 500 ETF Trust",
+            "3. type": "ETF",
+            "4. region": "United States",
+            "5. marketOpen": "09:30",
+            "6. marketClose": "16:00",
+            "7. timezone": "UTC-05",
+            "8. currency": "USD",
+            "9. matchScore": "1.0000",
+          },
+        ],
       });
 
       const provider = new AlphaVantageProvider({ apiKey: "demo", rateLimiter: unlimitedLimiter });
@@ -211,9 +283,15 @@ describe("AlphaVantageProvider", () => {
     it("respects the limit option", async () => {
       mockFetch({
         bestMatches: Array.from({ length: 10 }, (_, i) => ({
-          "1. symbol": `SYM${i}`, "2. name": `Symbol ${i}`, "3. type": "Equity",
-          "4. region": "US", "5. marketOpen": "09:30", "6. marketClose": "16:00",
-          "7. timezone": "UTC-05", "8. currency": "USD", "9. matchScore": "1.0000",
+          "1. symbol": `SYM${i}`,
+          "2. name": `Symbol ${i}`,
+          "3. type": "Equity",
+          "4. region": "US",
+          "5. marketOpen": "09:30",
+          "6. marketClose": "16:00",
+          "7. timezone": "UTC-05",
+          "8. currency": "USD",
+          "9. matchScore": "1.0000",
         })),
       });
 

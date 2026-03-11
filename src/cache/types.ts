@@ -40,10 +40,4 @@ export interface CacheConfig {
   ttlOverrides?: Partial<Record<CacheMethod, number>>;
 }
 
-export type CacheMethod =
-  | "quote"
-  | "historical"
-  | "company"
-  | "news"
-  | "search"
-  | "marketStatus";
+export type CacheMethod = "quote" | "historical" | "company" | "news" | "search" | "marketStatus";

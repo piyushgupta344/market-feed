@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { HttpClient } from "../../../src/http/client.js";
 import { ProviderError } from "../../../src/errors.js";
+import { HttpClient } from "../../../src/http/client.js";
 
 describe("HttpClient", () => {
   it("returns parsed JSON on success", async () => {
@@ -38,13 +38,26 @@ describe("HttpClient", () => {
     const mockFetch = vi.fn().mockImplementation(async () => {
       calls++;
       if (calls < 2) {
-        return { ok: false, status: 503, statusText: "Service Unavailable", headers: { get: () => "application/json" } };
+        return {
+          ok: false,
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: { get: () => "application/json" },
+        };
       }
-      return { ok: true, headers: { get: () => "application/json" }, json: async () => ({ ok: true }) };
+      return {
+        ok: true,
+        headers: { get: () => "application/json" },
+        json: async () => ({ ok: true }),
+      };
     });
     vi.stubGlobal("fetch", mockFetch);
 
-    const client = new HttpClient("test", { baseUrl: "https://example.com", retries: 2, retryDelayMs: 0 });
+    const client = new HttpClient("test", {
+      baseUrl: "https://example.com",
+      retries: 2,
+      retryDelayMs: 0,
+    });
     const result = await client.get("/endpoint");
     expect(result).toEqual({ ok: true });
     expect(calls).toBe(2);

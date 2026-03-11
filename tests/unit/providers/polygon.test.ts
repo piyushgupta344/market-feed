@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { PolygonProvider } from "../../../src/providers/polygon/index.js";
 import { ProviderError } from "../../../src/errors.js";
+import { PolygonProvider } from "../../../src/providers/polygon/index.js";
 import { RateLimiter } from "../../../src/utils/rate-limiter.js";
 import polygonFixture from "../../fixtures/polygon-snapshot.json";
 
@@ -161,8 +161,26 @@ describe("PolygonProvider", () => {
       mockFetch({
         status: "OK",
         results: [
-          { ticker: "AAPL", name: "Apple Inc.", market: "stocks", locale: "us", primary_exchange: "XNAS", type: "CS", active: true, currency_name: "usd" },
-          { ticker: "AAPL.BA", name: "Apple Inc.", market: "stocks", locale: "ar", primary_exchange: "XBUE", type: "CS", active: true, currency_name: "ars" },
+          {
+            ticker: "AAPL",
+            name: "Apple Inc.",
+            market: "stocks",
+            locale: "us",
+            primary_exchange: "XNAS",
+            type: "CS",
+            active: true,
+            currency_name: "usd",
+          },
+          {
+            ticker: "AAPL.BA",
+            name: "Apple Inc.",
+            market: "stocks",
+            locale: "ar",
+            primary_exchange: "XBUE",
+            type: "CS",
+            active: true,
+            currency_name: "ars",
+          },
         ],
       });
 
@@ -180,7 +198,19 @@ describe("PolygonProvider", () => {
     });
 
     it("maps CS to stock type", async () => {
-      mockFetch({ status: "OK", results: [{ ticker: "AAPL", name: "Apple", market: "stocks", locale: "us", type: "CS", active: true }] });
+      mockFetch({
+        status: "OK",
+        results: [
+          {
+            ticker: "AAPL",
+            name: "Apple",
+            market: "stocks",
+            locale: "us",
+            type: "CS",
+            active: true,
+          },
+        ],
+      });
       const provider = new PolygonProvider({ apiKey: "demo", rateLimiter: unlimitedLimiter });
       const [result] = await provider.search("AAPL");
       expect(result?.type).toBe("stock");
@@ -188,7 +218,19 @@ describe("PolygonProvider", () => {
     });
 
     it("maps ETF to etf type", async () => {
-      mockFetch({ status: "OK", results: [{ ticker: "SPY", name: "SPDR S&P 500", market: "stocks", locale: "us", type: "ETF", active: true }] });
+      mockFetch({
+        status: "OK",
+        results: [
+          {
+            ticker: "SPY",
+            name: "SPDR S&P 500",
+            market: "stocks",
+            locale: "us",
+            type: "ETF",
+            active: true,
+          },
+        ],
+      });
       const provider = new PolygonProvider({ apiKey: "demo", rateLimiter: unlimitedLimiter });
       const [result] = await provider.search("SPY");
       expect(result?.type).toBe("etf");
@@ -278,10 +320,12 @@ describe("PolygonProvider", () => {
             json: async () => ({
               status: "OK",
               results: Array.from({ length: 5 }, (_, i) => ({
-                id: `art-${i}`, title: `Article ${i}`,
+                id: `art-${i}`,
+                title: `Article ${i}`,
                 published_utc: "2024-03-06T18:00:00Z",
                 article_url: `https://example.com/${i}`,
-                tickers: ["AAPL"], publisher: { name: "Source" },
+                tickers: ["AAPL"],
+                publisher: { name: "Source" },
               })),
             }),
           };
