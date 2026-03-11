@@ -54,13 +54,13 @@ One interface. Four providers. Zero API key required for Yahoo Finance.
 - **Multi-runtime** — Node 18+, Bun 1+, Deno 2+, Cloudflare Workers
 - **Escape hatch** — pass `{ raw: true }` to get the original provider response
 - **Exchange calendar** — synchronous, offline-capable holiday and session detection for 8 exchanges + crypto (24/7)
-- **Observable stream** — market-hours-aware polling that pauses overnight and on weekends
+- **WebSocket streaming** — `market-feed/ws` opens a persistent WS connection to Polygon or Finnhub; polling fallback for Yahoo/AV
+- **Observable stream** — market-hours-aware HTTP polling that pauses overnight and on weekends
 - **Price consensus** — query all providers in parallel, get a weighted mean with confidence score
 - **Technical indicators** — SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic — pure functions, zero deps
 - **Portfolio tracking** — live P&L, unrealised gains, day change across all positions
 - **CLI** — `npx market-feed quote AAPL` — no install required
 - **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
-- **True WebSocket streaming** — `market-feed/ws` opens a persistent WS connection (Polygon, Finnhub), polling fallback for other providers
 
 ---
 
@@ -688,7 +688,7 @@ const feed = new MarketFeed({ providers: [new MyProvider()] });
 
 | Runtime | Version | Notes |
 |---------|---------|-------|
-| Node.js | 18+ | Requires native `fetch` (available since Node 18) |
+| Node.js | 18+ | `fetch` available since Node 18; `WebSocket` global available since Node 21. For Node 18–20, inject the `ws` package via `wsImpl` for `market-feed/ws`. |
 | Bun | 1+ | Fully supported |
 | Deno | 2+ | Fully supported |
 | Cloudflare Workers | Latest | Fully supported |

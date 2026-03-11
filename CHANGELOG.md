@@ -88,7 +88,7 @@ connect(provider, ["AAPL"], { wsImpl: WebSocket as unknown as typeof globalThis.
 
 - `PolygonProvider` now exposes `get wsApiKey(): string` (used internally by `market-feed/ws`)
 - `FinnhubProvider` now exposes `get wsApiKey(): string` (used internally by `market-feed/ws`)
-- 27 new unit tests (368 total across 18 test files)
+- 27 new unit tests (341 total across 18 test files)
 - 7 tsup library entry points + 1 CLI binary: `index`, `calendar`, `stream`, `consensus`, `indicators`, `portfolio`, `ws`, `cli`
 
 ### Breaking changes
