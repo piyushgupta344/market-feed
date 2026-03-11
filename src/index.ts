@@ -12,6 +12,9 @@ export type { AlphaVantageProviderOptions } from "./providers/alpha-vantage/inde
 export { PolygonProvider } from "./providers/polygon/index.js";
 export type { PolygonProviderOptions } from "./providers/polygon/index.js";
 
+export { FinnhubProvider } from "./providers/finnhub/index.js";
+export type { FinnhubProviderOptions } from "./providers/finnhub/index.js";
+
 // Cache
 export { MemoryCacheDriver } from "./cache/memory.js";
 export type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";
@@ -48,9 +51,12 @@ export type {
 // Utilities (useful for custom provider implementations)
 export {
   dedupeSymbols,
+  isCrypto,
+  isForex,
   normalise,
   stripExchange,
   toAlphaVantageSymbol,
+  toFinnhubSymbol,
   toPolygonSymbol,
   toYahooSymbol,
 } from "./utils/symbol.js";

@@ -89,4 +89,16 @@ export const EXCHANGES: Record<ExchangeId, ExchangeInfo> = {
     postCloseTime: "16:00",
     currency: "INR",
   },
+  CRYPTO: {
+    id: "CRYPTO",
+    name: "Crypto Market",
+    mic: "",
+    timezone: "UTC",
+    openTime: "00:00",
+    closeTime: "23:59",
+    preOpenTime: "00:00",
+    postCloseTime: "23:59",
+    currency: "USD",
+    alwaysOpen: true,
+  },
 };

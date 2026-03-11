@@ -125,6 +125,8 @@ function getEarlyCloseSet(exchange: ExchangeId, year: number): Set<string> {
  */
 export function getSession(exchange: ExchangeId, at: Date = new Date()): TradingSession {
   const info = EXCHANGES[exchange];
+  if (info.alwaysOpen) return "regular";
+
   const local = toLocalParts(at, info.timezone);
 
   // Weekend
@@ -163,6 +165,7 @@ export function isMarketOpen(exchange: ExchangeId, at: Date = new Date()): boole
  */
 export function isHoliday(exchange: ExchangeId, date: Date = new Date()): boolean {
   const info = EXCHANGES[exchange];
+  if (info.alwaysOpen) return false;
   const local = toLocalParts(date, info.timezone);
   const dateKey = `${String(local.year).padStart(4, "0")}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
   return getHolidaySet(exchange, local.year).has(dateKey);
@@ -173,6 +176,7 @@ export function isHoliday(exchange: ExchangeId, date: Date = new Date()): boolea
  */
 export function isEarlyClose(exchange: ExchangeId, date: Date = new Date()): boolean {
   const info = EXCHANGES[exchange];
+  if (info.alwaysOpen) return false;
   const local = toLocalParts(date, info.timezone);
   const dateKey = `${String(local.year).padStart(4, "0")}-${String(local.month).padStart(2, "0")}-${String(local.day).padStart(2, "0")}`;
   return getEarlyCloseSet(exchange, local.year).has(dateKey);
@@ -184,6 +188,7 @@ export function isEarlyClose(exchange: ExchangeId, date: Date = new Date()): boo
  */
 export function nextSessionOpen(exchange: ExchangeId, from: Date = new Date()): Date {
   const info = EXCHANGES[exchange];
+  if (info.alwaysOpen) return from;
 
   // Walk day by day (max 10 days) to find next open session
   for (let dayOffset = 0; dayOffset < 10; dayOffset++) {
@@ -214,6 +219,8 @@ export function nextSessionOpen(exchange: ExchangeId, from: Date = new Date()): 
  */
 export function nextSessionClose(exchange: ExchangeId, from: Date = new Date()): Date {
   const info = EXCHANGES[exchange];
+  // Crypto never closes — return a rolling 24h window
+  if (info.alwaysOpen) return new Date(from.getTime() + 86_400_000);
 
   for (let dayOffset = 0; dayOffset < 10; dayOffset++) {
     const candidate = new Date(from.getTime() + dayOffset * 86_400_000);
