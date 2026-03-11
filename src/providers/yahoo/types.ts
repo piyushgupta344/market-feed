@@ -17,6 +17,17 @@ export interface YahooChartResult {
     quote: YahooQuoteIndicator[];
     adjclose?: YahooAdjCloseIndicator[];
   };
+  events?: YahooChartEvents;
+}
+
+export interface YahooChartEvents {
+  dividends?: Record<string, { amount: number; date: number }>;
+  splits?: Record<string, {
+    numerator: number;
+    denominator: number;
+    splitRatio: string;
+    date: number;
+  }>;
 }
 
 export interface YahooChartMeta {
@@ -83,6 +94,22 @@ export interface YahooQuoteSummaryResult {
   assetProfile?: YahooAssetProfile;
   summaryDetail?: YahooSummaryDetail;
   price?: YahooPriceModule;
+  earningsHistory?: YahooEarningsHistoryModule;
+}
+
+export interface YahooEarningsHistoryModule {
+  history?: YahooEarningsHistoryEntry[];
+}
+
+export interface YahooEarningsHistoryEntry {
+  epsActual?: { raw?: number };
+  epsEstimate?: { raw?: number };
+  epsDifference?: { raw?: number };
+  surprisePercent?: { raw?: number };
+  /** Human-readable period label, e.g. "-3q" — not useful as a label */
+  period?: string;
+  /** Quarter-end date as Unix epoch seconds */
+  quarter?: { raw?: number; fmt?: string };
 }
 
 export interface YahooAssetProfile {

@@ -24,6 +24,8 @@ export default defineConfig([
       indicators: "src/indicators/index.ts",
       portfolio:  "src/portfolio/index.ts",
       ws:         "src/ws/index.ts",
+      backtest:   "src/backtest/index.ts",
+      alerts:     "src/alerts/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

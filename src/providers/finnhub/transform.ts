@@ -1,10 +1,12 @@
 import type { CompanyProfile } from "../../types/company.js";
+import type { EarningsEvent } from "../../types/earnings.js";
 import type { HistoricalBar } from "../../types/historical.js";
 import type { NewsItem } from "../../types/news.js";
 import type { Quote } from "../../types/quote.js";
 import type { AssetType, SearchResult } from "../../types/search.js";
 import type {
   FinnhubCandlesResponse,
+  FinnhubEarningsEntry,
   FinnhubNewsArticle,
   FinnhubProfileResponse,
   FinnhubQuoteResponse,
@@ -99,6 +101,23 @@ export function transformNews(article: FinnhubNewsArticle, raw?: unknown): NewsI
           .filter(Boolean)
       : [],
     thumbnail: article.image || undefined,
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformEarnings(entry: FinnhubEarningsEntry, raw?: unknown): EarningsEvent {
+  return {
+    symbol: entry.symbol,
+    date: new Date(entry.period),
+    period: entry.period,
+    ...(entry.actual !== null && entry.actual !== undefined ? { epsActual: entry.actual } : {}),
+    ...(entry.estimate !== null && entry.estimate !== undefined
+      ? { epsEstimate: entry.estimate }
+      : {}),
+    ...(entry.surprisePercent !== null && entry.surprisePercent !== undefined
+      ? { epsSurprisePct: entry.surprisePercent }
+      : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };

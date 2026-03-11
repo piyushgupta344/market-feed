@@ -1,0 +1,37 @@
+{
+  "quoteSummary": {
+    "result": [
+      {
+        "earningsHistory": {
+          "history": [
+            {
+              "epsActual": { "raw": 1.53, "fmt": "1.53" },
+              "epsEstimate": { "raw": 1.50, "fmt": "1.50" },
+              "epsDifference": { "raw": 0.03, "fmt": "0.03" },
+              "surprisePercent": { "raw": 2.0, "fmt": "2.00%" },
+              "quarter": { "raw": 1719792000, "fmt": "6/30/2024" },
+              "period": "-1q"
+            },
+            {
+              "epsActual": { "raw": 1.26, "fmt": "1.26" },
+              "epsEstimate": { "raw": 1.29, "fmt": "1.29" },
+              "epsDifference": { "raw": -0.03, "fmt": "-0.03" },
+              "surprisePercent": { "raw": -2.33, "fmt": "-2.33%" },
+              "quarter": { "raw": 1711929600, "fmt": "3/31/2024" },
+              "period": "-2q"
+            },
+            {
+              "epsActual": { "raw": 2.18, "fmt": "2.18" },
+              "epsEstimate": { "raw": 2.10, "fmt": "2.10" },
+              "epsDifference": { "raw": 0.08, "fmt": "0.08" },
+              "surprisePercent": { "raw": 3.81, "fmt": "3.81%" },
+              "quarter": { "raw": 1704067200, "fmt": "12/31/2023" },
+              "period": "-3q"
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}

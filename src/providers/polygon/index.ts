@@ -1,24 +1,30 @@
 import { ProviderError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
+import type { DividendEvent, DividendOptions } from "../../types/dividends.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { NewsItem, NewsOptions } from "../../types/news.js";
 import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
 import type { SearchOptions, SearchResult } from "../../types/search.js";
+import type { SplitEvent, SplitOptions } from "../../types/splits.js";
 import { RateLimiter } from "../../utils/rate-limiter.js";
 import { normalise } from "../../utils/symbol.js";
 import {
   transformCompany,
+  transformDividend,
   transformHistoricalBar,
   transformNews,
   transformQuote,
   transformSearch,
+  transformSplit,
 } from "./transform.js";
 import type {
   PolygonAggregatesResponse,
+  PolygonDividendsResponse,
   PolygonNewsResponse,
   PolygonSnapshotResponse,
+  PolygonSplitsResponse,
   PolygonTickerDetailsResponse,
   PolygonTickersResponse,
 } from "./types.js";
@@ -181,6 +187,60 @@ export class PolygonProvider implements MarketProvider {
     this.assertSuccess(data as { status: string; error?: string });
 
     return (data.results ?? []).map((a) => transformNews(a, options?.raw ? a : undefined));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Dividends
+  // ---------------------------------------------------------------------------
+  async dividends(symbol: string, options?: DividendOptions): Promise<DividendEvent[]> {
+    this.limiter.consume();
+
+    const s = normalise(symbol);
+    const limit = options?.limit ?? 50;
+    const params: Record<string, string | number | boolean> = {
+      ticker: s,
+      limit,
+      order: "desc",
+      sort: "ex_dividend_date",
+      apiKey: this.options.apiKey,
+    };
+    if (options?.from) params["ex_dividend_date.gte"] = toDateString(new Date(options.from as string));
+    if (options?.to) params["ex_dividend_date.lte"] = toDateString(new Date(options.to as string));
+
+    const data = await this.http.get<PolygonDividendsResponse>("/v3/reference/dividends", {
+      params,
+    });
+
+    this.assertSuccess(data as { status: string; error?: string });
+
+    return (data.results ?? []).map((d) => transformDividend(d, options?.raw ? d : undefined));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Splits
+  // ---------------------------------------------------------------------------
+  async splits(symbol: string, options?: SplitOptions): Promise<SplitEvent[]> {
+    this.limiter.consume();
+
+    const s = normalise(symbol);
+    const limit = options?.limit ?? 50;
+    const params: Record<string, string | number | boolean> = {
+      ticker: s,
+      limit,
+      order: "desc",
+      sort: "execution_date",
+      apiKey: this.options.apiKey,
+    };
+    if (options?.from) params["execution_date.gte"] = toDateString(new Date(options.from as string));
+    if (options?.to) params["execution_date.lte"] = toDateString(new Date(options.to as string));
+
+    const data = await this.http.get<PolygonSplitsResponse>("/v3/reference/splits", {
+      params,
+    });
+
+    this.assertSuccess(data as { status: string; error?: string });
+
+    return (data.results ?? []).map((s) => transformSplit(s, options?.raw ? s : undefined));
   }
 
   // ---------------------------------------------------------------------------

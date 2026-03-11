@@ -1,0 +1,53 @@
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "AAPL",
+          "exchangeName": "NasdaqGS",
+          "fullExchangeName": "NasdaqGS",
+          "instrumentType": "EQUITY",
+          "firstTradeDate": 345479400,
+          "regularMarketTime": 1712155200,
+          "hasPrePostMarketData": true,
+          "gmtoffset": -18000,
+          "timezone": "EDT",
+          "exchangeTimezoneName": "America/New_York",
+          "regularMarketPrice": 189.84,
+          "fiftyTwoWeekHigh": 199.62,
+          "fiftyTwoWeekLow": 124.17,
+          "regularMarketDayHigh": 191.05,
+          "regularMarketDayLow": 188.20,
+          "regularMarketVolume": 52000000,
+          "regularMarketPreviousClose": 188.32,
+          "chartPreviousClose": 188.32,
+          "priceHint": 2,
+          "currentTradingPeriod": {
+            "pre": { "timezone": "EDT", "start": 1712131200, "end": 1712151000, "gmtoffset": -18000 },
+            "regular": { "timezone": "EDT", "start": 1712151000, "end": 1712174400, "gmtoffset": -18000 },
+            "post": { "timezone": "EDT", "start": 1712174400, "end": 1712188800, "gmtoffset": -18000 }
+          },
+          "dataGranularity": "1d",
+          "range": "",
+          "validRanges": ["1d","5d","1mo","3mo","6mo","1y","2y","5y","10y","ytd","max"]
+        },
+        "timestamp": [],
+        "events": {
+          "splits": {
+            "1598918400": {
+              "numerator": 4,
+              "denominator": 1,
+              "splitRatio": "4:1",
+              "date": 1598918400
+            }
+          }
+        },
+        "indicators": {
+          "quote": [{ "open": [], "high": [], "low": [], "close": [], "volume": [] }]
+        }
+      }
+    ],
+    "error": null
+  }
+}

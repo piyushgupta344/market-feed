@@ -1,5 +1,128 @@
 # market-feed Changelog
 
+## 0.5.0 — 2026-03-11
+
+### New modules
+
+**`market-feed/backtest`** — Pure-function backtesting engine over `HistoricalBar[]`.
+
+```ts
+import { backtest } from "market-feed/backtest";
+import type { EntrySignal, ExitSignal } from "market-feed/backtest";
+
+const entry: EntrySignal = (bars, i) => i > 0 && bars[i]!.close > bars[i - 1]!.close;
+const exit: ExitSignal  = (bars, i) => i > 0 && bars[i]!.close < bars[i - 1]!.close;
+
+const result = backtest("AAPL", bars, entry, exit, { initialCapital: 10_000 });
+console.log(`Total return: ${(result.totalReturn * 100).toFixed(2)}%`);
+console.log(`Sharpe ratio: ${result.sharpeRatio.toFixed(2)}`);
+console.log(`Max drawdown: ${(result.maxDrawdown * 100).toFixed(2)}%`);
+```
+
+| Field | Description |
+|-------|-------------|
+| `totalReturn` | Fraction, e.g. 0.25 = 25% |
+| `annualizedReturn` | CAGR as a fraction |
+| `sharpeRatio` | Annualised Sharpe (risk-free rate = 0) |
+| `maxDrawdown` | Peak-to-trough as a positive fraction |
+| `winRate` | Fraction of profitable trades |
+| `profitFactor` | Gross profit / gross loss (`Infinity` when no losses) |
+| `totalTrades` | Number of completed round-trip trades |
+| `trades` | Full `BacktestTrade[]` ledger |
+
+**`market-feed/alerts`** — Poll a feed and yield `AlertEvent` when conditions are met.
+
+```ts
+import { watchAlerts } from "market-feed/alerts";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+const controller = new AbortController();
+
+for await (const event of watchAlerts(feed, [
+  { symbol: "AAPL", condition: { type: "price_above", threshold: 200 }, once: true },
+  { symbol: "TSLA", condition: { type: "change_pct_below", threshold: -5 }, debounceMs: 60_000 },
+], { signal: controller.signal })) {
+  console.log(`${event.alert.symbol} triggered: $${event.quote.price}`);
+}
+```
+
+| Condition type | Description |
+|----------------|-------------|
+| `price_above` | `quote.price > threshold` |
+| `price_below` | `quote.price < threshold` |
+| `change_pct_above` | Daily `%` change exceeds threshold |
+| `change_pct_below` | Daily `%` change falls below threshold |
+| `volume_above` | `quote.volume > threshold` |
+
+`AlertConfig` options: `once` (fire at most once), `debounceMs` (suppress re-fires within window).
+
+### New data: earnings, dividends, splits
+
+Three new methods on `MarketFeed` (and on individual providers):
+
+```ts
+const feed = new MarketFeed([new PolygonProvider({ apiKey: "..." })]);
+
+const earnings  = await feed.earnings("AAPL", { limit: 8 });
+const dividends = await feed.dividends("AAPL");
+const splits    = await feed.splits("AAPL");
+```
+
+#### Provider support
+
+| Method | `YahooProvider` | `PolygonProvider` | `FinnhubProvider` | `AlphaVantageProvider` |
+|--------|-----------------|-------------------|-------------------|------------------------|
+| `earnings` | ✓ quoteSummary `earningsHistory` | — | ✓ `/stock/earnings` | — |
+| `dividends` | ✓ chart `events=div` | ✓ `/v3/reference/dividends` | — | — |
+| `splits` | ✓ chart `events=split` | ✓ `/v3/reference/splits` | — | — |
+
+#### `EarningsEvent`
+
+```ts
+interface EarningsEvent {
+  symbol: string; date: Date; period?: string;
+  epsActual?: number; epsEstimate?: number; epsSurprisePct?: number;
+  revenueActual?: number; revenueEstimate?: number;
+  provider: string; raw?: unknown;
+}
+```
+
+#### `DividendEvent`
+
+```ts
+interface DividendEvent {
+  symbol: string; exDate: Date; payDate?: Date; declaredDate?: Date;
+  amount: number; currency: string;
+  frequency?: "annual" | "semi-annual" | "quarterly" | "monthly" | "irregular";
+  provider: string; raw?: unknown;
+}
+```
+
+#### `SplitEvent`
+
+```ts
+interface SplitEvent {
+  symbol: string; date: Date;
+  ratio: number;      // 4-for-1 forward split → 4; 1-for-10 reverse → 0.1
+  description?: string;
+  provider: string; raw?: unknown;
+}
+```
+
+### Other changes
+
+- `CacheMethod` extended with `"earnings" | "dividends" | "splits"` (TTLs: earnings 1 h, dividends/splits 24 h)
+- All new types exported from main `market-feed` entry point
+- 51 new unit tests (392 total across 21 test files)
+- 9 tsup library entry points + 1 CLI binary: `index`, `calendar`, `stream`, `consensus`, `indicators`, `portfolio`, `ws`, `backtest`, `alerts`, `cli`
+
+### Breaking changes
+
+None. All v0.4.0 imports continue to work unchanged.
+
+---
+
 ## 0.4.0 — 2026-03-11
 
 ### New module

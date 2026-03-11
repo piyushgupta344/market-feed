@@ -1,0 +1,32 @@
+[
+  {
+    "actual": 1.53,
+    "estimate": 1.50,
+    "period": "2024-06-30",
+    "quarter": 3,
+    "surprise": 0.03,
+    "surprisePercent": 2.0,
+    "symbol": "AAPL",
+    "year": 2024
+  },
+  {
+    "actual": 1.26,
+    "estimate": 1.29,
+    "period": "2024-03-31",
+    "quarter": 2,
+    "surprise": -0.03,
+    "surprisePercent": -2.33,
+    "symbol": "AAPL",
+    "year": 2024
+  },
+  {
+    "actual": 2.18,
+    "estimate": 2.10,
+    "period": "2023-12-31",
+    "quarter": 1,
+    "surprise": 0.08,
+    "surprisePercent": 3.81,
+    "symbol": "AAPL",
+    "year": 2024
+  }
+]

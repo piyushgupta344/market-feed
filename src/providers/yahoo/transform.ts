@@ -1,8 +1,11 @@
 import type { CompanyProfile } from "../../types/company.js";
+import type { DividendEvent } from "../../types/dividends.js";
+import type { EarningsEvent } from "../../types/earnings.js";
 import type { HistoricalBar } from "../../types/historical.js";
 import type { Quote } from "../../types/quote.js";
 import type { SearchResult } from "../../types/search.js";
 import type { AssetType } from "../../types/search.js";
+import type { SplitEvent } from "../../types/splits.js";
 import type { YahooChartResult, YahooQuoteSummaryResult, YahooSearchQuote } from "./types.js";
 
 const PROVIDER = "yahoo";
@@ -123,6 +126,86 @@ export function transformCompany(
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };
+}
+
+// ---------------------------------------------------------------------------
+// Earnings
+// ---------------------------------------------------------------------------
+export function transformEarnings(
+  symbol: string,
+  result: YahooQuoteSummaryResult,
+  raw?: unknown,
+): EarningsEvent[] {
+  const history = result.earningsHistory?.history;
+  if (!history || history.length === 0) return [];
+
+  return history
+    .map((entry) => {
+      const ts = entry.quarter?.raw;
+      if (ts == null) return null;
+
+      const event: EarningsEvent = {
+        symbol,
+        date: new Date(ts * 1_000),
+        ...(entry.quarter?.fmt !== undefined ? { period: entry.quarter.fmt } : {}),
+        ...(entry.epsActual?.raw !== undefined ? { epsActual: entry.epsActual.raw } : {}),
+        ...(entry.epsEstimate?.raw !== undefined ? { epsEstimate: entry.epsEstimate.raw } : {}),
+        ...(entry.surprisePercent?.raw !== undefined
+          ? { epsSurprisePct: entry.surprisePercent.raw }
+          : {}),
+        provider: PROVIDER,
+        ...(raw !== undefined ? { raw } : {}),
+      };
+      return event;
+    })
+    .filter((e): e is EarningsEvent => e !== null)
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
+}
+
+// ---------------------------------------------------------------------------
+// Dividends
+// ---------------------------------------------------------------------------
+export function transformDividends(
+  symbol: string,
+  result: YahooChartResult,
+  raw?: unknown,
+): DividendEvent[] {
+  const dividends = result.events?.dividends;
+  if (!dividends) return [];
+
+  return Object.values(dividends)
+    .map((d) => ({
+      symbol,
+      exDate: new Date(d.date * 1_000),
+      amount: d.amount,
+      currency: result.meta.currency,
+      provider: PROVIDER,
+      ...(raw !== undefined ? { raw } : {}),
+    }))
+    .sort((a, b) => b.exDate.getTime() - a.exDate.getTime());
+}
+
+// ---------------------------------------------------------------------------
+// Splits
+// ---------------------------------------------------------------------------
+export function transformSplits(
+  symbol: string,
+  result: YahooChartResult,
+  raw?: unknown,
+): SplitEvent[] {
+  const splits = result.events?.splits;
+  if (!splits) return [];
+
+  return Object.values(splits)
+    .map((s) => ({
+      symbol,
+      date: new Date(s.date * 1_000),
+      ratio: s.denominator > 0 ? s.numerator / s.denominator : s.numerator,
+      description: s.splitRatio,
+      provider: PROVIDER,
+      ...(raw !== undefined ? { raw } : {}),
+    }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,28 @@
+{
+  "status": "OK",
+  "request_id": "test-request-id",
+  "results": [
+    {
+      "ticker": "AAPL",
+      "ex_dividend_date": "2024-08-09",
+      "pay_date": "2024-08-15",
+      "declaration_date": "2024-08-01",
+      "record_date": "2024-08-12",
+      "cash_amount": 0.25,
+      "currency": "USD",
+      "frequency": 4,
+      "dividend_type": "CD"
+    },
+    {
+      "ticker": "AAPL",
+      "ex_dividend_date": "2024-05-10",
+      "pay_date": "2024-05-16",
+      "declaration_date": "2024-05-02",
+      "record_date": "2024-05-13",
+      "cash_amount": 0.25,
+      "currency": "USD",
+      "frequency": 4,
+      "dividend_type": "CD"
+    }
+  ]
+}
