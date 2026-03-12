@@ -1,6 +1,6 @@
 # WebSocket Streaming
 
-`market-feed/ws` opens a persistent WebSocket connection to Polygon.io or Finnhub and yields individual trade executions in real time. For providers without native WebSocket support (Yahoo, Alpha Vantage), it falls back to HTTP polling automatically.
+`market-feed/ws` opens a persistent WebSocket connection to Polygon.io, Finnhub, Alpaca, or Interactive Brokers TWS and yields individual trade executions in real time. For providers without native WebSocket support (Yahoo, Alpha Vantage), it falls back to HTTP polling automatically.
 
 ## Basic usage
 
@@ -66,10 +66,62 @@ controller.abort();
 |----------|-----------|-------|
 | `PolygonProvider` | Native WS | Subscribes to `T.*` trade channel; auth via JSON handshake |
 | `FinnhubProvider` | Native WS | Token in URL; per-symbol subscribe messages |
+| `AlpacaProvider` | Native WS | Free IEX or paid SIP feed; auth via `key`/`secret` JSON message |
+| `IbTwsProvider` | Native WS | Connects to local TWS/IB Gateway; streams level I market data |
 | `YahooProvider` | Polling fallback | Polls `quote()` every 5 s |
 | `AlphaVantageProvider` | Polling fallback | Same as Yahoo |
 | `TwelveDataProvider` | Polling fallback | Same as Yahoo |
 | `TiingoProvider` | Polling fallback | Same as Yahoo |
+
+### Alpaca
+
+Free Alpaca account required. [Sign up at alpaca.markets](https://alpaca.markets/)
+
+```ts
+import { AlpacaProvider } from "market-feed";
+import { connect } from "market-feed/ws";
+
+const provider = new AlpacaProvider({
+  keyId:     process.env.ALPACA_KEY_ID!,
+  secretKey: process.env.ALPACA_SECRET_KEY!,
+  feed: "iex",  // "iex" (free) or "sip" (paid, full SIP feed)
+});
+
+for await (const event of connect(provider, ["AAPL", "MSFT"])) {
+  if (event.type === "trade") {
+    console.log(`${event.trade.symbol}: $${event.trade.price}`);
+  }
+}
+```
+
+### Interactive Brokers TWS
+
+Connects to a locally running IB TWS or IB Gateway with the Client Portal API enabled. The session must be authenticated via the browser before connecting.
+
+```ts
+import { IbTwsProvider } from "market-feed";
+import { connect } from "market-feed/ws";
+
+// conidMap maps symbols to IB contract IDs.
+// Look up conids at https://localhost:5000 → Contract Lookup,
+// or via GET /v1/api/iserver/secdef/search?symbol=AAPL
+const provider = new IbTwsProvider({
+  conidMap: {
+    AAPL:  265598,
+    MSFT:  272093,
+    TSLA:  76792991,
+    GOOGL: 208813719,
+  },
+  // host: "localhost",  // default
+  // port: 5000,         // TWS default (5001 for IB Gateway)
+});
+
+for await (const event of connect(provider, ["AAPL", "MSFT"])) {
+  if (event.type === "trade") {
+    console.log(`${event.trade.symbol}: $${event.trade.price}`);
+  }
+}
+```
 
 ## Options
 

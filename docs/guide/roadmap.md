@@ -13,19 +13,13 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **`market-feed/macro`** — 15 FRED economic indicator series (see [Macro Indicators](/modules/macro))
 - **Screener `volume_vs_avg`** — `volume_vs_avg_above` / `volume_vs_avg_below` criteria
 - **Streaming fundamentals** — `includeFundamentals: true` option on `watch()` emits `earnings_released` events when a new quarterly report is detected (see [Stream](/modules/stream))
+- **More WebSocket providers** — `AlpacaProvider` (IEX/SIP feed) and `IbTwsProvider` (local TWS/IB Gateway) added to `market-feed/ws` (see [WebSocket Streaming](/modules/ws))
 
 ## Near-term
 
 ---
 
 ## Medium-term
-
-### More WebSocket providers
-
-The `market-feed/ws` module currently supports Polygon.io and Finnhub. Planned additions:
-
-- **Alpaca** — commission-free brokerage with real-time data WebSocket
-- **Interactive Brokers TWS** — institutional-grade level II data
 
 ### Level II order book
 

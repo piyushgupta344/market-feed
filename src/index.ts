@@ -21,6 +21,12 @@ export type { TwelveDataProviderOptions } from "./providers/twelve-data/index.js
 export { TiingoProvider } from "./providers/tiingo/index.js";
 export type { TiingoProviderOptions } from "./providers/tiingo/index.js";
 
+export { AlpacaProvider } from "./providers/alpaca/index.js";
+export type { AlpacaProviderOptions } from "./providers/alpaca/index.js";
+
+export { IbTwsProvider } from "./providers/ibtws/index.js";
+export type { IbTwsProviderOptions } from "./providers/ibtws/index.js";
+
 // Cache
 export { MemoryCacheDriver } from "./cache/memory.js";
 export type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";

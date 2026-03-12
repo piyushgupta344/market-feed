@@ -624,3 +624,281 @@ describe("wsApiKey getter", () => {
     expect(p.wsApiKey).toBe("my-fh-key");
   });
 });
+
+// ---------------------------------------------------------------------------
+// connect() — Alpaca WebSocket adapter
+// ---------------------------------------------------------------------------
+
+describe("connect() — Alpaca WebSocket", () => {
+  beforeEach(() => MockWebSocket.reset());
+
+  function makeAlpacaProvider(feed: "iex" | "sip" = "iex") {
+    return {
+      name: "alpaca" as const,
+      feed,
+      wsApiKey: "AK_TEST",
+      wsApiSecret: "SK_TEST",
+      quote: vi.fn(),
+      historical: vi.fn(),
+      search: vi.fn(),
+    };
+  }
+
+  it("connects to the correct IEX feed URL", () => {
+    const provider = makeAlpacaProvider("iex");
+    const controller = new AbortController();
+    connect(provider, ["AAPL"], { wsImpl: WS_IMPL, signal: controller.signal }).next();
+    expect(MockWebSocket.latest.url).toBe("wss://stream.data.alpaca.markets/v2/iex");
+    controller.abort();
+  });
+
+  it("connects to the SIP feed URL when configured", () => {
+    const provider = makeAlpacaProvider("sip");
+    const controller = new AbortController();
+    connect(provider, ["AAPL"], { wsImpl: WS_IMPL, signal: controller.signal }).next();
+    expect(MockWebSocket.latest.url).toBe("wss://stream.data.alpaca.markets/v2/sip");
+    controller.abort();
+  });
+
+  it("sends auth after connected message", () => {
+    const provider = makeAlpacaProvider();
+    const controller = new AbortController();
+    connect(provider, ["AAPL"], { wsImpl: WS_IMPL, signal: controller.signal }).next();
+
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "connected" }]));
+
+    expect(ws.sentMessages).toContainEqual(
+      JSON.stringify({ action: "auth", key: "AK_TEST", secret: "SK_TEST" }),
+    );
+    controller.abort();
+  });
+
+  it("emits connected and subscribes after authenticated", async () => {
+    const provider = makeAlpacaProvider();
+    const controller = new AbortController();
+    const gen = connect(provider, ["AAPL", "MSFT"], { wsImpl: WS_IMPL, signal: controller.signal });
+
+    const p = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "connected" }]));
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "authenticated" }]));
+
+    const event = await p;
+    expect(event.value).toMatchObject({ type: "connected", provider: "alpaca" });
+
+    const subMsg = ws.sentMessages.find((m) => m.includes("subscribe"));
+    expect(subMsg).toBeDefined();
+    const parsed = JSON.parse(subMsg!) as { action: string; trades: string[] };
+    expect(parsed.action).toBe("subscribe");
+    expect(parsed.trades).toContain("AAPL");
+    expect(parsed.trades).toContain("MSFT");
+
+    controller.abort();
+  });
+
+  it("emits trade events from T messages", async () => {
+    const provider = makeAlpacaProvider();
+    const controller = new AbortController();
+    const gen = connect(provider, ["AAPL"], { wsImpl: WS_IMPL, signal: controller.signal });
+
+    // connected
+    const p1 = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "connected" }]));
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "authenticated" }]));
+    await p1;
+
+    // trade
+    const p2 = gen.next();
+    ws.simulateMessage(
+      JSON.stringify([{ T: "t", S: "AAPL", p: 189.84, s: 100, t: "2024-07-01T14:00:00.000Z", x: "D" }]),
+    );
+    const e2 = await p2;
+    expect(e2.value).toMatchObject({ type: "trade" });
+    if (e2.value?.type === "trade") {
+      expect(e2.value.trade.symbol).toBe("AAPL");
+      expect(e2.value.trade.price).toBe(189.84);
+      expect(e2.value.trade.size).toBe(100);
+    }
+
+    controller.abort();
+  });
+
+  it("closes queue on auth error message", async () => {
+    const provider = makeAlpacaProvider();
+    const gen = connect(provider, ["AAPL"], { wsImpl: WS_IMPL });
+
+    const p = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "connected" }]));
+    ws.simulateMessage(JSON.stringify([{ T: "error", code: 403, msg: "forbidden" }]));
+
+    await expect(p).rejects.toThrow("forbidden");
+  });
+
+  it("emits disconnected on unexpected close", async () => {
+    const provider = makeAlpacaProvider();
+    const controller = new AbortController();
+    const gen = connect(provider, ["AAPL"], {
+      wsImpl: WS_IMPL,
+      signal: controller.signal,
+      reconnectDelayMs: 0,
+    });
+
+    const p1 = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "connected" }]));
+    ws.simulateMessage(JSON.stringify([{ T: "success", msg: "authenticated" }]));
+    await p1;
+
+    const p2 = gen.next();
+    ws.simulateClose(1006, "Abnormal closure");
+
+    const e2 = await p2;
+    expect(e2.value).toMatchObject({ type: "disconnected", provider: "alpaca", reconnecting: true });
+
+    controller.abort();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// connect() — IB TWS WebSocket adapter
+// ---------------------------------------------------------------------------
+
+describe("connect() — IB TWS WebSocket", () => {
+  beforeEach(() => MockWebSocket.reset());
+
+  function makeIbTwsProvider() {
+    return {
+      name: "ibtws" as const,
+      conidMap: { AAPL: 265598, MSFT: 272093 } as Record<string, number>,
+      wsBaseUrl: "ws://localhost:5000/v1/api/ws",
+      quote: vi.fn(),
+      historical: vi.fn(),
+      search: vi.fn(),
+    };
+  }
+
+  it("connects to localhost TWS URL", () => {
+    const provider = makeIbTwsProvider();
+    const controller = new AbortController();
+    connect(provider, ["AAPL"], { wsImpl: WS_IMPL, signal: controller.signal }).next();
+    expect(MockWebSocket.latest.url).toBe("ws://localhost:5000/v1/api/ws");
+    controller.abort();
+  });
+
+  it("emits connected and subscribes to conids after authenticated sts", async () => {
+    const provider = makeIbTwsProvider();
+    const controller = new AbortController();
+    const gen = connect(provider, ["AAPL", "MSFT"], { wsImpl: WS_IMPL, signal: controller.signal });
+
+    const p = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(
+      JSON.stringify({ topic: "sts", args: { authenticated: true, competing: false, message: "" } }),
+    );
+
+    const event = await p;
+    expect(event.value).toMatchObject({ type: "connected", provider: "ibtws" });
+
+    // Should have sent smd+ subscription for both conids
+    const subMsgs = ws.sentMessages.filter((m) => m.startsWith("smd+"));
+    expect(subMsgs.some((m) => m.startsWith("smd+265598+"))).toBe(true); // AAPL
+    expect(subMsgs.some((m) => m.startsWith("smd+272093+"))).toBe(true); // MSFT
+
+    controller.abort();
+  });
+
+  it("closes queue when sts reports unauthenticated", async () => {
+    const provider = makeIbTwsProvider();
+    const gen = connect(provider, ["AAPL"], { wsImpl: WS_IMPL });
+
+    const p = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(
+      JSON.stringify({ topic: "sts", args: { authenticated: false, competing: false, message: "" } }),
+    );
+
+    await expect(p).rejects.toThrow("not authenticated");
+  });
+
+  it("emits trade events from smd market data updates", async () => {
+    const provider = makeIbTwsProvider();
+    const controller = new AbortController();
+    const gen = connect(provider, ["AAPL"], { wsImpl: WS_IMPL, signal: controller.signal });
+
+    // connected
+    const p1 = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(
+      JSON.stringify({ topic: "sts", args: { authenticated: true, competing: false, message: "" } }),
+    );
+    await p1;
+
+    // market data update for AAPL conid 265598
+    const p2 = gen.next();
+    ws.simulateMessage(
+      JSON.stringify({ topic: "smd+265598", "31": "189.84", "7702": "100", _updated: 1712345678000 }),
+    );
+    const e2 = await p2;
+
+    expect(e2.value).toMatchObject({ type: "trade" });
+    if (e2.value?.type === "trade") {
+      expect(e2.value.trade.symbol).toBe("AAPL");
+      expect(e2.value.trade.price).toBe(189.84);
+      expect(e2.value.trade.size).toBe(100);
+    }
+
+    controller.abort();
+  });
+
+  it("skips smd updates for unknown conids", async () => {
+    const provider = makeIbTwsProvider();
+    const controller = new AbortController();
+    const gen = connect(provider, ["AAPL"], { wsImpl: WS_IMPL, signal: controller.signal });
+
+    const p1 = gen.next();
+    const ws = MockWebSocket.latest;
+    ws.simulateMessage(
+      JSON.stringify({ topic: "sts", args: { authenticated: true, competing: false, message: "" } }),
+    );
+    await p1;
+
+    // conid 99999 is not in conidMap — should not emit
+    ws.simulateMessage(JSON.stringify({ topic: "smd+99999", "31": "50.00" }));
+
+    // A real AAPL update follows — should be the next event
+    const p2 = gen.next();
+    ws.simulateMessage(
+      JSON.stringify({ topic: "smd+265598", "31": "189.84", "7702": "50" }),
+    );
+    const e2 = await p2;
+    expect(e2.value).toMatchObject({ type: "trade" });
+    if (e2.value?.type === "trade") {
+      expect(e2.value.trade.symbol).toBe("AAPL");
+    }
+
+    controller.abort();
+  });
+
+  it("AlpacaProvider exposes wsApiKey and wsApiSecret", async () => {
+    const { AlpacaProvider } = await import("../../../src/providers/alpaca/index.js");
+    const p = new AlpacaProvider({ keyId: "AK123", secretKey: "SK456" });
+    expect(p.wsApiKey).toBe("AK123");
+    expect(p.wsApiSecret).toBe("SK456");
+    expect(p.feed).toBe("iex");
+  });
+
+  it("IbTwsProvider wsBaseUrl uses ws:// by default", async () => {
+    const { IbTwsProvider } = await import("../../../src/providers/ibtws/index.js");
+    const p = new IbTwsProvider({ conidMap: { AAPL: 265598 } });
+    expect(p.wsBaseUrl).toBe("ws://localhost:5000/v1/api/ws");
+  });
+
+  it("IbTwsProvider wsBaseUrl uses wss:// when secure: true", async () => {
+    const { IbTwsProvider } = await import("../../../src/providers/ibtws/index.js");
+    const p = new IbTwsProvider({ conidMap: { AAPL: 265598 }, secure: true, port: 5001 });
+    expect(p.wsBaseUrl).toBe("wss://localhost:5001/v1/api/ws");
+  });
+});
