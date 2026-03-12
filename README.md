@@ -54,7 +54,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Multi-runtime** — Node 18+, Bun 1+, Deno 2+, Cloudflare Workers
 - **Escape hatch** — pass `{ raw: true }` to get the original provider response
 - **Exchange calendar** — synchronous, offline-capable holiday and session detection for 8 exchanges + crypto (24/7)
-- **WebSocket streaming** — `market-feed/ws` opens a persistent WS connection to Polygon or Finnhub; polling fallback for Yahoo/AV
+- **WebSocket streaming** — `market-feed/ws` opens a persistent WS connection to Polygon, Finnhub, Alpaca, or IB TWS; polling fallback for others; `getOrderBook()` for top-of-book bid/ask
 - **Observable stream** — market-hours-aware HTTP polling that pauses overnight and on weekends; emits `earnings_released` events when new quarterly reports are detected (`includeFundamentals: true`)
 - **Price consensus** — query all providers in parallel, get a weighted mean with confidence score
 - **Technical indicators** — SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic — pure functions, zero deps

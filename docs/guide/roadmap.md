@@ -14,6 +14,7 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **Screener `volume_vs_avg`** — `volume_vs_avg_above` / `volume_vs_avg_below` criteria
 - **Streaming fundamentals** — `includeFundamentals: true` option on `watch()` emits `earnings_released` events when a new quarterly report is detected (see [Stream](/modules/stream))
 - **More WebSocket providers** — `AlpacaProvider` (IEX/SIP feed) and `IbTwsProvider` (local TWS/IB Gateway) added to `market-feed/ws` (see [WebSocket Streaming](/modules/ws))
+- **Level II order book** — `getOrderBook()` async generator for top-of-book bid/ask updates from Polygon, Alpaca, IB TWS, or polling fallback (see [WebSocket Streaming](/modules/ws#level-ii-order-book))
 
 ## Near-term
 
