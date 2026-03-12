@@ -89,6 +89,32 @@ Emitted when multiple providers return prices that differ by more than `divergen
 }
 ```
 
+### `earnings_released`
+
+```ts
+{
+  type: "earnings_released";
+  symbol: string;
+  earnings: EarningsEvent;  // the newly detected quarterly report
+  timestamp: Date;
+}
+```
+
+Emitted when the stream detects a new quarterly earnings report for a watched symbol. Only emitted when `includeFundamentals: true`. Requires a provider with `earnings()` support (Yahoo Finance, Polygon).
+
+```ts
+for await (const event of watch(feed, ["AAPL", "MSFT"], {
+  includeFundamentals: true,
+})) {
+  if (event.type === "earnings_released") {
+    console.log(
+      `${event.symbol} new earnings: EPS ${event.earnings.epsActual} ` +
+      `(est. ${event.earnings.epsEstimate})`
+    );
+  }
+}
+```
+
 ## Options
 
 ```ts
@@ -116,6 +142,20 @@ interface WatchOptions {
 
   /** AbortSignal to stop the stream. */
   signal?: AbortSignal;
+
+  /**
+   * When true, monitors watched symbols for new quarterly earnings reports
+   * and emits `earnings_released` events when a newer period is detected.
+   * Default: false
+   */
+  includeFundamentals?: boolean;
+
+  /**
+   * How often to check for new earnings data, in milliseconds.
+   * Only relevant when `includeFundamentals: true`.
+   * Default: 900_000 (15 minutes)
+   */
+  fundamentalsIntervalMs?: number;
 }
 ```
 

@@ -370,4 +370,110 @@ describe("watch()", () => {
     const result = await gen.next();
     expect(result.done).toBe(true);
   });
+
+  // ---------------------------------------------------------------------------
+  // Streaming fundamentals — earnings_released events
+  // ---------------------------------------------------------------------------
+
+  describe("includeFundamentals", () => {
+    beforeEach(() => {
+      vi.useRealTimers(); // override parent's fake timers — sleep(0) resolves naturally
+    });
+    afterEach(() => {
+      vi.useFakeTimers(); // restore fake timers for parent describe's afterEach
+    });
+
+    function makeFeedWithEarnings(
+      earningsSequence: Array<{ date: Date; epsActual?: number }[]>,
+    ): MarketFeed {
+      let callCount = 0;
+      const earningsFn = vi.fn().mockImplementation(async () => {
+        const result = earningsSequence[callCount] ?? [];
+        callCount++;
+        return result.map((e) => ({ symbol: "AAPL", provider: "yahoo", ...e }));
+      });
+      const base = makeFeed({});
+      return { ...base, earnings: earningsFn } as unknown as MarketFeed;
+    }
+
+    it("emits earnings_released when a newer period is detected", async () => {
+      const d1 = new Date("2024-07-01");
+      const d2 = new Date("2024-10-01"); // newer
+
+      // Call 1 (first check): returns d1 — recorded, no emit
+      // Call 2 (second check): returns d2 — d2 > d1 → emit
+      const feed = makeFeedWithEarnings([[{ date: d1 }], [{ date: d2, epsActual: 1.5 }]]);
+      const controller = new AbortController();
+
+      const gen = watch(feed, ["AAPL"], {
+        signal: controller.signal,
+        marketHoursAware: false,
+        includeFundamentals: true,
+        fundamentalsIntervalMs: 0, // check every poll
+        interval: { open: 0 },
+      });
+
+      // Collect events until we find an earnings_released or exhaust 10 events
+      const events = [];
+      for (let i = 0; i < 10; i++) {
+        const { value, done } = await gen.next();
+        if (done) break;
+        events.push(value);
+        if ((value as { type: string }).type === "earnings_released") break;
+      }
+      controller.abort();
+
+      const earningsEv = events.find((e) => (e as { type: string }).type === "earnings_released");
+      expect(earningsEv).toBeDefined();
+      expect((earningsEv as { type: string; symbol: string }).symbol).toBe("AAPL");
+      expect(
+        (earningsEv as { earnings: { date: Date } }).earnings.date.getTime(),
+      ).toBe(d2.getTime());
+    });
+
+    it("does not emit earnings_released when date is unchanged", async () => {
+      const d1 = new Date("2024-07-01");
+      const feed = makeFeedWithEarnings([[{ date: d1 }], [{ date: d1 }]]);
+      const controller = new AbortController();
+
+      const gen = watch(feed, ["AAPL"], {
+        signal: controller.signal,
+        marketHoursAware: false,
+        includeFundamentals: true,
+        fundamentalsIntervalMs: 0,
+        interval: { open: 0 },
+      });
+
+      const events = [];
+      for (let i = 0; i < 6; i++) {
+        const { value, done } = await gen.next();
+        if (done) break;
+        events.push(value);
+      }
+      controller.abort();
+
+      const earningsEv = events.find((e) => (e as { type: string }).type === "earnings_released");
+      expect(earningsEv).toBeUndefined();
+    });
+
+    it("silently ignores earnings fetch errors", async () => {
+      const earningsFn = vi.fn().mockRejectedValue(new Error("provider error"));
+      const base = makeFeed({});
+      const feed = { ...base, earnings: earningsFn } as unknown as MarketFeed;
+      const controller = new AbortController();
+
+      const gen = watch(feed, ["AAPL"], {
+        signal: controller.signal,
+        marketHoursAware: false,
+        includeFundamentals: true,
+        fundamentalsIntervalMs: 0,
+        interval: { open: 0 },
+      });
+
+      // Should not throw — just yields quote events
+      const ev1 = await gen.next();
+      controller.abort();
+      expect((ev1.value as { type: string }).type).toBe("quote");
+    });
+  });
 });
