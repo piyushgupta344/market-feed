@@ -62,6 +62,9 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Backtesting** — pure-function engine: total return, CAGR, Sharpe ratio, max drawdown, win rate, profit factor
 - **Price alerts** — async generator that fires `AlertEvent` on price/volume/change conditions, with debounce
 - **Earnings, dividends, splits** — structured historical corporate action data from Yahoo, Polygon, and Finnhub
+- **Financial statements** — income statement, balance sheet, and cash flow statement via `market-feed/fundamentals`
+- **Stock screener** — filter a universe of symbols by price, volume, market cap, 52-week range, or any custom predicate via `market-feed/screener`
+- **React hooks** — `useQuote`, `useStream`, `useAlerts` for React ≥ 18 via `market-feed/react`
 - **CLI** — `npx market-feed quote AAPL` — no install required
 - **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
 
@@ -69,7 +72,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 
 ## Subpath modules
 
-`market-feed` ships eight optional subpath modules alongside the core client.
+`market-feed` ships eleven optional subpath modules alongside the core client.
 
 ### `market-feed/ws`
 
@@ -518,6 +521,199 @@ When all `once` alerts have fired, the generator terminates automatically. Perma
 
 ---
 
+### `market-feed/fundamentals`
+
+Fetch income statements, balance sheets, and cash flow statements for any public company.
+
+```ts
+import { getFundamentals } from "market-feed/fundamentals";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+
+// Fetch all three statements in parallel — partial failure is OK
+const { incomeStatements, balanceSheets, cashFlows } = await getFundamentals(feed, "AAPL");
+
+const latest = incomeStatements[0]!;
+console.log(`Revenue:   $${(latest.revenue! / 1e9).toFixed(1)}B`);
+console.log(`Net income: $${(latest.netIncome! / 1e9).toFixed(1)}B`);
+console.log(`Diluted EPS: $${latest.dilutedEps?.toFixed(2)}`);
+
+// Quarterly statements
+const { incomeStatements: quarterly } = await getFundamentals(feed, "AAPL", {
+  quarterly: true,
+  limit: 4,
+});
+```
+
+`getFundamentals()` fires all three queries with `Promise.allSettled` — if one statement type fails, the others still return.
+
+#### `IncomeStatement`
+
+| Field | Description |
+|-------|-------------|
+| `revenue` | Total revenue |
+| `grossProfit` | Revenue − cost of revenue |
+| `operatingIncome` | Operating income (EBIT) |
+| `netIncome` | Bottom-line net income |
+| `ebitda` | EBITDA |
+| `dilutedEps` | Diluted EPS |
+
+#### `BalanceSheet`
+
+| Field | Description |
+|-------|-------------|
+| `totalAssets` | Total assets |
+| `totalLiabilities` | Total liabilities |
+| `totalStockholdersEquity` | Book value of equity |
+| `cashAndCashEquivalents` | Cash + equivalents |
+| `totalDebt` | Short + long-term debt |
+
+#### `CashFlowStatement`
+
+| Field | Description |
+|-------|-------------|
+| `operatingCashFlow` | Cash from operations |
+| `capitalExpenditures` | CapEx (negative = outflow) |
+| `freeCashFlow` | `operatingCashFlow + capitalExpenditures` |
+| `investingCashFlow` | Cash from investing |
+| `financingCashFlow` | Cash from financing |
+
+All three types include `symbol`, `date` (period end date), `periodType` (`"annual"` | `"quarterly"`), and `provider`.
+
+#### `MarketFeed` methods
+
+```ts
+feed.incomeStatements(symbol, options?)  // Promise<IncomeStatement[]>
+feed.balanceSheets(symbol, options?)     // Promise<BalanceSheet[]>
+feed.cashFlows(symbol, options?)         // Promise<CashFlowStatement[]>
+```
+
+| `FundamentalsOptions` | Default | Description |
+|-----------------------|---------|-------------|
+| `quarterly` | `false` | Return quarterly instead of annual periods |
+| `limit` | unlimited | Max number of periods to return |
+| `raw` | `false` | Include raw provider response on each object |
+
+---
+
+### `market-feed/screener`
+
+Filter a list of symbols against a set of criteria using live quote data.
+
+```ts
+import { screen } from "market-feed/screener";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+
+// Find large-caps that gained > 1.5% today on high volume
+const results = await screen(feed, ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA", "META"], {
+  criteria: [
+    { type: "market_cap_above", value: 100_000_000_000 },
+    { type: "change_pct_above", value: 1.5 },
+    { type: "volume_above",     value: 10_000_000 },
+  ],
+  limit: 5,
+});
+
+for (const r of results) {
+  console.log(`${r.symbol}: $${r.quote.price.toFixed(2)} (+${r.quote.changePercent.toFixed(2)}%)`);
+}
+```
+
+All criteria are evaluated with **AND logic** — a symbol must pass every criterion to be included.
+
+#### Criterion types
+
+| Type | Passes when |
+|------|-------------|
+| `price_above` / `price_below` | `quote.price > / < value` |
+| `change_pct_above` / `change_pct_below` | `quote.changePercent > / < value` |
+| `volume_above` / `volume_below` | `quote.volume > / < value` |
+| `market_cap_above` / `market_cap_below` | `quote.marketCap > / < value` (skips if undefined) |
+| `52w_high_pct_below` | Price is within N% of the 52-week high |
+| `52w_low_pct_above` | Price is at least N% above the 52-week low |
+| `custom` | `{ type: "custom", fn: (quote: Quote) => boolean }` |
+
+#### `ScreenerOptions`
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `criteria` | required | Array of `ScreenerCriterion` |
+| `batchSize` | all at once | Max symbols per `quote()` call |
+| `limit` | unlimited | Max results to return |
+
+`screen()` accepts any object with a `quote(symbols[]) → Quote[]` method — works with `MarketFeed`, individual providers, or a test mock.
+
+---
+
+### `market-feed/react`
+
+React hooks for live market data. Requires React ≥ 18 (peer dependency).
+
+```bash
+npm install market-feed react
+```
+
+```tsx
+import { useQuote, useStream, useAlerts } from "market-feed/react";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+
+// Poll a quote every 5 seconds
+function StockPrice({ symbol }: { symbol: string }) {
+  const { data, loading, error } = useQuote(feed, symbol);
+  if (loading) return <span>Loading…</span>;
+  if (error)   return <span>Error: {error.message}</span>;
+  return <span>{symbol}: ${data?.price.toFixed(2)}</span>;
+}
+
+// Subscribe to a live watch() stream
+function LiveFeed() {
+  const { event } = useStream(feed, ["AAPL", "MSFT", "GOOGL"]);
+  if (!event || event.type !== "quote") return null;
+  return <p>{event.symbol}: ${event.quote.price.toFixed(2)}</p>;
+}
+
+// Collect price alerts
+function AlertLog() {
+  const { events, clearEvents } = useAlerts(feed, [
+    { symbol: "AAPL", condition: { type: "price_above", threshold: 200 }, once: false },
+  ]);
+  return (
+    <ul>
+      {events.map((e, i) => (
+        <li key={i}>{e.alert.symbol} triggered @ ${e.quote.price.toFixed(2)}</li>
+      ))}
+      <button onClick={clearEvents}>Clear</button>
+    </ul>
+  );
+}
+```
+
+#### Hook reference
+
+**`useQuote(source, symbol, options?)`** — polls a quote at a regular interval.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `intervalMs` | `5000` | Poll interval in milliseconds |
+| `enabled` | `true` | Set to `false` to suspend polling |
+
+Returns `{ data: Quote \| null, loading: boolean, error: Error \| null, refetch() }`.
+
+**`useStream(feed, symbols, options?)`** — drives a `watch()` async generator. Restarts automatically when `symbols` changes; stops on unmount via an internal `AbortSignal`.
+
+Returns `{ event: StreamEvent \| null, error: Error \| null }`.
+
+**`useAlerts(feed, alerts, options?)`** — drives a `watchAlerts()` async generator. Accumulates triggered events; restarts when alert definitions change.
+
+Returns `{ events: AlertEvent[], error: Error \| null, clearEvents() }`.
+
+---
+
 ### CLI (`npx market-feed`)
 
 A zero-config CLI powered by Yahoo Finance (no API key needed). Add keys to unlock more providers.
@@ -537,6 +733,11 @@ npx market-feed company AAPL
 
 # News (JSON output)
 npx market-feed news AAPL --limit 5 --json
+
+# Corporate actions
+npx market-feed earnings AAPL
+npx market-feed dividends AAPL
+npx market-feed splits AAPL
 ```
 
 #### Options
@@ -546,6 +747,8 @@ npx market-feed news AAPL --limit 5 --json
 | `--av-key <key>` | Alpha Vantage API key |
 | `--polygon-key <key>` | Polygon.io API key |
 | `--finnhub-key <key>` | Finnhub API key |
+| `--td-key <key>` | Twelve Data API key |
+| `--tiingo-key <key>` | Tiingo API key |
 | `--json` | Output raw JSON instead of formatted tables |
 | `--limit <n>` | Limit results (default: 10) |
 | `--interval <i>` | Historical interval: `1m` `5m` `15m` `30m` `1h` `1d` `1wk` `1mo` (default: `1d`) |
@@ -601,14 +804,16 @@ console.log(profile.sector); // "Technology"
 
 ## Providers
 
-| Provider | API Key | Quote | Historical | Search | Company | News | Market Status |
-|----------|---------|:-----:|:----------:|:------:|:-------:|:----:|:-------------:|
-| **Yahoo Finance** | Not required | ✓ | ✓ | ✓ | ✓ | — | — |
+| Provider | API Key | Quote | Historical | Search | Company | News | Fundamentals |
+|----------|---------|:-----:|:----------:|:------:|:-------:|:----:|:------------:|
+| **Yahoo Finance** | Not required | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | **Alpha Vantage** | Free (25/day) | ✓ | ✓ | ✓ | ✓ | — | — |
 | **Polygon.io** | Free (delayed) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
 | **Finnhub** | Free (60/min) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| **Twelve Data** | Free (800/day) | ✓ | ✓ | ✓ | ✓ | — | — |
+| **Tiingo** | Free (1000/day) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
 
-Get free keys: [Alpha Vantage](https://www.alphavantage.co/support/#api-key) · [Polygon.io](https://polygon.io/) · [Finnhub](https://finnhub.io/)
+Get free keys: [Alpha Vantage](https://www.alphavantage.co/support/#api-key) · [Polygon.io](https://polygon.io/) · [Finnhub](https://finnhub.io/) · [Twelve Data](https://twelvedata.com/) · [Tiingo](https://www.tiingo.com/)
 
 ### Using multiple providers
 
@@ -619,6 +824,8 @@ import {
   AlphaVantageProvider,
   PolygonProvider,
   FinnhubProvider,
+  TwelveDataProvider,
+  TiingoProvider,
 } from "market-feed";
 
 const feed = new MarketFeed({
@@ -627,6 +834,8 @@ const feed = new MarketFeed({
     new AlphaVantageProvider({ apiKey: process.env.AV_KEY }),
     new PolygonProvider({ apiKey: process.env.POLYGON_KEY }),
     new FinnhubProvider({ apiKey: process.env.FINNHUB_KEY }),
+    new TwelveDataProvider({ apiKey: process.env.TD_KEY }),
+    new TiingoProvider({ apiKey: process.env.TIINGO_KEY }),
   ],
   fallback: true, // auto-try next provider on failure
 });
@@ -646,6 +855,12 @@ The default LRU cache stores responses in memory with sensible TTLs:
 | `news` | 5 minutes |
 | `search` | 10 minutes |
 | `marketStatus` | 60s |
+| `earnings` | 1 hour |
+| `dividends` | 24 hours |
+| `splits` | 24 hours |
+| `incomeStatements` | 24 hours |
+| `balanceSheets` | 24 hours |
+| `cashFlows` | 24 hours |
 
 ### Override TTLs
 
@@ -734,6 +949,11 @@ feed.dividends(symbol: string, options?: DividendOptions): Promise<DividendEvent
 
 // Stock split history
 feed.splits(symbol: string, options?: SplitOptions): Promise<SplitEvent[]>
+
+// Financial statements
+feed.incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]>
+feed.balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]>
+feed.cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]>
 
 // Cache management
 feed.clearCache(): Promise<void>
@@ -834,7 +1054,7 @@ pnpm test
 
 ## Disclaimer
 
-This library is not affiliated with or endorsed by Yahoo Finance, Alpha Vantage, Polygon.io, or Finnhub. Data is provided for informational purposes only and should not be used as the sole basis for investment decisions.
+This library is not affiliated with or endorsed by Yahoo Finance, Alpha Vantage, Polygon.io, Finnhub, Twelve Data, or Tiingo. Data is provided for informational purposes only and should not be used as the sole basis for investment decisions.
 
 ---
 
