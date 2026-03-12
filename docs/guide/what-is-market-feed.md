@@ -1,6 +1,6 @@
 # What is market-feed?
 
-**market-feed** is a TypeScript library that provides a unified interface to free financial market data APIs.
+**market-feed** is a TypeScript library that provides a unified interface to free financial market data APIs — plus a growing toolkit of analysis and UI utilities built on top of it.
 
 ## The problem
 
@@ -35,7 +35,7 @@ const quote = await feed.quote("AAPL");
 console.log(quote.price); // always a number, always the same field name
 ```
 
-One interface. Three providers. Cache, retry, fallback — all built in.
+One interface. Six providers. Cache, retry, fallback — all built in.
 
 ## Design goals
 
@@ -46,10 +46,26 @@ One interface. Three providers. Cache, retry, fallback — all built in.
 | **Strict TypeScript** | No `any`. Full inference. Works with `strict: true` |
 | **Smart defaults** | Works out-of-the-box with Yahoo Finance — no API key required |
 | **Transparent** | `raw: true` exposes the original provider response when you need it |
+| **Modular** | Eleven optional subpath modules — import only what you use |
+
+## Beyond the core client
+
+market-feed ships a full analysis toolkit as opt-in subpath modules:
+
+- **[Exchange Calendar](/modules/calendar)** — synchronous, offline-capable session and holiday detection for 8 exchanges + crypto
+- **[HTTP Polling Stream](/modules/stream)** — market-hours-aware async generator that pauses overnight and on weekends
+- **[WebSocket Streaming](/modules/ws)** — true tick-by-tick trade data from Polygon and Finnhub
+- **[Price Consensus](/modules/consensus)** — query all providers in parallel, get a statistically weighted result
+- **[Technical Indicators](/modules/indicators)** — SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic
+- **[Portfolio](/modules/portfolio)** — track positions and compute live P&L
+- **[Backtesting](/modules/backtest)** — test entry/exit strategies against historical data
+- **[Price Alerts](/modules/alerts)** — fire events when price, change%, or volume conditions are met
+- **[Fundamentals](/modules/fundamentals)** — income statements, balance sheets, cash flow statements
+- **[Stock Screener](/modules/screener)** — filter a universe of symbols by any criteria
+- **[React Hooks](/modules/react)** — `useQuote`, `useStream`, `useAlerts` for React ≥ 18
 
 ## What market-feed is NOT
 
-- A **real-time streaming** library (use WebSockets or SSE for that)
 - A **paid data service** — it wraps free APIs that have rate limits and data delays
 - A browser library — financial APIs block CORS; run market-feed server-side
 - A **trading platform** — the data is for informational use only

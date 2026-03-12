@@ -4,7 +4,7 @@ layout: home
 hero:
   name: "market-feed"
   text: "Unified financial market data"
-  tagline: One TypeScript client for Yahoo Finance, Alpha Vantage & Polygon.io — with caching and automatic fallback.
+  tagline: One TypeScript client for Yahoo Finance, Alpha Vantage, Polygon.io, Finnhub, Twelve Data, and Tiingo — with caching, fallback, streaming, and React hooks built in.
   actions:
     - theme: brand
       text: Get Started
@@ -15,8 +15,8 @@ hero:
 
 features:
   - icon: 🔌
-    title: Three providers, one interface
-    details: Yahoo Finance (free), Alpha Vantage (25/day free), and Polygon.io (delayed free). All return the same Quote, HistoricalBar, and CompanyProfile shapes.
+    title: Six providers, one interface
+    details: Yahoo Finance (free), Alpha Vantage, Polygon.io, Finnhub, Twelve Data, and Tiingo. All return the same Quote, HistoricalBar, and CompanyProfile shapes regardless of which provider answers.
 
   - icon: ⚡
     title: Built-in LRU cache
@@ -24,19 +24,27 @@ features:
 
   - icon: 🔄
     title: Automatic failover
-    details: Configure a provider chain and market-feed will silently try the next one if the first fails or hits a rate limit.
+    details: Configure a provider chain and market-feed silently tries the next one if the first fails or hits a rate limit — no code changes needed.
+
+  - icon: 📡
+    title: Real-time streaming
+    details: market-feed/ws delivers tick-by-tick WebSocket trade data from Polygon and Finnhub. market-feed/stream provides market-hours-aware HTTP polling that pauses overnight.
+
+  - icon: 📊
+    title: Analysis toolkit
+    details: Technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic), portfolio P&L tracking, backtesting engine, price alerts, fundamentals, and stock screener — all in one package.
+
+  - icon: ⚛️
+    title: React hooks
+    details: useQuote, useStream, and useAlerts bring live market data directly into your React components with a single import. Requires React ≥ 18.
 
   - icon: 🦾
     title: Strict TypeScript
-    details: No any. Every response is fully typed with complete autocomplete. Works the same in Node 18, Bun, Deno, and Cloudflare Workers.
+    details: No any. Every response is fully typed with complete autocomplete. Works in Node 18+, Bun, Deno, and Cloudflare Workers.
 
   - icon: 📦
     title: Zero production dependencies
-    details: Uses only the native fetch API. 38 KB ESM bundle. Tree-shakable — import only the providers you need.
-
-  - icon: 🔓
-    title: Escape hatch
-    details: Pass { raw: true } to any method to get the original provider response alongside the normalised data.
+    details: Uses only the native fetch API. Tree-shakable subpath exports — import only what you need. React is an optional peer dependency.
 ---
 
 ## Quickstart
@@ -48,7 +56,7 @@ npm install market-feed
 ```ts
 import { MarketFeed } from "market-feed";
 
-const feed = new MarketFeed(); // zero-config, Yahoo Finance, no API key
+const feed = new MarketFeed(); // zero-config — Yahoo Finance, no API key needed
 
 const quote = await feed.quote("AAPL");
 console.log(`${quote.symbol}: $${quote.price.toFixed(2)}`);
@@ -56,3 +64,20 @@ console.log(`${quote.symbol}: $${quote.price.toFixed(2)}`);
 ```
 
 That's it. No API keys, no boilerplate.
+
+## Subpath modules
+
+| Import | Description |
+|--------|-------------|
+| `market-feed` | Core client + all six providers |
+| `market-feed/calendar` | Offline exchange calendar for 8 markets + crypto |
+| `market-feed/stream` | Market-hours-aware HTTP polling async generator |
+| `market-feed/ws` | WebSocket streaming from Polygon / Finnhub |
+| `market-feed/consensus` | Parallel multi-provider weighted price consensus |
+| `market-feed/indicators` | SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic |
+| `market-feed/portfolio` | Live P&L and unrealised gains tracking |
+| `market-feed/backtest` | Pure-function backtesting engine |
+| `market-feed/alerts` | Price / volume alert async generator |
+| `market-feed/fundamentals` | Income statements, balance sheets, cash flows |
+| `market-feed/screener` | Filter symbols by price, volume, market cap, and more |
+| `market-feed/react` | `useQuote`, `useStream`, `useAlerts` hooks (React ≥ 18) |
