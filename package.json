@@ -104,6 +104,11 @@
       "types": "./dist/react.d.ts",
       "import": "./dist/react.js",
       "require": "./dist/react.cjs"
+    },
+    "./options": {
+      "types": "./dist/options.d.ts",
+      "import": "./dist/options.js",
+      "require": "./dist/options.cjs"
     }
   },
   "peerDependencies": {

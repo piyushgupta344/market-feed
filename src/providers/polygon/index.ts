@@ -10,6 +10,7 @@ import type {
 } from "../../types/fundamentals.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { NewsItem, NewsOptions } from "../../types/news.js";
+import type { OptionChain, OptionChainOptions } from "../../types/options.js";
 import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
 import type { SearchOptions, SearchResult } from "../../types/search.js";
@@ -17,6 +18,7 @@ import type { SplitEvent, SplitOptions } from "../../types/splits.js";
 import { RateLimiter } from "../../utils/rate-limiter.js";
 import { normalise } from "../../utils/symbol.js";
 import {
+  buildOptionChain,
   transformBalanceSheet,
   transformCashFlowStatement,
   transformCompany,
@@ -24,6 +26,7 @@ import {
   transformHistoricalBar,
   transformIncomeStatement,
   transformNews,
+  transformOptionContract,
   transformQuote,
   transformSearch,
   transformSplit,
@@ -33,6 +36,7 @@ import type {
   PolygonDividendsResponse,
   PolygonFinancialsResponse,
   PolygonNewsResponse,
+  PolygonOptionsSnapshotResponse,
   PolygonSnapshotResponse,
   PolygonSplitsResponse,
   PolygonTickerDetailsResponse,
@@ -251,6 +255,40 @@ export class PolygonProvider implements MarketProvider {
     this.assertSuccess(data as { status: string; error?: string });
 
     return (data.results ?? []).map((s) => transformSplit(s, options?.raw ? s : undefined));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Options chain
+  // ---------------------------------------------------------------------------
+
+  async optionChain(symbol: string, options?: OptionChainOptions): Promise<OptionChain> {
+    this.limiter.consume();
+
+    const s = normalise(symbol);
+    const limit = options?.limit ?? 50;
+
+    const params: Record<string, string | number | boolean> = {
+      limit,
+      apiKey: this.options.apiKey,
+    };
+    if (options?.expiry) params["expiration_date"] = options.expiry;
+    if (options?.strike !== undefined) params["strike_price"] = options.strike;
+    if (options?.strikeLow !== undefined) params["strike_price.gte"] = options.strikeLow;
+    if (options?.strikeHigh !== undefined) params["strike_price.lte"] = options.strikeHigh;
+    if (options?.type) params["contract_type"] = options.type;
+
+    const data = await this.http.get<PolygonOptionsSnapshotResponse>(
+      `/v3/snapshot/options/${s}`,
+      { params },
+    );
+
+    this.assertSuccess(data as { status: string; error?: string });
+
+    const contracts = (data.results ?? []).map((snap) =>
+      transformOptionContract(snap, s, options?.raw ? snap : undefined),
+    );
+
+    return buildOptionChain(contracts, s);
   }
 
   // ---------------------------------------------------------------------------

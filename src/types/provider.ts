@@ -1,4 +1,5 @@
 import type { CompanyOptions, CompanyProfile } from "./company.js";
+import type { OptionChain, OptionChainOptions } from "./options.js";
 import type { DividendEvent, DividendOptions } from "./dividends.js";
 import type { EarningsEvent, EarningsOptions } from "./earnings.js";
 import type {
@@ -85,4 +86,9 @@ export interface MarketProvider {
    * Fetch historical cash flow statements (annual or quarterly). Optional.
    */
   cashFlows?(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]>;
+
+  /**
+   * Fetch an options chain for a symbol. Optional.
+   */
+  optionChain?(symbol: string, options?: OptionChainOptions): Promise<OptionChain>;
 }

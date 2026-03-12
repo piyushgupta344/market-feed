@@ -14,6 +14,7 @@ import type {
 import type { HistoricalBar, HistoricalOptions } from "./types/historical.js";
 import type { MarketStatus, MarketStatusOptions } from "./types/market.js";
 import type { NewsItem, NewsOptions } from "./types/news.js";
+import type { OptionChain, OptionChainOptions } from "./types/options.js";
 import type { MarketProvider } from "./types/provider.js";
 import type { Quote, QuoteOptions } from "./types/quote.js";
 import type { SearchOptions, SearchResult } from "./types/search.js";
@@ -52,6 +53,7 @@ const DEFAULT_TTLS: Record<CacheMethod, number> = {
   incomeStatements: 86400,
   balanceSheets: 86400,
   cashFlows: 86400,
+  optionChain: 60,
 };
 
 /**
@@ -326,6 +328,25 @@ export class MarketFeed {
     });
 
     await this.setCache(cacheKey, result, "cashFlows");
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // optionChain
+  // ---------------------------------------------------------------------------
+
+  async optionChain(symbol: string, options?: OptionChainOptions): Promise<OptionChain> {
+    const cacheKey = `optionChain:${symbol}:${options?.expiry ?? ""}:${options?.type ?? ""}:${options?.strike ?? ""}`;
+    const cached = await this.getCache<OptionChain>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.withFallback("optionChain", (provider) => {
+      if (!provider.optionChain)
+        throw new UnsupportedOperationError(provider.name, "optionChain");
+      return provider.optionChain(symbol, options);
+    });
+
+    await this.setCache(cacheKey, result, "optionChain");
     return result;
   }
 

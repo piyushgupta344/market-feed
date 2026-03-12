@@ -9,6 +9,7 @@ export type { DividendEvent, DividendFrequency, DividendOptions } from "./divide
 export type { EarningsEvent, EarningsOptions } from "./earnings.js";
 export type { HistoricalBar, HistoricalInterval, HistoricalOptions } from "./historical.js";
 export type { MarketStatus, MarketStatusOptions, TradingSession } from "./market.js";
+export type { OptionChain, OptionChainOptions, OptionContract } from "./options.js";
 export type { NewsItem, NewsOptions } from "./news.js";
 export type { MarketProvider } from "./provider.js";
 export type { Quote, QuoteOptions } from "./quote.js";

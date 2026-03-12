@@ -2,6 +2,7 @@ import type { CompanyProfile } from "../../types/company.js";
 import type { DividendEvent, DividendFrequency } from "../../types/dividends.js";
 import type { BalanceSheet, CashFlowStatement, IncomeStatement } from "../../types/fundamentals.js";
 import type { HistoricalBar } from "../../types/historical.js";
+import type { OptionChain, OptionContract } from "../../types/options.js";
 import type { NewsItem } from "../../types/news.js";
 import type { Quote } from "../../types/quote.js";
 import type { AssetType, SearchResult } from "../../types/search.js";
@@ -11,6 +12,7 @@ import type {
   PolygonDividend,
   PolygonFinancialStatement,
   PolygonNewsArticle,
+  PolygonOptionSnapshot,
   PolygonSnapshotTicker,
   PolygonSplit,
   PolygonTicker,
@@ -293,6 +295,58 @@ export function transformCashFlowStatement(
     ...(freeCashFlow !== undefined ? { freeCashFlow } : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Options chain
+// ---------------------------------------------------------------------------
+
+export function transformOptionContract(
+  snap: PolygonOptionSnapshot,
+  underlyingSymbol: string,
+  raw?: unknown,
+): OptionContract {
+  const d = snap.details;
+  return {
+    ticker: d.ticker,
+    underlyingSymbol: underlyingSymbol.toUpperCase(),
+    type: d.contract_type,
+    strike: d.strike_price,
+    expiry: new Date(d.expiration_date),
+    style: d.exercise_style,
+    sharesPerContract: d.shares_per_contract,
+    ...(snap.last_quote?.bid !== undefined ? { bid: snap.last_quote.bid } : {}),
+    ...(snap.last_quote?.ask !== undefined ? { ask: snap.last_quote.ask } : {}),
+    ...(snap.last_quote?.midpoint !== undefined ? { midpoint: snap.last_quote.midpoint } : {}),
+    ...(snap.last_trade?.price !== undefined ? { lastPrice: snap.last_trade.price } : {}),
+    ...(snap.day?.volume !== undefined ? { volume: snap.day.volume } : {}),
+    ...(snap.open_interest !== undefined ? { openInterest: snap.open_interest } : {}),
+    ...(snap.implied_volatility !== undefined
+      ? { impliedVolatility: snap.implied_volatility }
+      : {}),
+    ...(snap.greeks?.delta !== undefined ? { delta: snap.greeks.delta } : {}),
+    ...(snap.greeks?.gamma !== undefined ? { gamma: snap.greeks.gamma } : {}),
+    ...(snap.greeks?.theta !== undefined ? { theta: snap.greeks.theta } : {}),
+    ...(snap.greeks?.vega !== undefined ? { vega: snap.greeks.vega } : {}),
+    ...(snap.day?.open !== undefined ? { open: snap.day.open } : {}),
+    ...(snap.day?.high !== undefined ? { high: snap.day.high } : {}),
+    ...(snap.day?.low !== undefined ? { low: snap.day.low } : {}),
+    ...(snap.day?.close !== undefined ? { close: snap.day.close } : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function buildOptionChain(
+  contracts: OptionContract[],
+  underlyingSymbol: string,
+): OptionChain {
+  return {
+    underlyingSymbol: underlyingSymbol.toUpperCase(),
+    calls: contracts.filter((c) => c.type === "call"),
+    puts: contracts.filter((c) => c.type === "put"),
+    fetchedAt: new Date(),
   };
 }
 

@@ -181,6 +181,57 @@ export interface PolygonSplit {
 }
 
 // ---------------------------------------------------------------------------
+// Options chain snapshot
+// v3/snapshot/options/{underlyingAsset}
+// ---------------------------------------------------------------------------
+export interface PolygonOptionsSnapshotResponse {
+  status: string;
+  results?: PolygonOptionSnapshot[];
+  next_url?: string;
+  error?: string;
+  message?: string;
+}
+
+export interface PolygonOptionSnapshot {
+  break_even_price?: number;
+  day?: {
+    open?: number;
+    high?: number;
+    low?: number;
+    close?: number;
+    volume?: number;
+    vwap?: number;
+  };
+  details: {
+    contract_type: "call" | "put";
+    exercise_style: "american" | "european";
+    expiration_date: string;
+    shares_per_contract: number;
+    strike_price: number;
+    ticker: string;
+  };
+  greeks?: {
+    delta?: number;
+    gamma?: number;
+    theta?: number;
+    vega?: number;
+  };
+  implied_volatility?: number;
+  last_quote?: {
+    ask?: number;
+    ask_size?: number;
+    bid?: number;
+    bid_size?: number;
+    midpoint?: number;
+  };
+  last_trade?: {
+    price?: number;
+    size?: number;
+  };
+  open_interest?: number;
+}
+
+// ---------------------------------------------------------------------------
 // Financials (income statement, balance sheet, cash flow)
 // vX/reference/financials
 // ---------------------------------------------------------------------------
