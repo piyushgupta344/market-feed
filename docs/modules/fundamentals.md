@@ -142,6 +142,16 @@ const tiingo = new TiingoProvider({ apiKey: process.env.TIINGO_KEY! });
 const sheets = await tiingo.balanceSheets("AAPL");
 ```
 
+### Using Twelve Data directly
+
+```ts
+import { TwelveDataProvider } from "market-feed";
+
+const td = new TwelveDataProvider({ apiKey: process.env.TD_KEY! });
+
+const flows = await td.cashFlows("AAPL", { quarterly: true, limit: 4 });
+```
+
 ## `FundamentalsOptions`
 
 ```ts
@@ -159,9 +169,9 @@ interface FundamentalsOptions {
 | Yahoo Finance | ✓ | ✓ | ✓ |
 | Polygon.io | ✓ | ✓ | ✓ |
 | Tiingo | ✓ | ✓ | ✓ |
+| Twelve Data | ✓ | ✓ | ✓ |
 | Alpha Vantage | — | — | — |
 | Finnhub | — | — | — |
-| Twelve Data | — | — | — |
 
 **Yahoo Finance** uses the `quoteSummary` API — provides annual and quarterly data for most publicly traded US equities.
 

@@ -1,0 +1,46 @@
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "exchange_timezone": "America/New_York"
+  },
+  "income_statement": {
+    "quarterly": [
+      {
+        "fiscal_date": "2024-09-30",
+        "revenue": "94930000000",
+        "cost_of_revenue": "50481000000",
+        "gross_profit": "44449000000",
+        "research_and_development": "7856000000",
+        "selling_general_and_administrative": "6043000000",
+        "operating_expenses": "58380000000",
+        "operating_income": "29550000000",
+        "ebit": "29550000000",
+        "ebitda": "32372000000",
+        "net_income": "14736000000",
+        "eps_basic": "0.97",
+        "eps_diluted": "0.97"
+      }
+    ],
+    "annual": [
+      {
+        "fiscal_date": "2023-09-30",
+        "revenue": "383285000000",
+        "cost_of_revenue": "214137000000",
+        "gross_profit": "169148000000",
+        "research_and_development": "29915000000",
+        "selling_general_and_administrative": "24932000000",
+        "operating_expenses": "261984000000",
+        "operating_income": "114301000000",
+        "ebit": "114301000000",
+        "ebitda": "125820000000",
+        "net_income": "96995000000",
+        "eps_basic": "6.16",
+        "eps_diluted": "6.13"
+      }
+    ]
+  }
+}

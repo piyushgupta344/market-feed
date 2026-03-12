@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 import { PolygonProvider } from "../../../src/providers/polygon/index.js";
 import { TiingoProvider } from "../../../src/providers/tiingo/index.js";
+import { TwelveDataProvider } from "../../../src/providers/twelve-data/index.js";
 import polygonFinancialsFixture from "../../fixtures/polygon-financials.json";
 import tiingoFundamentalsFixture from "../../fixtures/tiingo-fundamentals.json";
+import tdBalanceSheetFixture from "../../fixtures/td-balance-sheet.json";
+import tdCashFlowFixture from "../../fixtures/td-cash-flow.json";
+import tdIncomeStatementFixture from "../../fixtures/td-income-statement.json";
 
 function mockFetch(fixture: unknown, ok = true, status = 200) {
   vi.stubGlobal(
@@ -244,6 +248,144 @@ describe("TiingoProvider.cashFlows()", () => {
     expect(f.freeCashFlow).toBe(23986000000);
     expect(f.depreciation).toBe(2822000000);
     expect(f.provider).toBe("tiingo");
+    vi.unstubAllGlobals();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TwelveData — incomeStatements
+// ---------------------------------------------------------------------------
+
+describe("TwelveDataProvider.incomeStatements()", () => {
+  it("returns normalised quarterly IncomeStatement array", async () => {
+    mockFetch(tdIncomeStatementFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const stmts = await provider.incomeStatements("AAPL", { quarterly: true });
+
+    expect(stmts).toHaveLength(1);
+    const s = stmts[0]!;
+    expect(s.symbol).toBe("AAPL");
+    expect(s.date).toBeInstanceOf(Date);
+    expect(s.date.toISOString().startsWith("2024-09-30")).toBe(true);
+    expect(s.periodType).toBe("quarterly");
+    expect(s.revenue).toBe(94930000000);
+    expect(s.costOfRevenue).toBe(50481000000);
+    expect(s.grossProfit).toBe(44449000000);
+    expect(s.researchAndDevelopment).toBe(7856000000);
+    expect(s.operatingIncome).toBe(29550000000);
+    expect(s.ebit).toBe(29550000000);
+    expect(s.ebitda).toBe(32372000000);
+    expect(s.netIncome).toBe(14736000000);
+    expect(s.eps).toBe(0.97);
+    expect(s.dilutedEps).toBe(0.97);
+    expect(s.provider).toBe("twelve-data");
+    vi.unstubAllGlobals();
+  });
+
+  it("returns annual IncomeStatement by default", async () => {
+    mockFetch(tdIncomeStatementFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const stmts = await provider.incomeStatements("AAPL");
+
+    expect(stmts).toHaveLength(1);
+    expect(stmts[0]!.periodType).toBe("annual");
+    expect(stmts[0]!.revenue).toBe(383285000000);
+    vi.unstubAllGlobals();
+  });
+
+  it("respects limit option", async () => {
+    mockFetch(tdIncomeStatementFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const stmts = await provider.incomeStatements("AAPL", { limit: 1 });
+    expect(stmts).toHaveLength(1);
+    vi.unstubAllGlobals();
+  });
+
+  it("includes raw when requested", async () => {
+    mockFetch(tdIncomeStatementFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const stmts = await provider.incomeStatements("AAPL", { quarterly: true, raw: true });
+    expect(stmts[0]?.raw).toBeDefined();
+    vi.unstubAllGlobals();
+  });
+
+  it("throws ProviderError on API error code", async () => {
+    mockFetch({ code: 400, message: "Invalid API key", status: "error" });
+    const provider = new TwelveDataProvider({ apiKey: "bad-key" });
+    await expect(provider.incomeStatements("AAPL")).rejects.toThrow("Invalid API key");
+    vi.unstubAllGlobals();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TwelveData — balanceSheets
+// ---------------------------------------------------------------------------
+
+describe("TwelveDataProvider.balanceSheets()", () => {
+  it("returns normalised quarterly BalanceSheet array", async () => {
+    mockFetch(tdBalanceSheetFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const sheets = await provider.balanceSheets("AAPL", { quarterly: true });
+
+    expect(sheets).toHaveLength(1);
+    const s = sheets[0]!;
+    expect(s.symbol).toBe("AAPL");
+    expect(s.periodType).toBe("quarterly");
+    expect(s.totalAssets).toBe(364980000000);
+    expect(s.totalCurrentAssets).toBe(143566000000);
+    expect(s.totalLiabilities).toBe(308030000000);
+    expect(s.totalCurrentLiabilities).toBe(176392000000);
+    expect(s.totalStockholdersEquity).toBe(56950000000);
+    expect(s.cashAndCashEquivalents).toBe(29943000000);
+    expect(s.shortTermInvestments).toBe(35228000000);
+    expect(s.longTermDebt).toBe(97150000000);
+    expect(s.totalDebt).toBe(108986000000);
+    expect(s.retainedEarnings).toBe(-19154000000);
+    expect(s.provider).toBe("twelve-data");
+    vi.unstubAllGlobals();
+  });
+
+  it("returns annual BalanceSheet by default", async () => {
+    mockFetch(tdBalanceSheetFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const sheets = await provider.balanceSheets("AAPL");
+    expect(sheets[0]!.periodType).toBe("annual");
+    expect(sheets[0]!.totalAssets).toBe(352583000000);
+    vi.unstubAllGlobals();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// TwelveData — cashFlows
+// ---------------------------------------------------------------------------
+
+describe("TwelveDataProvider.cashFlows()", () => {
+  it("returns normalised quarterly CashFlowStatement array", async () => {
+    mockFetch(tdCashFlowFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const flows = await provider.cashFlows("AAPL", { quarterly: true });
+
+    expect(flows).toHaveLength(1);
+    const f = flows[0]!;
+    expect(f.symbol).toBe("AAPL");
+    expect(f.periodType).toBe("quarterly");
+    expect(f.operatingCashFlow).toBe(26808000000);
+    expect(f.investingCashFlow).toBe(-2753000000);
+    expect(f.financingCashFlow).toBe(-28671000000);
+    expect(f.netChangeInCash).toBe(-4616000000);
+    expect(f.capitalExpenditures).toBe(-2822000000);
+    expect(f.freeCashFlow).toBe(23986000000);
+    expect(f.depreciation).toBe(2822000000);
+    expect(f.provider).toBe("twelve-data");
+    vi.unstubAllGlobals();
+  });
+
+  it("returns annual CashFlowStatement by default", async () => {
+    mockFetch(tdCashFlowFixture);
+    const provider = new TwelveDataProvider({ apiKey: "test-key" });
+    const flows = await provider.cashFlows("AAPL");
+    expect(flows[0]!.periodType).toBe("annual");
+    expect(flows[0]!.operatingCashFlow).toBe(113260000000);
     vi.unstubAllGlobals();
   });
 });

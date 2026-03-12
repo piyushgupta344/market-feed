@@ -101,3 +101,94 @@ export interface TwelveDataProfileResponse {
   status?: string;
   message?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Fundamentals
+// ---------------------------------------------------------------------------
+
+export interface TwelveDataFundamentalsMeta {
+  symbol: string;
+  name?: string;
+  currency?: string;
+  exchange?: string;
+}
+
+export interface TwelveDataIncomeStatementPeriod {
+  /** "YYYY-MM-DD" */
+  fiscal_date: string;
+  revenue?: string;
+  cost_of_revenue?: string;
+  gross_profit?: string;
+  research_and_development?: string;
+  selling_general_and_administrative?: string;
+  operating_expenses?: string;
+  operating_income?: string;
+  ebit?: string;
+  ebitda?: string;
+  net_income?: string;
+  eps_basic?: string;
+  eps_diluted?: string;
+}
+
+export interface TwelveDataIncomeStatementResponse {
+  meta: TwelveDataFundamentalsMeta;
+  income_statement: {
+    annual?: TwelveDataIncomeStatementPeriod[];
+    quarterly?: TwelveDataIncomeStatementPeriod[];
+  };
+  code?: number;
+  status?: string;
+  message?: string;
+}
+
+export interface TwelveDataBalanceSheetPeriod {
+  /** "YYYY-MM-DD" */
+  fiscal_date: string;
+  total_assets?: string;
+  total_current_assets?: string;
+  total_liabilities?: string;
+  total_current_liabilities?: string;
+  total_equity?: string;
+  cash_and_cash_equivalents?: string;
+  short_term_investments?: string;
+  net_receivables?: string;
+  inventory?: string;
+  short_term_debt?: string;
+  long_term_debt?: string;
+  total_debt?: string;
+  retained_earnings?: string;
+}
+
+export interface TwelveDataBalanceSheetResponse {
+  meta: TwelveDataFundamentalsMeta;
+  balance_sheet: {
+    annual?: TwelveDataBalanceSheetPeriod[];
+    quarterly?: TwelveDataBalanceSheetPeriod[];
+  };
+  code?: number;
+  status?: string;
+  message?: string;
+}
+
+export interface TwelveDataCashFlowPeriod {
+  /** "YYYY-MM-DD" */
+  fiscal_date: string;
+  operating_activities?: string;
+  investing_activities?: string;
+  financing_activities?: string;
+  net_change_in_cash?: string;
+  capital_expenditure?: string;
+  free_cash_flow?: string;
+  depreciation_and_amortization?: string;
+}
+
+export interface TwelveDataCashFlowResponse {
+  meta: TwelveDataFundamentalsMeta;
+  cash_flow_statement: {
+    annual?: TwelveDataCashFlowPeriod[];
+    quarterly?: TwelveDataCashFlowPeriod[];
+  };
+  code?: number;
+  status?: string;
+  message?: string;
+}
