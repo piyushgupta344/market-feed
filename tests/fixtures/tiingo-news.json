@@ -1,0 +1,24 @@
+[
+  {
+    "id": 12345678,
+    "title": "Apple Reports Record Q1 2024 Earnings",
+    "url": "https://example.com/apple-earnings",
+    "description": "Apple Inc. reported record Q1 2024 earnings, beating analyst estimates on both revenue and EPS.",
+    "source": "Reuters",
+    "publishedDate": "2024-03-06T14:30:00+00:00",
+    "crawlDate": "2024-03-06T14:35:00+00:00",
+    "tags": ["earnings", "technology"],
+    "tickers": ["aapl", "msft"]
+  },
+  {
+    "id": 12345679,
+    "title": "iPhone Sales Exceed Expectations in Greater China",
+    "url": "https://example.com/iphone-china",
+    "description": "",
+    "source": "Bloomberg",
+    "publishedDate": "2024-03-06T10:00:00+00:00",
+    "crawlDate": "2024-03-06T10:05:00+00:00",
+    "tags": ["sales"],
+    "tickers": ["aapl"]
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "ticker": "aapl",
+    "name": "Apple Inc",
+    "description": "Apple Inc. designs and manufactures consumer electronics.",
+    "startDate": "1980-12-12T00:00:00+00:00",
+    "endDate": "2024-03-06T00:00:00+00:00",
+    "exchangeCode": "NASDAQ",
+    "assetType": "Stock"
+  },
+  {
+    "ticker": "aaplw",
+    "name": "Apple Hospitality REIT Inc Warrants",
+    "description": "",
+    "startDate": "2015-05-18T00:00:00+00:00",
+    "endDate": "2024-03-06T00:00:00+00:00",
+    "exchangeCode": "NYSE",
+    "assetType": "Stock"
+  }
+]

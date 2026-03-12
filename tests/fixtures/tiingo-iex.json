@@ -1,0 +1,19 @@
+[
+  {
+    "ticker": "aapl",
+    "timestamp": "2024-03-06T21:00:00+00:00",
+    "last": 187.94,
+    "lastSize": 100,
+    "prevClose": 186.86,
+    "open": 180.02,
+    "high": 190.32,
+    "low": 185.19,
+    "mid": null,
+    "volume": 50123456,
+    "bidSize": 200,
+    "bidPrice": 187.90,
+    "askSize": 300,
+    "askPrice": 187.98,
+    "tngoLast": 187.94
+  }
+]

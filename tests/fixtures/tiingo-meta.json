@@ -1,0 +1,8 @@
+{
+  "ticker": "aapl",
+  "name": "Apple Inc",
+  "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+  "startDate": "1980-12-12T00:00:00+00:00",
+  "endDate": "2024-03-06T00:00:00+00:00",
+  "exchangeCode": "NASDAQ"
+}
