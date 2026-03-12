@@ -113,9 +113,81 @@ const exit: ExitSignal = (bars, i) => {
 const result = backtest("AAPL", bars, entry, exit);
 ```
 
+## Portfolio backtesting
+
+`portfolioBacktest()` runs multiple assets simultaneously over a shared cash pool.
+
+```ts
+import { portfolioBacktest } from "market-feed/backtest";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+const [aaplBars, msftBars, spyBars] = await Promise.all([
+  feed.historical("AAPL", { period1: "2022-01-01", interval: "1d" }),
+  feed.historical("MSFT", { period1: "2022-01-01", interval: "1d" }),
+  feed.historical("SPY",  { period1: "2022-01-01", interval: "1d" }),
+]);
+
+// Same momentum strategy on both symbols
+const entry: EntrySignal = (bars, i) => i > 0 && bars[i]!.close > bars[i - 1]!.close;
+const exit: ExitSignal  = (bars, i) => i > 0 && bars[i]!.close < bars[i - 1]!.close;
+
+const result = portfolioBacktest(
+  [
+    { symbol: "AAPL", bars: aaplBars, entry, exit },
+    { symbol: "MSFT", bars: msftBars, entry, exit },
+  ],
+  {
+    initialCapital: 100_000,
+    commission: 1,
+    // Allocate 10% of current equity to each new position
+    sizing: { type: "percent_equity", pct: 10 },
+    // Compare against SPY buy-and-hold
+    benchmarkBars: spyBars,
+    benchmarkSymbol: "SPY",
+  },
+);
+
+console.log(`Portfolio return:   ${(result.totalReturn * 100).toFixed(2)}%`);
+console.log(`CAGR:               ${(result.annualizedReturn * 100).toFixed(2)}%`);
+console.log(`Sharpe:             ${result.sharpeRatio.toFixed(2)}`);
+console.log(`Max drawdown:       ${(result.maxDrawdown * 100).toFixed(2)}%`);
+console.log(`Benchmark (SPY):    ${(result.benchmarkReturn! * 100).toFixed(2)}%`);
+
+// Per-asset breakdown
+for (const [symbol, summary] of Object.entries(result.byAsset)) {
+  console.log(`${symbol}: ${summary.totalTrades} trades, win rate ${(summary.winRate * 100).toFixed(1)}%`);
+}
+```
+
+### Position sizing
+
+| `type` | Description |
+|--------|-------------|
+| `fixed_quantity` | Always trade N shares (default: 1) |
+| `fixed_dollar` | Buy floor(amount / price) shares at each entry |
+| `percent_equity` | Buy floor((equity × pct/100) / price) shares at each entry |
+
+Per-asset sizing can be set via the `sizing` field on each `PortfolioAsset` — it overrides the global option for that asset.
+
+### `PortfolioBacktestResult`
+
+| Field | Description |
+|-------|-------------|
+| `totalReturn` | Combined portfolio return as a fraction |
+| `annualizedReturn` | CAGR of the combined equity curve |
+| `sharpeRatio` | Annualised Sharpe (risk-free = 0) |
+| `maxDrawdown` | Max peak-to-trough of combined equity curve |
+| `winRate` | Combined win rate across all assets |
+| `profitFactor` | Combined gross profit / gross loss |
+| `totalTrades` | Total round-trip trades across all assets |
+| `equityCurve` | `{ date, equity }[]` — combined portfolio equity |
+| `byAsset` | `Record<symbol, PortfolioAssetSummary>` — per-asset stats |
+| `benchmarkReturn` | Buy-and-hold return (when `benchmarkBars` provided) |
+| `benchmarkAnnualizedReturn` | Buy-and-hold CAGR |
+
 ## Limitations
 
-- Single-asset only — no portfolio-level backtesting
-- No position sizing beyond fixed `quantity`
 - No slippage model (fills at closing price)
 - Risk-free rate for Sharpe is assumed to be 0
+- Multi-asset engine does not model correlation for position sizing (positions are independent)

@@ -8,6 +8,16 @@ import type {
 } from "./types.js";
 
 export type { BacktestOptions, BacktestResult, BacktestTrade, EntrySignal, ExitSignal } from "./types.js";
+export {
+  portfolioBacktest,
+} from "./portfolio.js";
+export type {
+  PortfolioAsset,
+  PortfolioAssetSummary,
+  PortfolioBacktestOptions,
+  PortfolioBacktestResult,
+  PositionSizing,
+} from "./portfolio.js";
 
 /**
  * Run a simple long-only backtest over a series of OHLCV bars.

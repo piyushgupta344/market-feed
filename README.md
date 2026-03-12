@@ -59,7 +59,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Price consensus** — query all providers in parallel, get a weighted mean with confidence score
 - **Technical indicators** — SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic — pure functions, zero deps
 - **Portfolio tracking** — live P&L, unrealised gains, day change across all positions
-- **Backtesting** — pure-function engine: total return, CAGR, Sharpe ratio, max drawdown, win rate, profit factor
+- **Backtesting** — single-asset pure-function engine + multi-asset `portfolioBacktest()` with shared cash pool, position sizing, and benchmark comparison
 - **Price alerts** — async generator that fires `AlertEvent` on price/volume/change conditions, with debounce
 - **ESG scores** — environmental, social, and governance scores on `CompanyProfile.esg` via Yahoo Finance
 - **Earnings, dividends, splits** — structured historical corporate action data from Yahoo, Polygon, and Finnhub
