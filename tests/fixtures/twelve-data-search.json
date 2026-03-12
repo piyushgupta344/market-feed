@@ -1,0 +1,35 @@
+{
+  "data": [
+    {
+      "symbol": "AAPL",
+      "instrument_name": "Apple Inc",
+      "exchange": "NASDAQ",
+      "mic_code": "XNGS",
+      "exchange_timezone": "America/New_York",
+      "instrument_type": "Common Stock",
+      "country": "United States",
+      "currency": "USD"
+    },
+    {
+      "symbol": "AAPL.BA",
+      "instrument_name": "Apple Inc",
+      "exchange": "Buenos Aires",
+      "mic_code": "XBUE",
+      "exchange_timezone": "America/Argentina/Buenos_Aires",
+      "instrument_type": "Common Stock",
+      "country": "Argentina",
+      "currency": "ARS"
+    },
+    {
+      "symbol": "AAPLW",
+      "instrument_name": "Apple Hospitality REIT Inc Warrants",
+      "exchange": "NYSE",
+      "mic_code": "XNYS",
+      "exchange_timezone": "America/New_York",
+      "instrument_type": "Common Stock",
+      "country": "United States",
+      "currency": "USD"
+    }
+  ],
+  "status": "ok"
+}

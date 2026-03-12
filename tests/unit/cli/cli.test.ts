@@ -25,10 +25,12 @@ describe("CLI parseArgs()", () => {
       "--av-key", "av123",
       "--polygon-key", "poly456",
       "--finnhub-key", "fh789",
+      "--td-key", "td000",
     ]);
     expect(args.avKey).toBe("av123");
     expect(args.polygonKey).toBe("poly456");
     expect(args.finnhubKey).toBe("fh789");
+    expect(args.tdKey).toBe("td000");
   });
 
   it("parses --limit and --interval", () => {

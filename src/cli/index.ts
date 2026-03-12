@@ -8,6 +8,7 @@ import { MarketFeed } from "../client.js";
 import { AlphaVantageProvider } from "../providers/alpha-vantage/index.js";
 import { FinnhubProvider } from "../providers/finnhub/index.js";
 import { PolygonProvider } from "../providers/polygon/index.js";
+import { TwelveDataProvider } from "../providers/twelve-data/index.js";
 import { YahooProvider } from "../providers/yahoo/index.js";
 
 const HELP = `
@@ -27,6 +28,7 @@ Options:
   --av-key <key>        Alpha Vantage API key
   --polygon-key <key>   Polygon.io API key
   --finnhub-key <key>   Finnhub API key
+  --td-key <key>        Twelve Data API key
   --json                Output raw JSON
   --limit <n>           Limit results (default: 10)
   --interval <i>        Historical interval: 1m 5m 15m 30m 1h 1d 1wk 1mo (default: 1d)
@@ -54,6 +56,7 @@ interface CliArgs {
   avKey?: string;
   polygonKey?: string;
   finnhubKey?: string;
+  tdKey?: string;
   limit: number;
   interval: string;
   period1?: string;
@@ -90,6 +93,9 @@ function parseArgs(argv: string[]): CliArgs {
     } else if (arg === "--finnhub-key") {
       result.finnhubKey = args[++i];
       i++;
+    } else if (arg === "--td-key") {
+      result.tdKey = args[++i];
+      i++;
     } else if (arg === "--limit") {
       result.limit = Number(args[++i]) || 10;
       i++;
@@ -122,12 +128,17 @@ function parseArgs(argv: string[]): CliArgs {
 }
 
 function buildFeed(args: CliArgs): MarketFeed {
-  const providers: InstanceType<typeof YahooProvider | typeof AlphaVantageProvider | typeof PolygonProvider | typeof FinnhubProvider>[] = [
-    new YahooProvider(),
-  ];
+  const providers: InstanceType<
+    | typeof YahooProvider
+    | typeof AlphaVantageProvider
+    | typeof PolygonProvider
+    | typeof FinnhubProvider
+    | typeof TwelveDataProvider
+  >[] = [new YahooProvider()];
   if (args.avKey) providers.push(new AlphaVantageProvider({ apiKey: args.avKey }));
   if (args.polygonKey) providers.push(new PolygonProvider({ apiKey: args.polygonKey }));
   if (args.finnhubKey) providers.push(new FinnhubProvider({ apiKey: args.finnhubKey }));
+  if (args.tdKey) providers.push(new TwelveDataProvider({ apiKey: args.tdKey }));
   return new MarketFeed({ providers });
 }
 

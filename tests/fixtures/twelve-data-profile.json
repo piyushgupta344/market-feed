@@ -1,0 +1,19 @@
+{
+  "symbol": "AAPL",
+  "name": "Apple Inc",
+  "exchange": "NASDAQ",
+  "mic_code": "XNGS",
+  "sector": "Technology",
+  "industry": "Consumer Electronics",
+  "employees": 154000,
+  "website": "https://www.apple.com",
+  "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+  "type": "Common Stock",
+  "CEO": "Tim Cook",
+  "address": "One Apple Park Way",
+  "city": "Cupertino",
+  "zip": "95014",
+  "state": "CA",
+  "country": "United States",
+  "phone": "+1 408 996-1010"
+}

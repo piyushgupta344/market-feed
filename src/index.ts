@@ -15,6 +15,9 @@ export type { PolygonProviderOptions } from "./providers/polygon/index.js";
 export { FinnhubProvider } from "./providers/finnhub/index.js";
 export type { FinnhubProviderOptions } from "./providers/finnhub/index.js";
 
+export { TwelveDataProvider } from "./providers/twelve-data/index.js";
+export type { TwelveDataProviderOptions } from "./providers/twelve-data/index.js";
+
 // Cache
 export { MemoryCacheDriver } from "./cache/memory.js";
 export type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";
@@ -65,6 +68,7 @@ export {
   toAlphaVantageSymbol,
   toFinnhubSymbol,
   toPolygonSymbol,
+  toTwelveDataSymbol,
   toYahooSymbol,
 } from "./utils/symbol.js";
 export { RateLimiter } from "./utils/rate-limiter.js";
