@@ -1,5 +1,79 @@
 # market-feed Changelog
 
+## 1.0.0 — 2026-03-12
+
+### New module
+
+**`market-feed/react`** — React hooks for live market data. Requires React ≥ 18.
+
+```tsx
+import { useQuote, useStream, useAlerts } from "market-feed/react";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+
+// Poll a single quote
+function StockPrice({ symbol }: { symbol: string }) {
+  const { data, loading, error } = useQuote(feed, symbol);
+  if (loading) return <span>…</span>;
+  if (error) return <span>Error: {error.message}</span>;
+  return <span>{symbol}: ${data?.price.toFixed(2)}</span>;
+}
+
+// Subscribe to a live stream
+function LiveFeed() {
+  const { event } = useStream(feed, ["AAPL", "MSFT", "GOOGL"]);
+  if (!event || event.type !== "quote") return null;
+  return <p>{event.symbol}: ${event.quote.price}</p>;
+}
+
+// Collect price alerts
+function AlertLog() {
+  const { events, clearEvents } = useAlerts(feed, [
+    { symbol: "AAPL", condition: { type: "price_above", threshold: 200 }, once: false },
+  ]);
+  return (
+    <ul>
+      {events.map((e, i) => <li key={i}>{e.alert.symbol} triggered @ ${e.quote.price}</li>)}
+      <button onClick={clearEvents}>Clear</button>
+    </ul>
+  );
+}
+```
+
+#### Hook reference
+
+**`useQuote(source, symbol, options?)`**
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `intervalMs` | `5000` | Poll interval in milliseconds |
+| `enabled` | `true` | Set to `false` to suspend polling |
+
+Returns `{ data: Quote \| null, loading: boolean, error: Error \| null, refetch() }`.
+
+**`useStream(feed, symbols, options?)`**
+
+Drives a `watch()` async generator. Restarts automatically when `symbols` changes. Stops on unmount via an internal `AbortSignal`.
+
+Returns `{ event: StreamEvent \| null, error: Error \| null }`.
+
+**`useAlerts(feed, alerts, options?)`**
+
+Drives a `watchAlerts()` async generator. Restarts when alert definitions (symbol + condition type + threshold) change.
+
+Returns `{ events: AlertEvent[], error: Error \| null, clearEvents() }`.
+
+#### Note on peer dependency
+
+`react` is a peer dependency — install it separately in your project:
+
+```
+npm install react
+```
+
+---
+
 ## 0.9.0 — 2026-03-12
 
 ### New module
