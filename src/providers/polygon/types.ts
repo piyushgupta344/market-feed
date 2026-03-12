@@ -181,6 +181,42 @@ export interface PolygonSplit {
 }
 
 // ---------------------------------------------------------------------------
+// Financials (income statement, balance sheet, cash flow)
+// vX/reference/financials
+// ---------------------------------------------------------------------------
+export interface PolygonFinancialsResponse {
+  status: string;
+  results?: PolygonFinancialStatement[];
+  next_url?: string;
+  error?: string;
+  message?: string;
+}
+
+export interface PolygonFinancialStatement {
+  id: string;
+  company_name: string;
+  cik?: string;
+  start_date: string;
+  end_date: string;
+  filing_date?: string;
+  /** "quarterly" | "annual" | "ttm" */
+  timeframe: string;
+  tickers?: string[];
+  financials: {
+    income_statement?: Record<string, PolygonFinancialLineItem>;
+    balance_sheet?: Record<string, PolygonFinancialLineItem>;
+    cash_flow_statement?: Record<string, PolygonFinancialLineItem>;
+  };
+}
+
+export interface PolygonFinancialLineItem {
+  value: number;
+  unit?: string;
+  label?: string;
+  order?: number;
+}
+
+// ---------------------------------------------------------------------------
 // News
 // ---------------------------------------------------------------------------
 export interface PolygonNewsResponse {

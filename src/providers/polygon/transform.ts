@@ -1,5 +1,6 @@
 import type { CompanyProfile } from "../../types/company.js";
 import type { DividendEvent, DividendFrequency } from "../../types/dividends.js";
+import type { BalanceSheet, CashFlowStatement, IncomeStatement } from "../../types/fundamentals.js";
 import type { HistoricalBar } from "../../types/historical.js";
 import type { NewsItem } from "../../types/news.js";
 import type { Quote } from "../../types/quote.js";
@@ -8,6 +9,7 @@ import type { SplitEvent } from "../../types/splits.js";
 import type {
   PolygonAggBar,
   PolygonDividend,
+  PolygonFinancialStatement,
   PolygonNewsArticle,
   PolygonSnapshotTicker,
   PolygonSplit,
@@ -157,6 +159,138 @@ export function transformSplit(split: PolygonSplit, raw?: unknown): SplitEvent {
     date: new Date(split.execution_date),
     ratio: split.split_from > 0 ? split.split_to / split.split_from : split.split_to,
     description: `${split.split_to}:${split.split_from}`,
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Fundamentals helpers
+// ---------------------------------------------------------------------------
+
+function val(
+  section: Record<string, { value: number }> | undefined,
+  key: string,
+): number | undefined {
+  return section?.[key]?.value;
+}
+
+function periodType(timeframe: string): "annual" | "quarterly" {
+  return timeframe === "annual" ? "annual" : "quarterly";
+}
+
+export function transformIncomeStatement(
+  stmt: PolygonFinancialStatement,
+  symbol: string,
+  raw?: unknown,
+): IncomeStatement {
+  const is = stmt.financials.income_statement;
+  return {
+    symbol,
+    date: new Date(stmt.end_date),
+    periodType: periodType(stmt.timeframe),
+    ...(val(is, "revenues") !== undefined ? { revenue: val(is, "revenues") } : {}),
+    ...(val(is, "cost_of_revenue") !== undefined
+      ? { costOfRevenue: val(is, "cost_of_revenue") }
+      : {}),
+    ...(val(is, "gross_profit") !== undefined ? { grossProfit: val(is, "gross_profit") } : {}),
+    ...(val(is, "research_and_development") !== undefined
+      ? { researchAndDevelopment: val(is, "research_and_development") }
+      : {}),
+    ...(val(is, "selling_general_and_administrative_expenses") !== undefined
+      ? {
+          sellingGeneralAdministrative: val(
+            is,
+            "selling_general_and_administrative_expenses",
+          ),
+        }
+      : {}),
+    ...(val(is, "operating_expenses") !== undefined
+      ? { totalOperatingExpenses: val(is, "operating_expenses") }
+      : {}),
+    ...(val(is, "operating_income_loss") !== undefined
+      ? { operatingIncome: val(is, "operating_income_loss"), ebit: val(is, "operating_income_loss") }
+      : {}),
+    ...(val(is, "net_income_loss") !== undefined
+      ? { netIncome: val(is, "net_income_loss") }
+      : {}),
+    ...(val(is, "basic_earnings_per_share") !== undefined
+      ? { eps: val(is, "basic_earnings_per_share") }
+      : {}),
+    ...(val(is, "diluted_earnings_per_share") !== undefined
+      ? { dilutedEps: val(is, "diluted_earnings_per_share") }
+      : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformBalanceSheet(
+  stmt: PolygonFinancialStatement,
+  symbol: string,
+  raw?: unknown,
+): BalanceSheet {
+  const bs = stmt.financials.balance_sheet;
+  return {
+    symbol,
+    date: new Date(stmt.end_date),
+    periodType: periodType(stmt.timeframe),
+    ...(val(bs, "assets") !== undefined ? { totalAssets: val(bs, "assets") } : {}),
+    ...(val(bs, "current_assets") !== undefined
+      ? { totalCurrentAssets: val(bs, "current_assets") }
+      : {}),
+    ...(val(bs, "liabilities") !== undefined ? { totalLiabilities: val(bs, "liabilities") } : {}),
+    ...(val(bs, "current_liabilities") !== undefined
+      ? { totalCurrentLiabilities: val(bs, "current_liabilities") }
+      : {}),
+    ...(val(bs, "equity") !== undefined
+      ? { totalStockholdersEquity: val(bs, "equity") }
+      : {}),
+    ...(val(bs, "cash_and_cash_equivalents_and_short_term_investments") !== undefined
+      ? {
+          cashAndCashEquivalents: val(
+            bs,
+            "cash_and_cash_equivalents_and_short_term_investments",
+          ),
+        }
+      : {}),
+    ...(val(bs, "long_term_debt") !== undefined
+      ? { longTermDebt: val(bs, "long_term_debt") }
+      : {}),
+    ...(val(bs, "retained_earnings") !== undefined
+      ? { retainedEarnings: val(bs, "retained_earnings") }
+      : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformCashFlowStatement(
+  stmt: PolygonFinancialStatement,
+  symbol: string,
+  raw?: unknown,
+): CashFlowStatement {
+  const cf = stmt.financials.cash_flow_statement;
+  const operating = val(cf, "net_cash_flow_from_operating_activities");
+  const capEx = val(cf, "capital_expenditure");
+  const freeCashFlow =
+    operating !== undefined && capEx !== undefined ? operating + capEx : undefined;
+  return {
+    symbol,
+    date: new Date(stmt.end_date),
+    periodType: periodType(stmt.timeframe),
+    ...(operating !== undefined ? { operatingCashFlow: operating } : {}),
+    ...(val(cf, "net_cash_flow_from_investing_activities") !== undefined
+      ? { investingCashFlow: val(cf, "net_cash_flow_from_investing_activities") }
+      : {}),
+    ...(val(cf, "net_cash_flow_from_financing_activities") !== undefined
+      ? { financingCashFlow: val(cf, "net_cash_flow_from_financing_activities") }
+      : {}),
+    ...(val(cf, "net_cash_flow") !== undefined
+      ? { netChangeInCash: val(cf, "net_cash_flow") }
+      : {}),
+    ...(capEx !== undefined ? { capitalExpenditures: capEx } : {}),
+    ...(freeCashFlow !== undefined ? { freeCashFlow } : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };
