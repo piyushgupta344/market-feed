@@ -178,6 +178,59 @@ attempt 10: wait 30 s (max)
 
 After `maxReconnectAttempts`, the generator terminates. Each reconnect resets the attempt counter on successful auth.
 
+## Level II order book
+
+`getOrderBook()` yields top-of-book (level I) updates — best bid and ask — for a single symbol.
+
+```ts
+import { getOrderBook } from "market-feed/ws";
+import { PolygonProvider } from "market-feed";
+
+const provider = new PolygonProvider({ apiKey: process.env.POLYGON_KEY! });
+const controller = new AbortController();
+
+for await (const update of getOrderBook(provider, "AAPL", { signal: controller.signal })) {
+  const bid = update.bids[0];
+  const ask = update.asks[0];
+  console.log(`AAPL  bid ${bid?.price} × ${bid?.size}  ask ${ask?.price} × ${ask?.size}`);
+}
+```
+
+### Provider support
+
+| Provider | Source | Data |
+|----------|--------|------|
+| `PolygonProvider` | `Q.*` NBBO quote channel | Real bid/ask price + size |
+| `AlpacaProvider` | `quotes` subscription | Real bid/ask price + size (IEX or SIP) |
+| `IbTwsProvider` | Fields 84/86 (bid/ask) | Real bid/ask price from TWS |
+| All others | HTTP polling | Synthetic 1-level book from last trade price |
+
+### `OrderBookEvent`
+
+```ts
+interface OrderBookEvent {
+  symbol: string;
+  /** Bids sorted price descending — index 0 is best bid */
+  bids: OrderBookLevel[];
+  /** Asks sorted price ascending — index 0 is best ask */
+  asks: OrderBookLevel[];
+  timestamp: Date;
+}
+
+interface OrderBookLevel {
+  price: number;
+  size: number;  // 0 when size is unavailable (polling fallback)
+}
+```
+
+### `OrderBookOptions`
+
+Extends `WsOptions` with one additional field:
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `pollIntervalMs` | `2000` | Poll interval for non-WS providers (ms) |
+
 ## vs. `market-feed/stream`
 
 See the [HTTP Polling Stream](/modules/stream#vs-market-feed-ws) comparison table.

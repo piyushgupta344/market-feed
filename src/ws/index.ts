@@ -10,6 +10,8 @@ import { AsyncQueue } from "./queue.js";
 import type { WsCapableProvider, WsEvent, WsOptions } from "./types.js";
 
 export type { WsCapableProvider, WsEvent, WsOptions, WsTrade } from "./types.js";
+export { getOrderBook } from "./orderbook.js";
+export type { OrderBookEvent, OrderBookLevel, OrderBookOptions } from "./orderbook.js";
 
 // ---------------------------------------------------------------------------
 // Internal: duck-type check for providers that expose a WS API key
