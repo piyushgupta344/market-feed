@@ -1,4 +1,10 @@
 export type { CompanyOptions, CompanyProfile } from "./company.js";
+export type {
+  BalanceSheet,
+  CashFlowStatement,
+  FundamentalsOptions,
+  IncomeStatement,
+} from "./fundamentals.js";
 export type { DividendEvent, DividendFrequency, DividendOptions } from "./dividends.js";
 export type { EarningsEvent, EarningsOptions } from "./earnings.js";
 export type { HistoricalBar, HistoricalInterval, HistoricalOptions } from "./historical.js";

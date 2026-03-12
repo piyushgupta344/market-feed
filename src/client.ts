@@ -5,6 +5,12 @@ import { YahooProvider } from "./providers/yahoo/index.js";
 import type { CompanyOptions, CompanyProfile } from "./types/company.js";
 import type { DividendEvent, DividendOptions } from "./types/dividends.js";
 import type { EarningsEvent, EarningsOptions } from "./types/earnings.js";
+import type {
+  BalanceSheet,
+  CashFlowStatement,
+  FundamentalsOptions,
+  IncomeStatement,
+} from "./types/fundamentals.js";
 import type { HistoricalBar, HistoricalOptions } from "./types/historical.js";
 import type { MarketStatus, MarketStatusOptions } from "./types/market.js";
 import type { NewsItem, NewsOptions } from "./types/news.js";
@@ -43,6 +49,9 @@ const DEFAULT_TTLS: Record<CacheMethod, number> = {
   earnings: 3600,
   dividends: 86400,
   splits: 86400,
+  incomeStatements: 86400,
+  balanceSheets: 86400,
+  cashFlows: 86400,
 };
 
 /**
@@ -261,6 +270,62 @@ export class MarketFeed {
     });
 
     await this.setCache(cacheKey, result, "splits");
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // incomeStatements
+  // ---------------------------------------------------------------------------
+
+  async incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]> {
+    const cacheKey = `incomeStatements:${symbol}:${options?.quarterly ?? false}:${options?.limit ?? 4}`;
+    const cached = await this.getCache<IncomeStatement[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.withFallback("incomeStatements", (provider) => {
+      if (!provider.incomeStatements)
+        throw new UnsupportedOperationError(provider.name, "incomeStatements");
+      return provider.incomeStatements(symbol, options);
+    });
+
+    await this.setCache(cacheKey, result, "incomeStatements");
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // balanceSheets
+  // ---------------------------------------------------------------------------
+
+  async balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]> {
+    const cacheKey = `balanceSheets:${symbol}:${options?.quarterly ?? false}:${options?.limit ?? 4}`;
+    const cached = await this.getCache<BalanceSheet[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.withFallback("balanceSheets", (provider) => {
+      if (!provider.balanceSheets)
+        throw new UnsupportedOperationError(provider.name, "balanceSheets");
+      return provider.balanceSheets(symbol, options);
+    });
+
+    await this.setCache(cacheKey, result, "balanceSheets");
+    return result;
+  }
+
+  // ---------------------------------------------------------------------------
+  // cashFlows
+  // ---------------------------------------------------------------------------
+
+  async cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]> {
+    const cacheKey = `cashFlows:${symbol}:${options?.quarterly ?? false}:${options?.limit ?? 4}`;
+    const cached = await this.getCache<CashFlowStatement[]>(cacheKey);
+    if (cached) return cached;
+
+    const result = await this.withFallback("cashFlows", (provider) => {
+      if (!provider.cashFlows) throw new UnsupportedOperationError(provider.name, "cashFlows");
+      return provider.cashFlows(symbol, options);
+    });
+
+    await this.setCache(cacheKey, result, "cashFlows");
     return result;
   }
 

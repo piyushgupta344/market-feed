@@ -95,6 +95,12 @@ export interface YahooQuoteSummaryResult {
   summaryDetail?: YahooSummaryDetail;
   price?: YahooPriceModule;
   earningsHistory?: YahooEarningsHistoryModule;
+  incomeStatementHistory?: YahooIncomeStatementHistoryModule;
+  incomeStatementHistoryQuarterly?: YahooIncomeStatementHistoryModule;
+  balanceSheetHistory?: YahooBalanceSheetHistoryModule;
+  balanceSheetHistoryQuarterly?: YahooBalanceSheetHistoryModule;
+  cashflowStatementHistory?: YahooCashflowStatementHistoryModule;
+  cashflowStatementHistoryQuarterly?: YahooCashflowStatementHistoryModule;
 }
 
 export interface YahooEarningsHistoryModule {
@@ -138,6 +144,74 @@ export interface YahooPriceModule {
   symbol?: string;
   exchangeName?: string;
   currency?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Fundamentals — shared number wrapper
+// ---------------------------------------------------------------------------
+export interface YahooNumberValue {
+  raw?: number;
+  fmt?: string;
+  longFmt?: string;
+}
+
+export interface YahooDateValue {
+  raw?: number;
+  fmt?: string;
+}
+
+export interface YahooIncomeStatement {
+  endDate?: YahooDateValue;
+  totalRevenue?: YahooNumberValue;
+  costOfRevenue?: YahooNumberValue;
+  grossProfit?: YahooNumberValue;
+  researchDevelopment?: YahooNumberValue;
+  sellingGeneralAdministrative?: YahooNumberValue;
+  totalOperatingExpenses?: YahooNumberValue;
+  operatingIncome?: YahooNumberValue;
+  netIncome?: YahooNumberValue;
+  ebit?: YahooNumberValue;
+  ebitda?: YahooNumberValue;
+  dilutedEps?: YahooNumberValue;
+}
+
+export interface YahooIncomeStatementHistoryModule {
+  incomeStatementHistory?: YahooIncomeStatement[];
+}
+
+export interface YahooBalanceSheet {
+  endDate?: YahooDateValue;
+  totalAssets?: YahooNumberValue;
+  totalCurrentAssets?: YahooNumberValue;
+  totalLiab?: YahooNumberValue;
+  totalCurrentLiabilities?: YahooNumberValue;
+  totalStockholderEquity?: YahooNumberValue;
+  cash?: YahooNumberValue;
+  shortTermInvestments?: YahooNumberValue;
+  netReceivables?: YahooNumberValue;
+  inventory?: YahooNumberValue;
+  shortLongTermDebt?: YahooNumberValue;
+  longTermDebt?: YahooNumberValue;
+  totalDebt?: YahooNumberValue;
+  retainedEarnings?: YahooNumberValue;
+}
+
+export interface YahooBalanceSheetHistoryModule {
+  balanceSheetStatements?: YahooBalanceSheet[];
+}
+
+export interface YahooCashFlowStatement {
+  endDate?: YahooDateValue;
+  totalCashFromOperatingActivities?: YahooNumberValue;
+  totalCashflowsFromInvestingActivities?: YahooNumberValue;
+  totalCashFromFinancingActivities?: YahooNumberValue;
+  changeInCash?: YahooNumberValue;
+  capitalExpenditures?: YahooNumberValue;
+  depreciation?: YahooNumberValue;
+}
+
+export interface YahooCashflowStatementHistoryModule {
+  cashflowStatements?: YahooCashFlowStatement[];
 }
 
 // ---------------------------------------------------------------------------

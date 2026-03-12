@@ -3,6 +3,12 @@ import { HttpClient } from "../../http/client.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
 import type { DividendEvent, DividendOptions } from "../../types/dividends.js";
 import type { EarningsEvent, EarningsOptions } from "../../types/earnings.js";
+import type {
+  BalanceSheet,
+  CashFlowStatement,
+  FundamentalsOptions,
+  IncomeStatement,
+} from "../../types/fundamentals.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
@@ -10,10 +16,13 @@ import type { SearchOptions, SearchResult } from "../../types/search.js";
 import type { SplitEvent, SplitOptions } from "../../types/splits.js";
 import { toYahooSymbol } from "../../utils/symbol.js";
 import {
+  transformBalanceSheet,
+  transformCashFlowStatement,
   transformCompany,
   transformDividends,
   transformEarnings,
   transformHistorical,
+  transformIncomeStatement,
   transformQuote,
   transformSearch,
   transformSplits,
@@ -212,6 +221,120 @@ export class YahooProvider implements MarketProvider {
     }
 
     return transformDividends(symbol, result, options?.raw ? data : undefined).slice(0, limit);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fundamentals: income statements
+  // ---------------------------------------------------------------------------
+  async incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]> {
+    const s = toYahooSymbol(symbol);
+    const limit = options?.limit ?? 4;
+    const quarterly = options?.quarterly ?? false;
+    const module = quarterly ? "incomeStatementHistoryQuarterly" : "incomeStatementHistory";
+
+    const data = await this.http2.get<YahooQuoteSummaryResponse>(`/v10/finance/quoteSummary/${s}`, {
+      params: { modules: module },
+    });
+
+    const result = data.quoteSummary.result?.[0];
+    if (!result) {
+      const err = data.quoteSummary.error;
+      throw new ProviderError(
+        err?.description ?? `No income statement data for symbol "${s}"`,
+        this.name,
+      );
+    }
+
+    const history = quarterly
+      ? result.incomeStatementHistoryQuarterly?.incomeStatementHistory
+      : result.incomeStatementHistory?.incomeStatementHistory;
+
+    return (history ?? [])
+      .slice(0, limit)
+      .map((entry) =>
+        transformIncomeStatement(
+          symbol,
+          entry,
+          quarterly ? "quarterly" : "annual",
+          options?.raw ? entry : undefined,
+        ),
+      );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fundamentals: balance sheets
+  // ---------------------------------------------------------------------------
+  async balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]> {
+    const s = toYahooSymbol(symbol);
+    const limit = options?.limit ?? 4;
+    const quarterly = options?.quarterly ?? false;
+    const module = quarterly ? "balanceSheetHistoryQuarterly" : "balanceSheetHistory";
+
+    const data = await this.http2.get<YahooQuoteSummaryResponse>(`/v10/finance/quoteSummary/${s}`, {
+      params: { modules: module },
+    });
+
+    const result = data.quoteSummary.result?.[0];
+    if (!result) {
+      const err = data.quoteSummary.error;
+      throw new ProviderError(
+        err?.description ?? `No balance sheet data for symbol "${s}"`,
+        this.name,
+      );
+    }
+
+    const statements = quarterly
+      ? result.balanceSheetHistoryQuarterly?.balanceSheetStatements
+      : result.balanceSheetHistory?.balanceSheetStatements;
+
+    return (statements ?? [])
+      .slice(0, limit)
+      .map((entry) =>
+        transformBalanceSheet(
+          symbol,
+          entry,
+          quarterly ? "quarterly" : "annual",
+          options?.raw ? entry : undefined,
+        ),
+      );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fundamentals: cash flow statements
+  // ---------------------------------------------------------------------------
+  async cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]> {
+    const s = toYahooSymbol(symbol);
+    const limit = options?.limit ?? 4;
+    const quarterly = options?.quarterly ?? false;
+    const module = quarterly ? "cashflowStatementHistoryQuarterly" : "cashflowStatementHistory";
+
+    const data = await this.http2.get<YahooQuoteSummaryResponse>(`/v10/finance/quoteSummary/${s}`, {
+      params: { modules: module },
+    });
+
+    const result = data.quoteSummary.result?.[0];
+    if (!result) {
+      const err = data.quoteSummary.error;
+      throw new ProviderError(
+        err?.description ?? `No cash flow data for symbol "${s}"`,
+        this.name,
+      );
+    }
+
+    const statements = quarterly
+      ? result.cashflowStatementHistoryQuarterly?.cashflowStatements
+      : result.cashflowStatementHistory?.cashflowStatements;
+
+    return (statements ?? [])
+      .slice(0, limit)
+      .map((entry) =>
+        transformCashFlowStatement(
+          symbol,
+          entry,
+          quarterly ? "quarterly" : "annual",
+          options?.raw ? entry : undefined,
+        ),
+      );
   }
 
   // ---------------------------------------------------------------------------

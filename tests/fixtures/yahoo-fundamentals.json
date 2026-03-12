@@ -1,0 +1,76 @@
+{
+  "quoteSummary": {
+    "result": [
+      {
+        "incomeStatementHistory": {
+          "incomeStatementHistory": [
+            {
+              "maxAge": 1,
+              "endDate": { "raw": 1696118400, "fmt": "2023-10-01" },
+              "totalRevenue": { "raw": 89498000000, "longFmt": "89,498,000,000" },
+              "costOfRevenue": { "raw": 47936000000, "longFmt": "47,936,000,000" },
+              "grossProfit": { "raw": 41562000000, "longFmt": "41,562,000,000" },
+              "researchDevelopment": { "raw": 7321000000, "longFmt": "7,321,000,000" },
+              "sellingGeneralAdministrative": { "raw": 6523000000, "longFmt": "6,523,000,000" },
+              "totalOperatingExpenses": { "raw": 61780000000, "longFmt": "61,780,000,000" },
+              "operatingIncome": { "raw": 27718000000, "longFmt": "27,718,000,000" },
+              "netIncome": { "raw": 22956000000, "longFmt": "22,956,000,000" },
+              "ebit": { "raw": 27906000000, "longFmt": "27,906,000,000" },
+              "dilutedEps": { "raw": 1.46, "fmt": "1.46" }
+            },
+            {
+              "maxAge": 1,
+              "endDate": { "raw": 1688169600, "fmt": "2023-07-01" },
+              "totalRevenue": { "raw": 81797000000, "longFmt": "81,797,000,000" },
+              "costOfRevenue": { "raw": 44573000000, "longFmt": "44,573,000,000" },
+              "grossProfit": { "raw": 37224000000, "longFmt": "37,224,000,000" },
+              "researchDevelopment": { "raw": 7442000000 },
+              "sellingGeneralAdministrative": { "raw": 6209000000 },
+              "totalOperatingExpenses": { "raw": 58224000000 },
+              "operatingIncome": { "raw": 23573000000 },
+              "netIncome": { "raw": 19881000000 },
+              "ebit": { "raw": 23729000000 },
+              "dilutedEps": { "raw": 1.26 }
+            }
+          ]
+        },
+        "balanceSheetHistory": {
+          "balanceSheetStatements": [
+            {
+              "maxAge": 1,
+              "endDate": { "raw": 1696118400, "fmt": "2023-10-01" },
+              "cash": { "raw": 29965000000 },
+              "shortTermInvestments": { "raw": 31590000000 },
+              "netReceivables": { "raw": 60985000000 },
+              "inventory": { "raw": 6331000000 },
+              "totalCurrentAssets": { "raw": 143566000000 },
+              "totalAssets": { "raw": 352583000000 },
+              "shortLongTermDebt": { "raw": 9822000000 },
+              "totalCurrentLiabilities": { "raw": 145308000000 },
+              "longTermDebt": { "raw": 95281000000 },
+              "totalDebt": { "raw": 111088000000 },
+              "totalLiab": { "raw": 290437000000 },
+              "totalStockholderEquity": { "raw": 62146000000 },
+              "retainedEarnings": { "raw": -214000000 }
+            }
+          ]
+        },
+        "cashflowStatementHistory": {
+          "cashflowStatements": [
+            {
+              "maxAge": 1,
+              "endDate": { "raw": 1696118400, "fmt": "2023-10-01" },
+              "totalCashFromOperatingActivities": { "raw": 114301000000 },
+              "totalCashflowsFromInvestingActivities": { "raw": 3705000000 },
+              "totalCashFromFinancingActivities": { "raw": -108488000000 },
+              "changeInCash": { "raw": 9518000000 },
+              "capitalExpenditures": { "raw": -10959000000 },
+              "depreciation": { "raw": 11519000000 }
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}
