@@ -9,7 +9,8 @@ const sharedConfig = {
   minify: false,
   outDir: "dist",
   tsconfig: "./tsconfig.build.json",
-  external: [] as string[],
+  // react is a peer dependency — never bundle it
+  external: ["react"] as string[],
 } as const;
 
 export default defineConfig([
@@ -28,6 +29,7 @@ export default defineConfig([
       alerts:       "src/alerts/index.ts",
       fundamentals: "src/fundamentals/index.ts",
       screener:     "src/screener/index.ts",
+      react:        "src/react/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,
