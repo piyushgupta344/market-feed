@@ -220,6 +220,30 @@ interface FundamentalsOptions {
 
 ---
 
+### `optionChain(symbol, options?)`
+
+Fetch an options chain for a symbol. Requires a provider that supports options (currently Polygon.io).
+
+```ts
+feed.optionChain(symbol: string, options?: OptionChainOptions): Promise<OptionChain>
+```
+
+```ts
+interface OptionChainOptions {
+  expiry?: string;       // filter to specific expiry, e.g. "2024-07-19"
+  strike?: number;       // exact strike filter
+  strikeLow?: number;    // min strike
+  strikeHigh?: number;   // max strike
+  type?: "call" | "put"; // both by default
+  limit?: number;        // max contracts (default 50)
+  raw?: boolean;
+}
+```
+
+Cache TTL: 60 seconds.
+
+---
+
 ### `clearCache()`
 
 Remove all cached entries.

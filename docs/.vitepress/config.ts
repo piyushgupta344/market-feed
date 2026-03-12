@@ -70,6 +70,8 @@ export default defineConfig({
           { text: "Price Alerts", link: "/modules/alerts" },
           { text: "Fundamentals", link: "/modules/fundamentals" },
           { text: "Stock Screener", link: "/modules/screener" },
+          { text: "Options Chain", link: "/modules/options" },
+          { text: "Macro Indicators", link: "/modules/macro" },
           { text: "React Hooks", link: "/modules/react" },
           { text: "CLI", link: "/modules/cli" },
         ],

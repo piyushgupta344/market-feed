@@ -2,43 +2,19 @@
 
 This page covers what's planned for future releases. Items are roughly ordered by priority, but nothing here is a firm commitment or timeline.
 
+## Recently shipped
+
+- **Polygon fundamentals** — `incomeStatements`, `balanceSheets`, `cashFlows` via `/vX/reference/financials`
+- **Tiingo fundamentals** — all three statement types via `/tiingo/fundamentals/{ticker}/statements`
+- **`market-feed/options`** — options chains with Greeks from Polygon.io (see [Options Chain](/modules/options))
+- **`market-feed/macro`** — 15 FRED economic indicator series (see [Macro Indicators](/modules/macro))
+- **Screener `volume_vs_avg`** — `volume_vs_avg_above` / `volume_vs_avg_below` criteria
+
 ## Near-term
 
-### More fundamentals providers
+### Twelve Data fundamentals
 
-Yahoo Finance currently provides all fundamental data (income statements, balance sheets, cash flows). Planned additions:
-
-- **Polygon.io** — financials via the `/vX/reference/financials` endpoint
-- **Tiingo** — fundamental data via the `daily` and `fundamentals` APIs
-- **Twelve Data** — income statement, balance sheet, and cash flow endpoints
-
-### Options data
-
-A new `market-feed/options` module:
-
-```ts
-import { getOptionChain } from "market-feed/options";
-
-const chain = await getOptionChain(feed, "AAPL", { expiry: "2024-07-19" });
-for (const contract of chain.calls) {
-  console.log(contract.strike, contract.lastPrice, contract.impliedVolatility);
-}
-```
-
-Planned fields: strike, expiry, type (call/put), bid/ask, last price, volume, open interest, implied volatility, delta, gamma, theta, vega.
-
-### Economic indicators
-
-A new `market-feed/macro` module for macroeconomic time-series data:
-
-```ts
-import { getIndicator } from "market-feed/macro";
-
-const cpi = await getIndicator(feed, "CPI"); // Consumer Price Index
-const fed = await getIndicator(feed, "FEDFUNDS"); // Federal funds rate
-```
-
-Initial data source: FRED (St. Louis Fed), which is free and requires a key.
+Twelve Data supports income statement, balance sheet, and cash flow endpoints. Adding `incomeStatements`, `balanceSheets`, `cashFlows` to `TwelveDataProvider`.
 
 ### ESG scores
 

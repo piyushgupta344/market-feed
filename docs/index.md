@@ -32,7 +32,7 @@ features:
 
   - icon: 📊
     title: Analysis toolkit
-    details: Technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic), portfolio P&L tracking, backtesting engine, price alerts, fundamentals, and stock screener — all in one package.
+    details: Technical indicators (SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic), portfolio P&L tracking, backtesting engine, price alerts, fundamentals, screener, options chains, and FRED macro indicators — all in one package.
 
   - icon: ⚛️
     title: React hooks
@@ -80,4 +80,6 @@ That's it. No API keys, no boilerplate.
 | `market-feed/alerts` | Price / volume alert async generator |
 | `market-feed/fundamentals` | Income statements, balance sheets, cash flows |
 | `market-feed/screener` | Filter symbols by price, volume, market cap, and more |
+| `market-feed/options` | Options chains with Greeks from Polygon.io |
+| `market-feed/macro` | FRED macroeconomic indicators (CPI, GDP, Fed Funds…) |
 | `market-feed/react` | `useQuote`, `useStream`, `useAlerts` hooks (React ≥ 18) |
