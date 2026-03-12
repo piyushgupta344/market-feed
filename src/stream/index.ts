@@ -5,6 +5,7 @@ import type { TradingSession } from "../types/market.js";
 import { getIntervalMs, sleep } from "./scheduler.js";
 import type {
   DivergenceEvent,
+  EarningsReleasedEvent,
   MarketCloseEvent,
   MarketOpenEvent,
   QuoteEvent,
@@ -20,6 +21,7 @@ export type {
   MarketCloseEvent,
   DivergenceEvent,
   StreamErrorEvent,
+  EarningsReleasedEvent,
   WatchOptions,
   WatchIntervalOptions,
 } from "./types.js";
@@ -58,10 +60,15 @@ export async function* watch(
   const marketHoursAware = options.marketHoursAware ?? true;
   const divergenceThreshold = options.divergenceThreshold ?? 0.5;
   const maxErrors = options.maxErrors ?? 5;
+  const fundamentalsIntervalMs = options.fundamentalsIntervalMs ?? 900_000;
   const { signal } = options;
 
   let lastSession: TradingSession | null = null;
   let consecutiveErrors = 0;
+
+  // Per-symbol earnings tracking (only used when includeFundamentals: true)
+  const lastEarningsTs = new Map<string, number>();   // symbol → last known earnings timestamp
+  const lastEarningsCheck = new Map<string, number>(); // symbol → last check time
 
   while (!signal?.aborted) {
     // -----------------------------------------------------------------------
@@ -134,7 +141,39 @@ export async function* watch(
     }
 
     // -----------------------------------------------------------------------
-    // 5. Divergence detection (only when multiple providers are configured)
+    // 5. Earnings monitoring (only when includeFundamentals: true)
+    // -----------------------------------------------------------------------
+    if (options.includeFundamentals && !signal?.aborted) {
+      for (const symbol of symbols) {
+        if (signal?.aborted) break;
+        const lastCheck = lastEarningsCheck.get(symbol) ?? 0;
+        if (Date.now() - lastCheck < fundamentalsIntervalMs) continue;
+        lastEarningsCheck.set(symbol, Date.now());
+        try {
+          const earns = await feed.earnings(symbol, { limit: 1 });
+          const latest = earns[0];
+          if (!latest) continue;
+          const latestTs = latest.date.getTime();
+          const prevTs = lastEarningsTs.get(symbol);
+          lastEarningsTs.set(symbol, latestTs);
+          if (prevTs !== undefined && latestTs > prevTs) {
+            const ev: EarningsReleasedEvent = {
+              type: "earnings_released",
+              symbol,
+              earnings: latest,
+              timestamp: new Date(),
+            };
+            yield ev;
+          }
+        } catch {
+          // Non-critical — earnings check failure should not interrupt the stream
+          lastEarningsCheck.set(symbol, Date.now());
+        }
+      }
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. Divergence detection (only when multiple providers are configured)
     // -----------------------------------------------------------------------
     if (!signal?.aborted && feed.providers.length > 1) {
       for (const symbol of symbols) {
@@ -173,7 +212,7 @@ export async function* watch(
     }
 
     // -----------------------------------------------------------------------
-    // 6. Sleep until next poll
+    // 7. Sleep until next poll
     // -----------------------------------------------------------------------
     try {
       await sleep(getIntervalMs(session, options.interval), signal);

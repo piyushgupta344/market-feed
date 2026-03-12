@@ -1,5 +1,6 @@
 import type { ExchangeId } from "../calendar/types.js";
 import type { MarketFeedError } from "../errors.js";
+import type { EarningsEvent } from "../types/earnings.js";
 import type { TradingSession } from "../types/market.js";
 import type { Quote } from "../types/quote.js";
 
@@ -49,12 +50,22 @@ export interface StreamErrorEvent {
   timestamp: Date;
 }
 
+/** Emitted when a new quarterly earnings report is detected for a watched symbol. */
+export interface EarningsReleasedEvent {
+  type: "earnings_released";
+  symbol: string;
+  /** The newly detected earnings report */
+  earnings: EarningsEvent;
+  timestamp: Date;
+}
+
 export type StreamEvent =
   | QuoteEvent
   | MarketOpenEvent
   | MarketCloseEvent
   | DivergenceEvent
-  | StreamErrorEvent;
+  | StreamErrorEvent
+  | EarningsReleasedEvent;
 
 // ---------------------------------------------------------------------------
 // Options
@@ -105,4 +116,18 @@ export interface WatchOptions {
    * Default: 5
    */
   maxErrors?: number;
+
+  /**
+   * When true, the stream monitors watched symbols for new quarterly earnings reports
+   * and emits `earnings_released` events when a newer period is detected.
+   * Default: false
+   */
+  includeFundamentals?: boolean;
+
+  /**
+   * How often to check for new earnings data, in milliseconds.
+   * Only relevant when `includeFundamentals: true`.
+   * Default: 900_000 (15 minutes)
+   */
+  fundamentalsIntervalMs?: number;
 }

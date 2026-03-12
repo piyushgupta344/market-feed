@@ -12,24 +12,13 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **`market-feed/options`** — options chains with Greeks from Polygon.io (see [Options Chain](/modules/options))
 - **`market-feed/macro`** — 15 FRED economic indicator series (see [Macro Indicators](/modules/macro))
 - **Screener `volume_vs_avg`** — `volume_vs_avg_above` / `volume_vs_avg_below` criteria
+- **Streaming fundamentals** — `includeFundamentals: true` option on `watch()` emits `earnings_released` events when a new quarterly report is detected (see [Stream](/modules/stream))
 
 ## Near-term
 
 ---
 
 ## Medium-term
-
-### Streaming fundamentals
-
-Combine the `watch()` stream with fundamentals to emit events when quarterly reports are published:
-
-```ts
-for await (const ev of watch(feed, ["AAPL"], { includeFundamentals: true })) {
-  if (ev.type === "earnings_released") {
-    console.log(ev.symbol, ev.eps, ev.revenueActual);
-  }
-}
-```
 
 ### More WebSocket providers
 

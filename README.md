@@ -55,7 +55,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Escape hatch** — pass `{ raw: true }` to get the original provider response
 - **Exchange calendar** — synchronous, offline-capable holiday and session detection for 8 exchanges + crypto (24/7)
 - **WebSocket streaming** — `market-feed/ws` opens a persistent WS connection to Polygon or Finnhub; polling fallback for Yahoo/AV
-- **Observable stream** — market-hours-aware HTTP polling that pauses overnight and on weekends
+- **Observable stream** — market-hours-aware HTTP polling that pauses overnight and on weekends; emits `earnings_released` events when new quarterly reports are detected (`includeFundamentals: true`)
 - **Price consensus** — query all providers in parallel, get a weighted mean with confidence score
 - **Technical indicators** — SMA, EMA, RSI, MACD, Bollinger Bands, ATR, VWAP, Stochastic — pure functions, zero deps
 - **Portfolio tracking** — live P&L, unrealised gains, day change across all positions
@@ -230,6 +230,9 @@ for await (const event of watch(feed, ["AAPL", "MSFT"], {
     case "divergence":
       console.log(`${event.symbol} providers disagree: ${event.spreadPct.toFixed(2)}%`);
       break;
+    case "earnings_released":
+      console.log(`${event.symbol} new earnings: EPS ${event.earnings.epsActual}`);
+      break;
     case "error":
       if (!event.recoverable) throw event.error;
       break;
@@ -240,7 +243,7 @@ for await (const event of watch(feed, ["AAPL", "MSFT"], {
 controller.abort();
 ```
 
-When `marketHoursAware: true` (default), the stream pauses completely during closed sessions — no wasted API calls overnight or on weekends. It emits `market-open` / `market-close` events at session boundaries. When the feed has multiple providers, it detects price divergence across them and emits `divergence` events.
+When `marketHoursAware: true` (default), the stream pauses completely during closed sessions — no wasted API calls overnight or on weekends. It emits `market-open` / `market-close` events at session boundaries. When the feed has multiple providers, it detects price divergence across them and emits `divergence` events. Set `includeFundamentals: true` to also receive `earnings_released` events when a new quarterly report is detected.
 
 #### `WatchOptions`
 
@@ -253,6 +256,8 @@ When `marketHoursAware: true` (default), the stream pauses completely during clo
 | `marketHoursAware` | `boolean` | `true` | Pause during closed sessions |
 | `divergenceThreshold` | `number` | `0.5` | % spread that triggers a divergence event |
 | `maxErrors` | `number` | `5` | Consecutive errors before the generator throws |
+| `includeFundamentals` | `boolean` | `false` | Emit `earnings_released` when new quarterly reports are detected |
+| `fundamentalsIntervalMs` | `number` | `900000` | How often to check for new earnings (ms) |
 | `signal` | `AbortSignal` | — | Cancel the stream |
 
 ---
