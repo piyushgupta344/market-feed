@@ -31,6 +31,7 @@ export default defineConfig([
       screener:     "src/screener/index.ts",
       react:        "src/react/index.ts",
       options:      "src/options/index.ts",
+      macro:        "src/macro/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

@@ -109,6 +109,11 @@
       "types": "./dist/options.d.ts",
       "import": "./dist/options.js",
       "require": "./dist/options.cjs"
+    },
+    "./macro": {
+      "types": "./dist/macro.d.ts",
+      "import": "./dist/macro.js",
+      "require": "./dist/macro.cjs"
     }
   },
   "peerDependencies": {
