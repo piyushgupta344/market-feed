@@ -49,4 +49,7 @@ export type CacheMethod =
   | "marketStatus"
   | "earnings"
   | "dividends"
-  | "splits";
+  | "splits"
+  | "incomeStatements"
+  | "balanceSheets"
+  | "cashFlows";

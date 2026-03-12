@@ -1,5 +1,91 @@
 # market-feed Changelog
 
+## 0.8.0 — 2026-03-12
+
+### New module
+
+**`market-feed/fundamentals`** — Financial statement types and a `getFundamentals()` convenience function.
+
+```ts
+import { getFundamentals } from "market-feed/fundamentals";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+const { incomeStatements, balanceSheets, cashFlows } = await getFundamentals(feed, "AAPL");
+
+console.log(`Revenue: $${(incomeStatements[0]!.revenue! / 1e9).toFixed(1)}B`);
+console.log(`Total assets: $${(balanceSheets[0]!.totalAssets! / 1e9).toFixed(1)}B`);
+console.log(`Free cash flow: $${(cashFlows[0]!.freeCashFlow! / 1e9).toFixed(1)}B`);
+```
+
+`getFundamentals()` fetches all three statements in parallel via `Promise.allSettled` — a failure on one statement still returns the others.
+
+#### `IncomeStatement`
+
+| Field | Description |
+|-------|-------------|
+| `revenue` | Total revenue |
+| `grossProfit` | Revenue - cost of revenue |
+| `operatingIncome` | EBIT (operating) |
+| `netIncome` | Bottom-line net income |
+| `ebitda` | EBITDA when available |
+| `dilutedEps` | Diluted EPS |
+
+#### `BalanceSheet`
+
+| Field | Description |
+|-------|-------------|
+| `totalAssets` | Total assets |
+| `totalLiabilities` | Total liabilities |
+| `totalStockholdersEquity` | Book value of equity |
+| `cashAndCashEquivalents` | Cash + cash equivalents |
+| `totalDebt` | Short + long-term debt |
+
+#### `CashFlowStatement`
+
+| Field | Description |
+|-------|-------------|
+| `operatingCashFlow` | Cash from operations |
+| `capitalExpenditures` | CapEx (negative = outflow) |
+| `freeCashFlow` | operatingCashFlow + capitalExpenditures |
+| `investingCashFlow` | Cash from investing |
+| `financingCashFlow` | Cash from financing |
+
+All three types include `symbol`, `date` (period end), `periodType` (`"annual"` | `"quarterly"`), and `provider`.
+
+### New methods on `MarketFeed`
+
+```ts
+const feed = new MarketFeed();
+
+const income  = await feed.incomeStatements("AAPL", { limit: 4 });
+const balance = await feed.balanceSheets("AAPL", { quarterly: true });
+const cash    = await feed.cashFlows("AAPL");
+```
+
+`FundamentalsOptions`: `quarterly?` (default `false`), `limit?` (default `4`), `raw?`.
+
+### Provider support
+
+| Method | `YahooProvider` | others |
+|--------|-----------------|--------|
+| `incomeStatements` | ✓ `incomeStatementHistory` / `incomeStatementHistoryQuarterly` | — |
+| `balanceSheets` | ✓ `balanceSheetHistory` / `balanceSheetHistoryQuarterly` | — |
+| `cashFlows` | ✓ `cashflowStatementHistory` / `cashflowStatementHistoryQuarterly` | — |
+
+### Breaking changes
+
+None. All v0.7.x imports continue to work unchanged.
+
+### Other changes
+
+- New types `IncomeStatement`, `BalanceSheet`, `CashFlowStatement`, `FundamentalsOptions` exported from main `market-feed` entry point
+- `CacheMethod` extended with `"incomeStatements" | "balanceSheets" | "cashFlows"` (TTL: 24 h each)
+- 13 new unit tests (460 total across 24 test files)
+- 10 tsup library entry points + 1 CLI binary
+
+---
+
 ## 0.7.0 — 2026-03-12
 
 ### New provider

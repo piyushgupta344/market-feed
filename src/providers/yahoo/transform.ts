@@ -1,12 +1,20 @@
 import type { CompanyProfile } from "../../types/company.js";
 import type { DividendEvent } from "../../types/dividends.js";
 import type { EarningsEvent } from "../../types/earnings.js";
+import type { BalanceSheet, CashFlowStatement, IncomeStatement } from "../../types/fundamentals.js";
 import type { HistoricalBar } from "../../types/historical.js";
 import type { Quote } from "../../types/quote.js";
 import type { SearchResult } from "../../types/search.js";
 import type { AssetType } from "../../types/search.js";
 import type { SplitEvent } from "../../types/splits.js";
-import type { YahooChartResult, YahooQuoteSummaryResult, YahooSearchQuote } from "./types.js";
+import type {
+  YahooBalanceSheet,
+  YahooCashFlowStatement,
+  YahooChartResult,
+  YahooIncomeStatement,
+  YahooQuoteSummaryResult,
+  YahooSearchQuote,
+} from "./types.js";
 
 const PROVIDER = "yahoo";
 
@@ -228,6 +236,120 @@ export function transformSearch(quote: YahooSearchQuote, raw?: unknown): SearchR
     name: quote.longname ?? quote.shortname ?? quote.symbol,
     type: YAHOO_TYPE_MAP[quote.quoteType?.toUpperCase() ?? ""] ?? "unknown",
     ...(exchange !== undefined ? { exchange } : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Fundamentals
+// ---------------------------------------------------------------------------
+
+export function transformIncomeStatement(
+  symbol: string,
+  entry: YahooIncomeStatement,
+  periodType: "annual" | "quarterly",
+  raw?: unknown,
+): IncomeStatement {
+  const rawDate = entry.endDate?.raw;
+  return {
+    symbol: symbol.toUpperCase(),
+    date: rawDate ? new Date(rawDate * 1000) : new Date(0),
+    periodType,
+    ...(entry.totalRevenue?.raw !== undefined ? { revenue: entry.totalRevenue.raw } : {}),
+    ...(entry.costOfRevenue?.raw !== undefined ? { costOfRevenue: entry.costOfRevenue.raw } : {}),
+    ...(entry.grossProfit?.raw !== undefined ? { grossProfit: entry.grossProfit.raw } : {}),
+    ...(entry.researchDevelopment?.raw !== undefined
+      ? { researchAndDevelopment: entry.researchDevelopment.raw }
+      : {}),
+    ...(entry.sellingGeneralAdministrative?.raw !== undefined
+      ? { sellingGeneralAdministrative: entry.sellingGeneralAdministrative.raw }
+      : {}),
+    ...(entry.totalOperatingExpenses?.raw !== undefined
+      ? { totalOperatingExpenses: entry.totalOperatingExpenses.raw }
+      : {}),
+    ...(entry.operatingIncome?.raw !== undefined
+      ? { operatingIncome: entry.operatingIncome.raw }
+      : {}),
+    ...(entry.netIncome?.raw !== undefined ? { netIncome: entry.netIncome.raw } : {}),
+    ...(entry.ebit?.raw !== undefined ? { ebit: entry.ebit.raw } : {}),
+    ...(entry.ebitda?.raw !== undefined ? { ebitda: entry.ebitda.raw } : {}),
+    ...(entry.dilutedEps?.raw !== undefined ? { dilutedEps: entry.dilutedEps.raw } : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformBalanceSheet(
+  symbol: string,
+  entry: YahooBalanceSheet,
+  periodType: "annual" | "quarterly",
+  raw?: unknown,
+): BalanceSheet {
+  const rawDate = entry.endDate?.raw;
+  return {
+    symbol: symbol.toUpperCase(),
+    date: rawDate ? new Date(rawDate * 1000) : new Date(0),
+    periodType,
+    ...(entry.totalAssets?.raw !== undefined ? { totalAssets: entry.totalAssets.raw } : {}),
+    ...(entry.totalCurrentAssets?.raw !== undefined
+      ? { totalCurrentAssets: entry.totalCurrentAssets.raw }
+      : {}),
+    ...(entry.totalLiab?.raw !== undefined ? { totalLiabilities: entry.totalLiab.raw } : {}),
+    ...(entry.totalCurrentLiabilities?.raw !== undefined
+      ? { totalCurrentLiabilities: entry.totalCurrentLiabilities.raw }
+      : {}),
+    ...(entry.totalStockholderEquity?.raw !== undefined
+      ? { totalStockholdersEquity: entry.totalStockholderEquity.raw }
+      : {}),
+    ...(entry.cash?.raw !== undefined ? { cashAndCashEquivalents: entry.cash.raw } : {}),
+    ...(entry.shortTermInvestments?.raw !== undefined
+      ? { shortTermInvestments: entry.shortTermInvestments.raw }
+      : {}),
+    ...(entry.netReceivables?.raw !== undefined
+      ? { netReceivables: entry.netReceivables.raw }
+      : {}),
+    ...(entry.inventory?.raw !== undefined ? { inventory: entry.inventory.raw } : {}),
+    ...(entry.shortLongTermDebt?.raw !== undefined
+      ? { shortTermDebt: entry.shortLongTermDebt.raw }
+      : {}),
+    ...(entry.longTermDebt?.raw !== undefined ? { longTermDebt: entry.longTermDebt.raw } : {}),
+    ...(entry.totalDebt?.raw !== undefined ? { totalDebt: entry.totalDebt.raw } : {}),
+    ...(entry.retainedEarnings?.raw !== undefined
+      ? { retainedEarnings: entry.retainedEarnings.raw }
+      : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformCashFlowStatement(
+  symbol: string,
+  entry: YahooCashFlowStatement,
+  periodType: "annual" | "quarterly",
+  raw?: unknown,
+): CashFlowStatement {
+  const rawDate = entry.endDate?.raw;
+  const operatingCF = entry.totalCashFromOperatingActivities?.raw;
+  const capex = entry.capitalExpenditures?.raw;
+  const freeCashFlow =
+    operatingCF !== undefined && capex !== undefined ? operatingCF + capex : undefined;
+
+  return {
+    symbol: symbol.toUpperCase(),
+    date: rawDate ? new Date(rawDate * 1000) : new Date(0),
+    periodType,
+    ...(operatingCF !== undefined ? { operatingCashFlow: operatingCF } : {}),
+    ...(entry.totalCashflowsFromInvestingActivities?.raw !== undefined
+      ? { investingCashFlow: entry.totalCashflowsFromInvestingActivities.raw }
+      : {}),
+    ...(entry.totalCashFromFinancingActivities?.raw !== undefined
+      ? { financingCashFlow: entry.totalCashFromFinancingActivities.raw }
+      : {}),
+    ...(entry.changeInCash?.raw !== undefined ? { netChangeInCash: entry.changeInCash.raw } : {}),
+    ...(capex !== undefined ? { capitalExpenditures: capex } : {}),
+    ...(freeCashFlow !== undefined ? { freeCashFlow } : {}),
+    ...(entry.depreciation?.raw !== undefined ? { depreciation: entry.depreciation.raw } : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };
