@@ -27,6 +27,7 @@ export default defineConfig([
       backtest:     "src/backtest/index.ts",
       alerts:       "src/alerts/index.ts",
       fundamentals: "src/fundamentals/index.ts",
+      screener:     "src/screener/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

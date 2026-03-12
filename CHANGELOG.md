@@ -1,5 +1,66 @@
 # market-feed Changelog
 
+## 0.9.0 — 2026-03-12
+
+### New module
+
+**`market-feed/screener`** — Filter a list of symbols against a set of criteria using live quote data.
+
+```ts
+import { screen } from "market-feed/screener";
+import { MarketFeed } from "market-feed";
+
+const feed = new MarketFeed();
+
+const results = await screen(feed, ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"], {
+  criteria: [
+    { type: "price_above", value: 100 },
+    { type: "change_pct_above", value: 1.5 },
+    { type: "volume_above", value: 10_000_000 },
+    { type: "market_cap_above", value: 100_000_000_000 },
+  ],
+  limit: 10,
+});
+
+console.log(results.map((r) => `${r.symbol} @ ${r.quote.price}`));
+```
+
+#### Criterion types
+
+| Type | Description |
+|------|-------------|
+| `price_above` / `price_below` | Filter by current price |
+| `change_pct_above` / `change_pct_below` | Filter by daily % change |
+| `volume_above` / `volume_below` | Filter by trading volume |
+| `market_cap_above` / `market_cap_below` | Filter by market cap |
+| `52w_high_pct_below` | Price is within N% of the 52-week high |
+| `52w_low_pct_above` | Price is at least N% above the 52-week low |
+| `custom` | Arbitrary predicate: `{ type: "custom", fn: (quote) => boolean }` |
+
+All criteria are evaluated with **AND logic** — a symbol must pass every criterion to be included.
+
+#### Options
+
+| Option | Description |
+|--------|-------------|
+| `criteria` | Array of `ScreenerCriterion` (required) |
+| `batchSize` | Max symbols per quote fetch call (default: all at once) |
+| `limit` | Max number of results to return |
+
+#### Result shape
+
+```ts
+interface ScreenerResult {
+  symbol: string;
+  quote: Quote;
+  matchedCriteria: number; // always === criteria.length
+}
+```
+
+`screen()` accepts any object with a `quote(symbols[]) → Quote[]` method — works with `MarketFeed`, individual providers, or your own mock.
+
+---
+
 ## 0.8.0 — 2026-03-12
 
 ### New module
