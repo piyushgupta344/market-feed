@@ -1,10 +1,13 @@
 import type { CompanyProfile } from "../../types/company.js";
+import type { BalanceSheet, CashFlowStatement, IncomeStatement } from "../../types/fundamentals.js";
 import type { HistoricalBar } from "../../types/historical.js";
 import type { NewsItem } from "../../types/news.js";
 import type { Quote } from "../../types/quote.js";
 import type { SearchResult } from "../../types/search.js";
 import type {
   TiingoDailyBar,
+  TiingoDataPoint,
+  TiingoFundamentalsStatement,
   TiingoIexQuote,
   TiingoMetaResponse,
   TiingoNewsArticle,
@@ -90,6 +93,118 @@ export function transformNews(article: TiingoNewsArticle, raw?: unknown): NewsIt
     source: article.source,
     publishedAt: new Date(article.publishedDate),
     symbols: article.tickers.map((t) => t.toUpperCase()),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Fundamentals
+// ---------------------------------------------------------------------------
+
+function dataVal(points: TiingoDataPoint[] | undefined, code: string): number | undefined {
+  const v = points?.find((p) => p.dataCode === code)?.value;
+  return v === null || v === undefined ? undefined : v;
+}
+
+function fundPeriodType(quarter: number): "annual" | "quarterly" {
+  return quarter === 0 ? "annual" : "quarterly";
+}
+
+export function transformIncomeStatement(
+  stmt: TiingoFundamentalsStatement,
+  symbol: string,
+  raw?: unknown,
+): IncomeStatement {
+  const is = stmt.statementData.incomeStatement;
+  return {
+    symbol,
+    date: new Date(stmt.date),
+    periodType: fundPeriodType(stmt.quarter),
+    ...(dataVal(is, "revenue") !== undefined ? { revenue: dataVal(is, "revenue") } : {}),
+    ...(dataVal(is, "costRev") !== undefined ? { costOfRevenue: dataVal(is, "costRev") } : {}),
+    ...(dataVal(is, "grossProfit") !== undefined
+      ? { grossProfit: dataVal(is, "grossProfit") }
+      : {}),
+    ...(dataVal(is, "rnd") !== undefined ? { researchAndDevelopment: dataVal(is, "rnd") } : {}),
+    ...(dataVal(is, "sgna") !== undefined
+      ? { sellingGeneralAdministrative: dataVal(is, "sgna") }
+      : {}),
+    ...(dataVal(is, "opinc") !== undefined
+      ? { operatingIncome: dataVal(is, "opinc"), ebit: dataVal(is, "opinc") }
+      : {}),
+    ...(dataVal(is, "ebitda") !== undefined ? { ebitda: dataVal(is, "ebitda") } : {}),
+    ...(dataVal(is, "netinc") !== undefined ? { netIncome: dataVal(is, "netinc") } : {}),
+    ...(dataVal(is, "eps") !== undefined ? { eps: dataVal(is, "eps") } : {}),
+    ...(dataVal(is, "epsDil") !== undefined ? { dilutedEps: dataVal(is, "epsDil") } : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformBalanceSheet(
+  stmt: TiingoFundamentalsStatement,
+  symbol: string,
+  raw?: unknown,
+): BalanceSheet {
+  const bs = stmt.statementData.balanceSheet;
+  return {
+    symbol,
+    date: new Date(stmt.date),
+    periodType: fundPeriodType(stmt.quarter),
+    ...(dataVal(bs, "totalAssets") !== undefined
+      ? { totalAssets: dataVal(bs, "totalAssets") }
+      : {}),
+    ...(dataVal(bs, "totalCurrent") !== undefined
+      ? { totalCurrentAssets: dataVal(bs, "totalCurrent") }
+      : {}),
+    ...(dataVal(bs, "totalLiabilities") !== undefined
+      ? { totalLiabilities: dataVal(bs, "totalLiabilities") }
+      : {}),
+    ...(dataVal(bs, "liabilitiesCurrent") !== undefined
+      ? { totalCurrentLiabilities: dataVal(bs, "liabilitiesCurrent") }
+      : {}),
+    ...(dataVal(bs, "equity") !== undefined
+      ? { totalStockholdersEquity: dataVal(bs, "equity") }
+      : {}),
+    ...(dataVal(bs, "cashAndEq") !== undefined
+      ? { cashAndCashEquivalents: dataVal(bs, "cashAndEq") }
+      : {}),
+    ...(dataVal(bs, "shortTermInv") !== undefined
+      ? { shortTermInvestments: dataVal(bs, "shortTermInv") }
+      : {}),
+    ...(dataVal(bs, "totalDebt") !== undefined ? { totalDebt: dataVal(bs, "totalDebt") } : {}),
+    ...(dataVal(bs, "debtNonCurrent") !== undefined
+      ? { longTermDebt: dataVal(bs, "debtNonCurrent") }
+      : {}),
+    ...(dataVal(bs, "retainedEarnings") !== undefined
+      ? { retainedEarnings: dataVal(bs, "retainedEarnings") }
+      : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformCashFlowStatement(
+  stmt: TiingoFundamentalsStatement,
+  symbol: string,
+  raw?: unknown,
+): CashFlowStatement {
+  const cf = stmt.statementData.cashFlow;
+  return {
+    symbol,
+    date: new Date(stmt.date),
+    periodType: fundPeriodType(stmt.quarter),
+    ...(dataVal(cf, "ncfo") !== undefined ? { operatingCashFlow: dataVal(cf, "ncfo") } : {}),
+    ...(dataVal(cf, "ncfi") !== undefined ? { investingCashFlow: dataVal(cf, "ncfi") } : {}),
+    ...(dataVal(cf, "ncff") !== undefined ? { financingCashFlow: dataVal(cf, "ncff") } : {}),
+    ...(dataVal(cf, "capex") !== undefined ? { capitalExpenditures: dataVal(cf, "capex") } : {}),
+    ...(dataVal(cf, "freeCashFlow") !== undefined
+      ? { freeCashFlow: dataVal(cf, "freeCashFlow") }
+      : {}),
+    ...(dataVal(cf, "depreciation") !== undefined
+      ? { depreciation: dataVal(cf, "depreciation") }
+      : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };

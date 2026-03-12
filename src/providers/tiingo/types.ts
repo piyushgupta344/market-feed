@@ -70,3 +70,24 @@ export interface TiingoNewsArticle {
 export interface TiingoErrorResponse {
   detail: string;
 }
+
+// ---------------------------------------------------------------------------
+// Fundamentals — /tiingo/fundamentals/{ticker}/statements
+// ---------------------------------------------------------------------------
+export interface TiingoFundamentalsStatement {
+  /** ISO date string — period end date */
+  date: string;
+  year: number;
+  /** 0 = annual, 1-4 = quarter */
+  quarter: number;
+  statementData: {
+    incomeStatement?: TiingoDataPoint[];
+    balanceSheet?: TiingoDataPoint[];
+    cashFlow?: TiingoDataPoint[];
+  };
+}
+
+export interface TiingoDataPoint {
+  dataCode: string;
+  value: number | null;
+}
