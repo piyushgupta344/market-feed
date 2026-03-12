@@ -150,6 +150,76 @@ feed.marketStatus(market?: string, options?: MarketStatusOptions): Promise<Marke
 
 ---
 
+### `earnings(symbol, options?)`
+
+Fetch historical EPS actuals vs. analyst estimates.
+
+```ts
+feed.earnings(symbol: string, options?: EarningsOptions): Promise<EarningsEvent[]>
+```
+
+---
+
+### `dividends(symbol, options?)`
+
+Fetch cash dividend history.
+
+```ts
+feed.dividends(symbol: string, options?: DividendOptions): Promise<DividendEvent[]>
+```
+
+---
+
+### `splits(symbol, options?)`
+
+Fetch stock split history.
+
+```ts
+feed.splits(symbol: string, options?: SplitOptions): Promise<SplitEvent[]>
+```
+
+---
+
+### `incomeStatements(symbol, options?)`
+
+Fetch annual or quarterly income statements.
+
+```ts
+feed.incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]>
+```
+
+---
+
+### `balanceSheets(symbol, options?)`
+
+Fetch annual or quarterly balance sheets.
+
+```ts
+feed.balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]>
+```
+
+---
+
+### `cashFlows(symbol, options?)`
+
+Fetch annual or quarterly cash flow statements.
+
+```ts
+feed.cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]>
+```
+
+```ts
+interface FundamentalsOptions {
+  /** Return quarterly periods instead of annual. Default: false. */
+  quarterly?: boolean;
+  /** Max number of periods to return. */
+  limit?: number;
+  raw?: boolean;
+}
+```
+
+---
+
 ### `clearCache()`
 
 Remove all cached entries.
@@ -306,6 +376,7 @@ interface CacheConfig {
 }
 
 type CacheMethod =
-  | "quote" | "historical" | "company"
-  | "news" | "search" | "marketStatus";
+  | "quote" | "historical" | "company" | "news" | "search" | "marketStatus"
+  | "earnings" | "dividends" | "splits"
+  | "incomeStatements" | "balanceSheets" | "cashFlows";
 ```

@@ -17,12 +17,14 @@ export default defineConfig({
 
     nav: [
       { text: "Guide", link: "/guide/getting-started" },
+      { text: "Modules", link: "/modules/calendar" },
       { text: "API", link: "/api/reference" },
       { text: "npm", link: "https://www.npmjs.com/package/market-feed" },
       {
-        text: "v0.1.0",
+        text: "v1.0.0",
         items: [
           { text: "Changelog", link: "https://github.com/piyushgupta344/market-feed/blob/main/CHANGELOG.md" },
+          { text: "Roadmap", link: "/guide/roadmap" },
           { text: "Contributing", link: "https://github.com/piyushgupta344/market-feed/blob/main/CONTRIBUTING.md" },
         ],
       },
@@ -52,14 +54,30 @@ export default defineConfig({
           { text: "Custom Provider", link: "/guide/custom-provider" },
           { text: "Custom Cache Driver", link: "/guide/custom-cache" },
           { text: "Multi-Runtime", link: "/guide/runtimes" },
+          { text: "Roadmap", link: "/guide/roadmap" },
+        ],
+      },
+      {
+        text: "Modules",
+        items: [
+          { text: "Exchange Calendar", link: "/modules/calendar" },
+          { text: "HTTP Polling Stream", link: "/modules/stream" },
+          { text: "WebSocket Streaming", link: "/modules/ws" },
+          { text: "Price Consensus", link: "/modules/consensus" },
+          { text: "Technical Indicators", link: "/modules/indicators" },
+          { text: "Portfolio", link: "/modules/portfolio" },
+          { text: "Backtesting", link: "/modules/backtest" },
+          { text: "Price Alerts", link: "/modules/alerts" },
+          { text: "Fundamentals", link: "/modules/fundamentals" },
+          { text: "Stock Screener", link: "/modules/screener" },
+          { text: "React Hooks", link: "/modules/react" },
+          { text: "CLI", link: "/modules/cli" },
         ],
       },
       {
         text: "API Reference",
         items: [
-          { text: "MarketFeed", link: "/api/market-feed" },
-          { text: "Providers", link: "/api/providers" },
-          { text: "Types", link: "/api/types" },
+          { text: "MarketFeed", link: "/api/reference" },
           { text: "Errors", link: "/api/errors" },
           { text: "Utilities", link: "/api/utilities" },
         ],
