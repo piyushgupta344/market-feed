@@ -74,4 +74,36 @@ describe("CLI parseArgs()", () => {
     expect(args.command).toBe("");
     expect(args.positionals).toEqual([]);
   });
+
+  it("parses earnings command", () => {
+    const args = parseArgs(["node", "cli.js", "earnings", "AAPL", "--limit", "8"]);
+    expect(args.command).toBe("earnings");
+    expect(args.positionals).toEqual(["AAPL"]);
+    expect(args.limit).toBe(8);
+  });
+
+  it("parses dividends command with --from and --to", () => {
+    const args = parseArgs([
+      "node", "cli.js", "dividends", "AAPL",
+      "--from", "2020-01-01",
+      "--to", "2024-12-31",
+    ]);
+    expect(args.command).toBe("dividends");
+    expect(args.positionals).toEqual(["AAPL"]);
+    expect(args.from).toBe("2020-01-01");
+    expect(args.to).toBe("2024-12-31");
+  });
+
+  it("parses splits command", () => {
+    const args = parseArgs(["node", "cli.js", "splits", "AAPL", "--json"]);
+    expect(args.command).toBe("splits");
+    expect(args.positionals).toEqual(["AAPL"]);
+    expect(args.json).toBe(true);
+  });
+
+  it("--from defaults to undefined", () => {
+    const args = parseArgs(["node", "cli.js", "dividends", "AAPL"]);
+    expect(args.from).toBeUndefined();
+    expect(args.to).toBeUndefined();
+  });
 });

@@ -19,6 +19,9 @@ Commands:
   search     <query>        Search for symbols
   company    <symbol>       Fetch company profile
   news       <symbol>       Fetch recent news
+  earnings   <symbol>       Fetch EPS history (actuals vs. estimates)
+  dividends  <symbol>       Fetch cash dividend history
+  splits     <symbol>       Fetch stock split history
 
 Options:
   --av-key <key>        Alpha Vantage API key
@@ -29,6 +32,8 @@ Options:
   --interval <i>        Historical interval: 1m 5m 15m 30m 1h 1d 1wk 1mo (default: 1d)
   --period1 <date>      Historical start date (ISO 8601)
   --period2 <date>      Historical end date (ISO 8601)
+  --from <date>         Dividends/splits start date (ISO 8601)
+  --to <date>           Dividends/splits end date (ISO 8601)
   -h, --help            Show this help message
 
 Examples:
@@ -37,6 +42,9 @@ Examples:
   market-feed search "apple inc"
   market-feed company AAPL --json
   market-feed news AAPL --limit 5
+  market-feed earnings AAPL --limit 8
+  market-feed dividends AAPL --from 2020-01-01
+  market-feed splits AAPL --json
 `.trim();
 
 interface CliArgs {
@@ -50,6 +58,8 @@ interface CliArgs {
   interval: string;
   period1?: string;
   period2?: string;
+  from?: string;
+  to?: string;
 }
 
 function parseArgs(argv: string[]): CliArgs {
@@ -91,6 +101,12 @@ function parseArgs(argv: string[]): CliArgs {
       i++;
     } else if (arg === "--period2") {
       result.period2 = args[++i];
+      i++;
+    } else if (arg === "--from") {
+      result.from = args[++i];
+      i++;
+    } else if (arg === "--to") {
+      result.to = args[++i];
       i++;
     } else if (!arg.startsWith("-") && !result.command) {
       result.command = arg;
@@ -226,6 +242,88 @@ async function runNews(feed: MarketFeed, symbol: string, args: CliArgs): Promise
   }
 }
 
+async function runEarnings(feed: MarketFeed, symbol: string, args: CliArgs): Promise<void> {
+  const events = await feed.earnings(symbol, { limit: args.limit });
+  if (args.json) {
+    console.log(JSON.stringify(events, null, 2));
+    return;
+  }
+  if (events.length === 0) {
+    console.log("No earnings data found.");
+    return;
+  }
+  console.log(
+    `${pad("Date", 12)} ${pad("Period", 12)} ${pad("Actual", 9)} ${pad("Estimate", 9)} ${pad("Surprise%", 10)} Provider`,
+  );
+  console.log("-".repeat(70));
+  for (const e of events) {
+    const date = e.date.toISOString().slice(0, 10);
+    const period = e.period ?? "-";
+    const actual = e.epsActual !== undefined ? fmtNum(e.epsActual, 2) : "-";
+    const estimate = e.epsEstimate !== undefined ? fmtNum(e.epsEstimate, 2) : "-";
+    const surprise =
+      e.epsSurprisePct !== undefined
+        ? `${e.epsSurprisePct >= 0 ? "+" : ""}${fmtNum(e.epsSurprisePct, 2)}%`
+        : "-";
+    console.log(
+      `${pad(date, 12)} ${pad(period, 12)} ${pad(actual, 9)} ${pad(estimate, 9)} ${pad(surprise, 10)} ${e.provider}`,
+    );
+  }
+}
+
+async function runDividends(feed: MarketFeed, symbol: string, args: CliArgs): Promise<void> {
+  const events = await feed.dividends(symbol, {
+    limit: args.limit,
+    ...(args.from ? { from: args.from } : {}),
+    ...(args.to ? { to: args.to } : {}),
+  });
+  if (args.json) {
+    console.log(JSON.stringify(events, null, 2));
+    return;
+  }
+  if (events.length === 0) {
+    console.log("No dividend data found.");
+    return;
+  }
+  console.log(
+    `${pad("Ex Date", 12)} ${pad("Amount", 9)} ${pad("Frequency", 14)} ${pad("Pay Date", 12)} Provider`,
+  );
+  console.log("-".repeat(66));
+  for (const e of events) {
+    const exDate = e.exDate.toISOString().slice(0, 10);
+    const amount = `$${fmtNum(e.amount, 4)}`;
+    const freq = e.frequency ?? "-";
+    const payDate = e.payDate ? e.payDate.toISOString().slice(0, 10) : "-";
+    console.log(
+      `${pad(exDate, 12)} ${pad(amount, 9)} ${pad(freq, 14)} ${pad(payDate, 12)} ${e.provider}`,
+    );
+  }
+}
+
+async function runSplits(feed: MarketFeed, symbol: string, args: CliArgs): Promise<void> {
+  const events = await feed.splits(symbol, {
+    limit: args.limit,
+    ...(args.from ? { from: args.from } : {}),
+    ...(args.to ? { to: args.to } : {}),
+  });
+  if (args.json) {
+    console.log(JSON.stringify(events, null, 2));
+    return;
+  }
+  if (events.length === 0) {
+    console.log("No split data found.");
+    return;
+  }
+  console.log(`${pad("Date", 12)} ${pad("Ratio", 8)} ${pad("Description", 14)} Provider`);
+  console.log("-".repeat(50));
+  for (const e of events) {
+    const date = e.date.toISOString().slice(0, 10);
+    const ratio = fmtNum(e.ratio, 4);
+    const desc = e.description ?? "-";
+    console.log(`${pad(date, 12)} ${pad(ratio, 8)} ${pad(desc, 14)} ${e.provider}`);
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -285,6 +383,33 @@ async function main(): Promise<void> {
           process.exit(1);
         }
         await runNews(feed, symbol, args);
+        break;
+      }
+      case "earnings": {
+        const [symbol] = args.positionals;
+        if (!symbol) {
+          console.error("Error: earnings requires a symbol\n");
+          process.exit(1);
+        }
+        await runEarnings(feed, symbol, args);
+        break;
+      }
+      case "dividends": {
+        const [symbol] = args.positionals;
+        if (!symbol) {
+          console.error("Error: dividends requires a symbol\n");
+          process.exit(1);
+        }
+        await runDividends(feed, symbol, args);
+        break;
+      }
+      case "splits": {
+        const [symbol] = args.positionals;
+        if (!symbol) {
+          console.error("Error: splits requires a symbol\n");
+          process.exit(1);
+        }
+        await runSplits(feed, symbol, args);
         break;
       }
       default: {

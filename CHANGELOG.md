@@ -1,5 +1,25 @@
 # market-feed Changelog
 
+## 0.5.1 — 2026-03-12
+
+### CLI additions
+
+Three new commands expose the v0.5.0 corporate-action data from the terminal:
+
+```bash
+market-feed earnings AAPL --limit 8
+market-feed dividends AAPL --from 2020-01-01
+market-feed splits AAPL --json
+```
+
+New flags `--from <date>` and `--to <date>` scope the dividend/split history by date range (ISO 8601). `--limit` and `--json` work on all three commands.
+
+### Breaking changes
+
+None.
+
+---
+
 ## 0.5.0 — 2026-03-11
 
 ### New modules
