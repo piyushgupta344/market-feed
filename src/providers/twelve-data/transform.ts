@@ -1,8 +1,12 @@
 import type { CompanyProfile } from "../../types/company.js";
+import type { BalanceSheet, CashFlowStatement, IncomeStatement } from "../../types/fundamentals.js";
 import type { HistoricalBar } from "../../types/historical.js";
 import type { Quote } from "../../types/quote.js";
 import type { AssetType, SearchResult } from "../../types/search.js";
 import type {
+  TwelveDataBalanceSheetPeriod,
+  TwelveDataCashFlowPeriod,
+  TwelveDataIncomeStatementPeriod,
   TwelveDataProfileResponse,
   TwelveDataQuoteResponse,
   TwelveDataSearchResult,
@@ -74,6 +78,141 @@ export function transformProfile(data: TwelveDataProfileResponse, raw?: unknown)
     website: data.website || undefined,
     ceo: data.CEO || undefined,
     exchange: data.exchange || undefined,
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Fundamentals
+// ---------------------------------------------------------------------------
+
+function numStr(val: string | undefined): number | undefined {
+  if (val === undefined || val === null || val === "") return undefined;
+  const n = Number(val);
+  return Number.isNaN(n) ? undefined : n;
+}
+
+export function transformIncomeStatement(
+  period: TwelveDataIncomeStatementPeriod,
+  symbol: string,
+  periodType: "annual" | "quarterly",
+  raw?: unknown,
+): IncomeStatement {
+  return {
+    symbol,
+    date: new Date(period.fiscal_date),
+    periodType,
+    ...(numStr(period.revenue) !== undefined ? { revenue: numStr(period.revenue) } : {}),
+    ...(numStr(period.cost_of_revenue) !== undefined
+      ? { costOfRevenue: numStr(period.cost_of_revenue) }
+      : {}),
+    ...(numStr(period.gross_profit) !== undefined
+      ? { grossProfit: numStr(period.gross_profit) }
+      : {}),
+    ...(numStr(period.research_and_development) !== undefined
+      ? { researchAndDevelopment: numStr(period.research_and_development) }
+      : {}),
+    ...(numStr(period.selling_general_and_administrative) !== undefined
+      ? { sellingGeneralAdministrative: numStr(period.selling_general_and_administrative) }
+      : {}),
+    ...(numStr(period.operating_expenses) !== undefined
+      ? { totalOperatingExpenses: numStr(period.operating_expenses) }
+      : {}),
+    ...(numStr(period.operating_income) !== undefined
+      ? { operatingIncome: numStr(period.operating_income) }
+      : {}),
+    ...(numStr(period.ebit) !== undefined ? { ebit: numStr(period.ebit) } : {}),
+    ...(numStr(period.ebitda) !== undefined ? { ebitda: numStr(period.ebitda) } : {}),
+    ...(numStr(period.net_income) !== undefined ? { netIncome: numStr(period.net_income) } : {}),
+    ...(numStr(period.eps_basic) !== undefined ? { eps: numStr(period.eps_basic) } : {}),
+    ...(numStr(period.eps_diluted) !== undefined ? { dilutedEps: numStr(period.eps_diluted) } : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformBalanceSheet(
+  period: TwelveDataBalanceSheetPeriod,
+  symbol: string,
+  periodType: "annual" | "quarterly",
+  raw?: unknown,
+): BalanceSheet {
+  return {
+    symbol,
+    date: new Date(period.fiscal_date),
+    periodType,
+    ...(numStr(period.total_assets) !== undefined
+      ? { totalAssets: numStr(period.total_assets) }
+      : {}),
+    ...(numStr(period.total_current_assets) !== undefined
+      ? { totalCurrentAssets: numStr(period.total_current_assets) }
+      : {}),
+    ...(numStr(period.total_liabilities) !== undefined
+      ? { totalLiabilities: numStr(period.total_liabilities) }
+      : {}),
+    ...(numStr(period.total_current_liabilities) !== undefined
+      ? { totalCurrentLiabilities: numStr(period.total_current_liabilities) }
+      : {}),
+    ...(numStr(period.total_equity) !== undefined
+      ? { totalStockholdersEquity: numStr(period.total_equity) }
+      : {}),
+    ...(numStr(period.cash_and_cash_equivalents) !== undefined
+      ? { cashAndCashEquivalents: numStr(period.cash_and_cash_equivalents) }
+      : {}),
+    ...(numStr(period.short_term_investments) !== undefined
+      ? { shortTermInvestments: numStr(period.short_term_investments) }
+      : {}),
+    ...(numStr(period.net_receivables) !== undefined
+      ? { netReceivables: numStr(period.net_receivables) }
+      : {}),
+    ...(numStr(period.inventory) !== undefined ? { inventory: numStr(period.inventory) } : {}),
+    ...(numStr(period.short_term_debt) !== undefined
+      ? { shortTermDebt: numStr(period.short_term_debt) }
+      : {}),
+    ...(numStr(period.long_term_debt) !== undefined
+      ? { longTermDebt: numStr(period.long_term_debt) }
+      : {}),
+    ...(numStr(period.total_debt) !== undefined ? { totalDebt: numStr(period.total_debt) } : {}),
+    ...(numStr(period.retained_earnings) !== undefined
+      ? { retainedEarnings: numStr(period.retained_earnings) }
+      : {}),
+    provider: PROVIDER,
+    ...(raw !== undefined ? { raw } : {}),
+  };
+}
+
+export function transformCashFlowStatement(
+  period: TwelveDataCashFlowPeriod,
+  symbol: string,
+  periodType: "annual" | "quarterly",
+  raw?: unknown,
+): CashFlowStatement {
+  return {
+    symbol,
+    date: new Date(period.fiscal_date),
+    periodType,
+    ...(numStr(period.operating_activities) !== undefined
+      ? { operatingCashFlow: numStr(period.operating_activities) }
+      : {}),
+    ...(numStr(period.investing_activities) !== undefined
+      ? { investingCashFlow: numStr(period.investing_activities) }
+      : {}),
+    ...(numStr(period.financing_activities) !== undefined
+      ? { financingCashFlow: numStr(period.financing_activities) }
+      : {}),
+    ...(numStr(period.net_change_in_cash) !== undefined
+      ? { netChangeInCash: numStr(period.net_change_in_cash) }
+      : {}),
+    ...(numStr(period.capital_expenditure) !== undefined
+      ? { capitalExpenditures: numStr(period.capital_expenditure) }
+      : {}),
+    ...(numStr(period.free_cash_flow) !== undefined
+      ? { freeCashFlow: numStr(period.free_cash_flow) }
+      : {}),
+    ...(numStr(period.depreciation_and_amortization) !== undefined
+      ? { depreciation: numStr(period.depreciation_and_amortization) }
+      : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };

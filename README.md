@@ -927,7 +927,7 @@ console.log(profile.sector); // "Technology"
 | **Alpha Vantage** | Free (25/day) | ✓ | ✓ | ✓ | ✓ | — | — |
 | **Polygon.io** | Free (delayed) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **Finnhub** | Free (60/min) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| **Twelve Data** | Free (800/day) | ✓ | ✓ | ✓ | ✓ | — | — |
+| **Twelve Data** | Free (800/day) | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | **Tiingo** | Free (1000/day) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 Get free keys: [Alpha Vantage](https://www.alphavantage.co/support/#api-key) · [Polygon.io](https://polygon.io/) · [Finnhub](https://finnhub.io/) · [Twelve Data](https://twelvedata.com/) · [Tiingo](https://www.tiingo.com/)

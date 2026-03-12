@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "exchange_timezone": "America/New_York"
+  },
+  "cash_flow_statement": {
+    "quarterly": [
+      {
+        "fiscal_date": "2024-09-30",
+        "operating_activities": "26808000000",
+        "investing_activities": "-2753000000",
+        "financing_activities": "-28671000000",
+        "net_change_in_cash": "-4616000000",
+        "capital_expenditure": "-2822000000",
+        "free_cash_flow": "23986000000",
+        "depreciation_and_amortization": "2822000000"
+      }
+    ],
+    "annual": [
+      {
+        "fiscal_date": "2023-09-30",
+        "operating_activities": "113260000000",
+        "investing_activities": "-21849000000",
+        "financing_activities": "-108488000000",
+        "net_change_in_cash": "-3077000000",
+        "capital_expenditure": "-11085000000",
+        "free_cash_flow": "102175000000",
+        "depreciation_and_amortization": "11519000000"
+      }
+    ]
+  }
+}

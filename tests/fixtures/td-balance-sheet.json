@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "symbol": "AAPL",
+    "name": "Apple Inc",
+    "currency": "USD",
+    "exchange": "NASDAQ",
+    "mic_code": "XNGS",
+    "exchange_timezone": "America/New_York"
+  },
+  "balance_sheet": {
+    "quarterly": [
+      {
+        "fiscal_date": "2024-09-30",
+        "total_assets": "364980000000",
+        "total_current_assets": "143566000000",
+        "total_liabilities": "308030000000",
+        "total_current_liabilities": "176392000000",
+        "total_equity": "56950000000",
+        "cash_and_cash_equivalents": "29943000000",
+        "short_term_investments": "35228000000",
+        "net_receivables": "33153000000",
+        "inventory": "7286000000",
+        "long_term_debt": "97150000000",
+        "total_debt": "108986000000",
+        "retained_earnings": "-19154000000"
+      }
+    ],
+    "annual": [
+      {
+        "fiscal_date": "2023-09-30",
+        "total_assets": "352583000000",
+        "total_current_assets": "135405000000",
+        "total_liabilities": "290437000000",
+        "total_current_liabilities": "145308000000",
+        "total_equity": "62146000000",
+        "cash_and_cash_equivalents": "29965000000",
+        "long_term_debt": "95281000000",
+        "total_debt": "111088000000",
+        "retained_earnings": "-214000000"
+      }
+    ]
+  }
+}

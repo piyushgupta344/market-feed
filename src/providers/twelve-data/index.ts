@@ -1,6 +1,7 @@
 import { ProviderError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
+import type { BalanceSheet, CashFlowStatement, FundamentalsOptions, IncomeStatement } from "../../types/fundamentals.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { MarketProvider } from "../../types/provider.js";
 import type { Quote, QuoteOptions } from "../../types/quote.js";
@@ -8,12 +9,18 @@ import type { SearchOptions, SearchResult } from "../../types/search.js";
 import { RateLimiter } from "../../utils/rate-limiter.js";
 import { normalise } from "../../utils/symbol.js";
 import {
+  transformBalanceSheet,
+  transformCashFlowStatement,
   transformHistoricalBar,
+  transformIncomeStatement,
   transformProfile,
   transformQuote,
   transformSearch,
 } from "./transform.js";
 import type {
+  TwelveDataBalanceSheetResponse,
+  TwelveDataCashFlowResponse,
+  TwelveDataIncomeStatementResponse,
   TwelveDataProfileResponse,
   TwelveDataQuoteResponse,
   TwelveDataSearchResponse,
@@ -176,6 +183,103 @@ export class TwelveDataProvider implements MarketProvider {
     }
 
     return transformProfile(data, options?.raw ? data : undefined);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fundamentals
+  // ---------------------------------------------------------------------------
+
+  async incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]> {
+    this.limiter.consume();
+    const s = normalise(symbol);
+
+    const data = await this.http.get<TwelveDataIncomeStatementResponse>("/income_statement", {
+      params: { symbol: s, apikey: this.apiKey },
+    });
+
+    if (data.code !== undefined) {
+      throw new ProviderError(
+        data.message ?? `No income statement data for symbol "${s}"`,
+        this.name,
+        data.code,
+      );
+    }
+
+    const periodType = options?.quarterly ? "quarterly" : "annual";
+    const periods = (options?.quarterly
+      ? data.income_statement?.quarterly
+      : data.income_statement?.annual) ?? [];
+
+    if (periods.length === 0) {
+      throw new ProviderError(`No income statement data for symbol "${s}"`, this.name);
+    }
+
+    const limit = options?.limit ?? periods.length;
+    return periods
+      .slice(0, limit)
+      .map((p) => transformIncomeStatement(p, s, periodType, options?.raw ? p : undefined));
+  }
+
+  async balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]> {
+    this.limiter.consume();
+    const s = normalise(symbol);
+
+    const data = await this.http.get<TwelveDataBalanceSheetResponse>("/balance_sheet", {
+      params: { symbol: s, apikey: this.apiKey },
+    });
+
+    if (data.code !== undefined) {
+      throw new ProviderError(
+        data.message ?? `No balance sheet data for symbol "${s}"`,
+        this.name,
+        data.code,
+      );
+    }
+
+    const periodType = options?.quarterly ? "quarterly" : "annual";
+    const periods = (options?.quarterly
+      ? data.balance_sheet?.quarterly
+      : data.balance_sheet?.annual) ?? [];
+
+    if (periods.length === 0) {
+      throw new ProviderError(`No balance sheet data for symbol "${s}"`, this.name);
+    }
+
+    const limit = options?.limit ?? periods.length;
+    return periods
+      .slice(0, limit)
+      .map((p) => transformBalanceSheet(p, s, periodType, options?.raw ? p : undefined));
+  }
+
+  async cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]> {
+    this.limiter.consume();
+    const s = normalise(symbol);
+
+    const data = await this.http.get<TwelveDataCashFlowResponse>("/cash_flow_statement", {
+      params: { symbol: s, apikey: this.apiKey },
+    });
+
+    if (data.code !== undefined) {
+      throw new ProviderError(
+        data.message ?? `No cash flow data for symbol "${s}"`,
+        this.name,
+        data.code,
+      );
+    }
+
+    const periodType = options?.quarterly ? "quarterly" : "annual";
+    const periods = (options?.quarterly
+      ? data.cash_flow_statement?.quarterly
+      : data.cash_flow_statement?.annual) ?? [];
+
+    if (periods.length === 0) {
+      throw new ProviderError(`No cash flow data for symbol "${s}"`, this.name);
+    }
+
+    const limit = options?.limit ?? periods.length;
+    return periods
+      .slice(0, limit)
+      .map((p) => transformCashFlowStatement(p, s, periodType, options?.raw ? p : undefined));
   }
 }
 
