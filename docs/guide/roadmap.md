@@ -8,6 +8,7 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **Tiingo fundamentals** — all three statement types via `/tiingo/fundamentals/{ticker}/statements`
 - **Twelve Data fundamentals** — `incomeStatements`, `balanceSheets`, `cashFlows` via `/income_statement`, `/balance_sheet`, `/cash_flow_statement`
 - **ESG scores** — `profile.esg.totalScore`, `environmentScore`, `socialScore`, `governanceScore` via Yahoo Finance `esgScores` module
+- **Portfolio-level backtesting** — `portfolioBacktest()` with shared cash pool, three position sizing modes, benchmark comparison
 - **`market-feed/options`** — options chains with Greeks from Polygon.io (see [Options Chain](/modules/options))
 - **`market-feed/macro`** — 15 FRED economic indicator series (see [Macro Indicators](/modules/macro))
 - **Screener `volume_vs_avg`** — `volume_vs_avg_above` / `volume_vs_avg_below` criteria
@@ -17,15 +18,6 @@ This page covers what's planned for future releases. Items are roughly ordered b
 ---
 
 ## Medium-term
-
-### Portfolio-level backtesting
-
-The current `backtest()` function is single-asset only. A multi-asset engine is planned:
-
-- Multiple positions open simultaneously
-- Position sizing (fixed dollar, percent of equity, Kelly criterion)
-- Correlation-aware max drawdown
-- Benchmark comparison (SPY, QQQ)
 
 ### Streaming fundamentals
 
