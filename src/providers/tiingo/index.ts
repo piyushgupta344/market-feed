@@ -1,6 +1,12 @@
 import { ProviderError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
+import type {
+  BalanceSheet,
+  CashFlowStatement,
+  FundamentalsOptions,
+  IncomeStatement,
+} from "../../types/fundamentals.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { NewsItem, NewsOptions } from "../../types/news.js";
 import type { MarketProvider } from "../../types/provider.js";
@@ -9,8 +15,11 @@ import type { SearchOptions, SearchResult } from "../../types/search.js";
 import { RateLimiter } from "../../utils/rate-limiter.js";
 import { normalise } from "../../utils/symbol.js";
 import {
+  transformBalanceSheet,
+  transformCashFlowStatement,
   transformCompany,
   transformHistoricalBar,
+  transformIncomeStatement,
   transformNews,
   transformQuote,
   transformSearch,
@@ -18,6 +27,7 @@ import {
 import type {
   TiingoDailyBar,
   TiingoErrorResponse,
+  TiingoFundamentalsStatement,
   TiingoIexQuote,
   TiingoMetaResponse,
   TiingoNewsArticle,
@@ -189,6 +199,70 @@ export class TiingoProvider implements MarketProvider {
     }
 
     return transformCompany(data as TiingoMetaResponse, options?.raw ? data : undefined);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fundamentals
+  // ---------------------------------------------------------------------------
+
+  async incomeStatements(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ): Promise<IncomeStatement[]> {
+    const stmts = await this.fetchStatements(symbol, options);
+    return stmts.map((s) =>
+      transformIncomeStatement(s, symbol.toUpperCase(), options?.raw ? s : undefined),
+    );
+  }
+
+  async balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]> {
+    const stmts = await this.fetchStatements(symbol, options);
+    return stmts.map((s) =>
+      transformBalanceSheet(s, symbol.toUpperCase(), options?.raw ? s : undefined),
+    );
+  }
+
+  async cashFlows(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ): Promise<CashFlowStatement[]> {
+    const stmts = await this.fetchStatements(symbol, options);
+    return stmts.map((s) =>
+      transformCashFlowStatement(s, symbol.toUpperCase(), options?.raw ? s : undefined),
+    );
+  }
+
+  private async fetchStatements(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ): Promise<TiingoFundamentalsStatement[]> {
+    this.limiter.consume();
+    const s = normalise(symbol);
+
+    const data = await this.http.get<TiingoFundamentalsStatement[] | TiingoErrorResponse>(
+      `/tiingo/fundamentals/${s}/statements`,
+    );
+
+    if (!Array.isArray(data)) {
+      throw new ProviderError(
+        (data as TiingoErrorResponse).detail ?? `No fundamentals data for symbol "${s}"`,
+        this.name,
+      );
+    }
+
+    if (data.length === 0) {
+      throw new ProviderError(`No fundamentals data for symbol "${s}"`, this.name);
+    }
+
+    // Filter by annual vs quarterly
+    const isQuarterly = options?.quarterly ?? false;
+    const filtered = data.filter((s) => (isQuarterly ? s.quarter > 0 : s.quarter === 0));
+
+    // Sort most-recent first and apply limit
+    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    const limit = options?.limit ?? 4;
+    return filtered.slice(0, limit);
   }
 
   // ---------------------------------------------------------------------------

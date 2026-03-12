@@ -1,0 +1,64 @@
+[
+  {
+    "date": "2024-09-30T00:00:00+00:00",
+    "year": 2024,
+    "quarter": 3,
+    "statementData": {
+      "incomeStatement": [
+        { "dataCode": "revenue",     "value": 94930000000 },
+        { "dataCode": "costRev",     "value": 50481000000 },
+        { "dataCode": "grossProfit", "value": 44449000000 },
+        { "dataCode": "rnd",         "value": 7856000000 },
+        { "dataCode": "sgna",        "value": 6320000000 },
+        { "dataCode": "opinc",       "value": 29550000000 },
+        { "dataCode": "ebitda",      "value": 32372000000 },
+        { "dataCode": "netinc",      "value": 14736000000 },
+        { "dataCode": "eps",         "value": 0.97 },
+        { "dataCode": "epsDil",      "value": 0.97 }
+      ],
+      "balanceSheet": [
+        { "dataCode": "totalAssets",         "value": 364980000000 },
+        { "dataCode": "totalCurrent",        "value": 143566000000 },
+        { "dataCode": "totalLiabilities",    "value": 308030000000 },
+        { "dataCode": "liabilitiesCurrent",  "value": 176392000000 },
+        { "dataCode": "equity",              "value": 56950000000 },
+        { "dataCode": "cashAndEq",           "value": 29943000000 },
+        { "dataCode": "shortTermInv",        "value": 35228000000 },
+        { "dataCode": "totalDebt",           "value": 108986000000 },
+        { "dataCode": "debtNonCurrent",      "value": 97150000000 },
+        { "dataCode": "retainedEarnings",    "value": -19154000000 }
+      ],
+      "cashFlow": [
+        { "dataCode": "ncfo",         "value": 26808000000 },
+        { "dataCode": "ncfi",         "value": -2753000000 },
+        { "dataCode": "ncff",         "value": -28671000000 },
+        { "dataCode": "capex",        "value": -2822000000 },
+        { "dataCode": "freeCashFlow", "value": 23986000000 },
+        { "dataCode": "depreciation", "value": 2822000000 }
+      ]
+    }
+  },
+  {
+    "date": "2023-12-31T00:00:00+00:00",
+    "year": 2023,
+    "quarter": 0,
+    "statementData": {
+      "incomeStatement": [
+        { "dataCode": "revenue",     "value": 383285000000 },
+        { "dataCode": "grossProfit", "value": 169148000000 },
+        { "dataCode": "netinc",      "value": 96995000000 },
+        { "dataCode": "epsDil",      "value": 6.16 }
+      ],
+      "balanceSheet": [
+        { "dataCode": "totalAssets",      "value": 352583000000 },
+        { "dataCode": "totalLiabilities", "value": 290437000000 },
+        { "dataCode": "equity",           "value": 62146000000 }
+      ],
+      "cashFlow": [
+        { "dataCode": "ncfo",         "value": 113301000000 },
+        { "dataCode": "capex",        "value": -11085000000 },
+        { "dataCode": "freeCashFlow", "value": 102216000000 }
+      ]
+    }
+  }
+]
