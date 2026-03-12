@@ -7,23 +7,12 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **Polygon fundamentals** — `incomeStatements`, `balanceSheets`, `cashFlows` via `/vX/reference/financials`
 - **Tiingo fundamentals** — all three statement types via `/tiingo/fundamentals/{ticker}/statements`
 - **Twelve Data fundamentals** — `incomeStatements`, `balanceSheets`, `cashFlows` via `/income_statement`, `/balance_sheet`, `/cash_flow_statement`
+- **ESG scores** — `profile.esg.totalScore`, `environmentScore`, `socialScore`, `governanceScore` via Yahoo Finance `esgScores` module
 - **`market-feed/options`** — options chains with Greeks from Polygon.io (see [Options Chain](/modules/options))
 - **`market-feed/macro`** — 15 FRED economic indicator series (see [Macro Indicators](/modules/macro))
 - **Screener `volume_vs_avg`** — `volume_vs_avg_above` / `volume_vs_avg_below` criteria
 
 ## Near-term
-
-### ESG scores
-
-Attach environmental, social, and governance scores to company profiles:
-
-```ts
-const profile = await feed.company("AAPL");
-console.log(profile.esg?.totalScore);    // 0–100
-console.log(profile.esg?.environmentScore);
-console.log(profile.esg?.socialScore);
-console.log(profile.esg?.governanceScore);
-```
 
 ---
 

@@ -1,3 +1,20 @@
+export interface EsgScores {
+  /** Overall ESG score (0–100, higher is better) */
+  totalScore?: number;
+  /** Environmental pillar score */
+  environmentScore?: number;
+  /** Social pillar score */
+  socialScore?: number;
+  /** Governance pillar score */
+  governanceScore?: number;
+  /** Percentile rank within the peer group */
+  percentile?: number;
+  /** Peer group name, e.g. "Technology Hardware" */
+  peerGroup?: string;
+  /** Performance tier, e.g. "OUT_PERF" | "AVG_PERF" | "UNDER_PERF" | "LAG_PERF" */
+  esgPerformance?: string;
+}
+
 export interface CompanyProfile {
   symbol: string;
   name: string;
@@ -27,6 +44,8 @@ export interface CompanyProfile {
   currency?: string;
   /** IPO date */
   ipoDate?: Date;
+  /** ESG scores — populated when available from the provider */
+  esg?: EsgScores;
   provider: string;
   raw?: unknown;
 }

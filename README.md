@@ -61,6 +61,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Portfolio tracking** — live P&L, unrealised gains, day change across all positions
 - **Backtesting** — pure-function engine: total return, CAGR, Sharpe ratio, max drawdown, win rate, profit factor
 - **Price alerts** — async generator that fires `AlertEvent` on price/volume/change conditions, with debounce
+- **ESG scores** — environmental, social, and governance scores on `CompanyProfile.esg` via Yahoo Finance
 - **Earnings, dividends, splits** — structured historical corporate action data from Yahoo, Polygon, and Finnhub
 - **Financial statements** — income statement, balance sheet, and cash flow statement via `market-feed/fundamentals`
 - **Options chains** — full options chain with Greeks (delta, gamma, theta, vega) from Polygon.io via `market-feed/options`
