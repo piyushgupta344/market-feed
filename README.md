@@ -63,6 +63,8 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Price alerts** — async generator that fires `AlertEvent` on price/volume/change conditions, with debounce
 - **Earnings, dividends, splits** — structured historical corporate action data from Yahoo, Polygon, and Finnhub
 - **Financial statements** — income statement, balance sheet, and cash flow statement via `market-feed/fundamentals`
+- **Options chains** — full options chain with Greeks (delta, gamma, theta, vega) from Polygon.io via `market-feed/options`
+- **Macro indicators** — 15 FRED economic series including CPI, GDP, unemployment, and yield curve data via `market-feed/macro`
 - **Stock screener** — filter a universe of symbols by price, volume, market cap, 52-week range, or any custom predicate via `market-feed/screener`
 - **React hooks** — `useQuote`, `useStream`, `useAlerts` for React ≥ 18 via `market-feed/react`
 - **CLI** — `npx market-feed quote AAPL` — no install required
@@ -72,7 +74,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 
 ## Subpath modules
 
-`market-feed` ships eleven optional subpath modules alongside the core client.
+`market-feed` ships thirteen optional subpath modules alongside the core client.
 
 ### `market-feed/ws`
 
@@ -634,6 +636,7 @@ All criteria are evaluated with **AND logic** — a symbol must pass every crite
 | `market_cap_above` / `market_cap_below` | `quote.marketCap > / < value` (skips if undefined) |
 | `52w_high_pct_below` | Price is within N% of the 52-week high |
 | `52w_low_pct_above` | Price is at least N% above the 52-week low |
+| `volume_vs_avg_above` / `volume_vs_avg_below` | Volume is > / < N× the average volume (skips if `avgVolume` undefined) |
 | `custom` | `{ type: "custom", fn: (quote: Quote) => boolean }` |
 
 #### `ScreenerOptions`
@@ -645,6 +648,120 @@ All criteria are evaluated with **AND logic** — a symbol must pass every crite
 | `limit` | unlimited | Max results to return |
 
 `screen()` accepts any object with a `quote(symbols[]) → Quote[]` method — works with `MarketFeed`, individual providers, or a test mock.
+
+---
+
+### `market-feed/options`
+
+Fetch a full options chain for any underlying symbol, including per-contract Greeks. Currently powered by Polygon.io.
+
+```ts
+import { getOptionChain } from "market-feed/options";
+import { MarketFeed, PolygonProvider } from "market-feed";
+
+const feed = new MarketFeed({
+  providers: [new PolygonProvider({ apiKey: process.env.POLYGON_KEY! })],
+});
+
+// Fetch the full chain
+const chain = await getOptionChain(feed, "AAPL");
+console.log(`${chain.calls.length} calls, ${chain.puts.length} puts`);
+
+for (const contract of chain.calls.slice(0, 3)) {
+  console.log(
+    `${contract.expiry} $${contract.strike} C  ` +
+    `bid/ask ${contract.bid}/${contract.ask}  ` +
+    `delta ${contract.delta?.toFixed(3)}  IV ${(contract.impliedVolatility! * 100).toFixed(1)}%`,
+  );
+}
+```
+
+You can also call `feed.optionChain()` directly:
+
+```ts
+// Filter by expiry and option type
+const julyPuts = await feed.optionChain("AAPL", {
+  expiry: "2024-07-19",
+  type: "put",
+  strikeLow: 150,
+  strikeHigh: 200,
+  limit: 20,
+});
+```
+
+#### `OptionChainOptions`
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `expiry` | `string` | — | Filter to specific expiry date (`"YYYY-MM-DD"`) |
+| `strike` | `number` | — | Exact strike filter |
+| `strikeLow` / `strikeHigh` | `number` | — | Strike range filter |
+| `type` | `"call" \| "put"` | both | Filter by contract type |
+| `limit` | `number` | `50` | Max contracts to return |
+
+#### `OptionContract` fields
+
+| Field | Description |
+|-------|-------------|
+| `ticker` | OCC ticker (e.g. `O:AAPL240719C00150000`) |
+| `type` | `"call"` or `"put"` |
+| `strike` | Strike price |
+| `expiry` | Expiration date string (`"YYYY-MM-DD"`) |
+| `bid` / `ask` / `midpoint` | Quote prices |
+| `volume` / `openInterest` | Liquidity metrics |
+| `impliedVolatility` | IV as a decimal (e.g. `0.35` = 35%) |
+| `delta` / `gamma` / `theta` / `vega` | Option Greeks |
+| `provider` | Always `"polygon"` for now |
+
+---
+
+### `market-feed/macro`
+
+Fetch macroeconomic time series from the FRED API (Federal Reserve Bank of St. Louis). No API key required.
+
+```ts
+import { FredProvider, getIndicator, INDICATORS } from "market-feed/macro";
+
+const fred = new FredProvider();
+
+// Fetch CPI (inflation) — last 12 months
+const cpi = await getIndicator(fred, INDICATORS.CPI, { limit: 12 });
+
+for (const obs of cpi.observations) {
+  console.log(`${obs.date}: ${obs.value}`);
+}
+console.log(cpi.title);      // "Consumer Price Index for All Urban Consumers"
+console.log(cpi.units);      // "Index 1982-1984=100"
+console.log(cpi.frequency);  // "Monthly"
+```
+
+#### Available indicators
+
+| Constant | FRED series | Description |
+|----------|-------------|-------------|
+| `INDICATORS.CPI` | `CPIAUCSL` | Consumer Price Index (all urban consumers) |
+| `INDICATORS.CORE_CPI` | `CPILFESL` | Core CPI (ex food & energy) |
+| `INDICATORS.PCE` | `PCEPI` | Personal Consumption Expenditures price index |
+| `INDICATORS.GDP` | `GDP` | Gross Domestic Product (quarterly, $B SAAR) |
+| `INDICATORS.REAL_GDP` | `GDPC1` | Real GDP (chained 2017 dollars) |
+| `INDICATORS.UNEMPLOYMENT` | `UNRATE` | Civilian Unemployment Rate (%) |
+| `INDICATORS.NONFARM_PAYROLLS` | `PAYEMS` | Total Nonfarm Payrolls (thousands) |
+| `INDICATORS.FED_FUNDS` | `FEDFUNDS` | Effective Federal Funds Rate (%) |
+| `INDICATORS.T10Y` | `DGS10` | 10-Year Treasury Constant Maturity Rate (%) |
+| `INDICATORS.T2Y` | `DGS2` | 2-Year Treasury Constant Maturity Rate (%) |
+| `INDICATORS.T10Y2Y` | `T10Y2Y` | 10-Year minus 2-Year Treasury spread (yield curve) |
+| `INDICATORS.MORTGAGE30` | `MORTGAGE30US` | 30-Year Fixed Mortgage Rate (%) |
+| `INDICATORS.INDUSTRIAL_PROD` | `INDPRO` | Industrial Production Index |
+| `INDICATORS.RETAIL_SALES` | `RSAFS` | Advance Retail Sales (monthly) |
+| `INDICATORS.HOUSING_STARTS` | `HOUST` | Housing Starts (thousands, SAAR) |
+
+#### `MacroOptions`
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `limit` | all | Max observations to return (most recent N) |
+| `startDate` | — | ISO date string filter |
+| `endDate` | — | ISO date string filter |
 
 ---
 
@@ -808,10 +925,10 @@ console.log(profile.sector); // "Technology"
 |----------|---------|:-----:|:----------:|:------:|:-------:|:----:|:------------:|
 | **Yahoo Finance** | Not required | ✓ | ✓ | ✓ | ✓ | — | ✓ |
 | **Alpha Vantage** | Free (25/day) | ✓ | ✓ | ✓ | ✓ | — | — |
-| **Polygon.io** | Free (delayed) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| **Polygon.io** | Free (delayed) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | **Finnhub** | Free (60/min) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
 | **Twelve Data** | Free (800/day) | ✓ | ✓ | ✓ | ✓ | — | — |
-| **Tiingo** | Free (1000/day) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
+| **Tiingo** | Free (1000/day) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 Get free keys: [Alpha Vantage](https://www.alphavantage.co/support/#api-key) · [Polygon.io](https://polygon.io/) · [Finnhub](https://finnhub.io/) · [Twelve Data](https://twelvedata.com/) · [Tiingo](https://www.tiingo.com/)
 
@@ -861,6 +978,7 @@ The default LRU cache stores responses in memory with sensible TTLs:
 | `incomeStatements` | 24 hours |
 | `balanceSheets` | 24 hours |
 | `cashFlows` | 24 hours |
+| `optionChain` | 60s |
 
 ### Override TTLs
 
@@ -954,6 +1072,9 @@ feed.splits(symbol: string, options?: SplitOptions): Promise<SplitEvent[]>
 feed.incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]>
 feed.balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]>
 feed.cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]>
+
+// Options chain (requires PolygonProvider)
+feed.optionChain(symbol: string, options?: OptionChainOptions): Promise<OptionChain>
 
 // Cache management
 feed.clearCache(): Promise<void>
