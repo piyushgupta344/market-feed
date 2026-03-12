@@ -8,6 +8,7 @@ import { MarketFeed } from "../client.js";
 import { AlphaVantageProvider } from "../providers/alpha-vantage/index.js";
 import { FinnhubProvider } from "../providers/finnhub/index.js";
 import { PolygonProvider } from "../providers/polygon/index.js";
+import { TiingoProvider } from "../providers/tiingo/index.js";
 import { TwelveDataProvider } from "../providers/twelve-data/index.js";
 import { YahooProvider } from "../providers/yahoo/index.js";
 
@@ -29,6 +30,7 @@ Options:
   --polygon-key <key>   Polygon.io API key
   --finnhub-key <key>   Finnhub API key
   --td-key <key>        Twelve Data API key
+  --tiingo-key <key>    Tiingo API key
   --json                Output raw JSON
   --limit <n>           Limit results (default: 10)
   --interval <i>        Historical interval: 1m 5m 15m 30m 1h 1d 1wk 1mo (default: 1d)
@@ -57,6 +59,7 @@ interface CliArgs {
   polygonKey?: string;
   finnhubKey?: string;
   tdKey?: string;
+  tiingoKey?: string;
   limit: number;
   interval: string;
   period1?: string;
@@ -96,6 +99,9 @@ function parseArgs(argv: string[]): CliArgs {
     } else if (arg === "--td-key") {
       result.tdKey = args[++i];
       i++;
+    } else if (arg === "--tiingo-key") {
+      result.tiingoKey = args[++i];
+      i++;
     } else if (arg === "--limit") {
       result.limit = Number(args[++i]) || 10;
       i++;
@@ -134,11 +140,13 @@ function buildFeed(args: CliArgs): MarketFeed {
     | typeof PolygonProvider
     | typeof FinnhubProvider
     | typeof TwelveDataProvider
+    | typeof TiingoProvider
   >[] = [new YahooProvider()];
   if (args.avKey) providers.push(new AlphaVantageProvider({ apiKey: args.avKey }));
   if (args.polygonKey) providers.push(new PolygonProvider({ apiKey: args.polygonKey }));
   if (args.finnhubKey) providers.push(new FinnhubProvider({ apiKey: args.finnhubKey }));
   if (args.tdKey) providers.push(new TwelveDataProvider({ apiKey: args.tdKey }));
+  if (args.tiingoKey) providers.push(new TiingoProvider({ apiKey: args.tiingoKey }));
   return new MarketFeed({ providers });
 }
 

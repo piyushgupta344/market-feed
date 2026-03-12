@@ -18,6 +18,9 @@ export type { FinnhubProviderOptions } from "./providers/finnhub/index.js";
 export { TwelveDataProvider } from "./providers/twelve-data/index.js";
 export type { TwelveDataProviderOptions } from "./providers/twelve-data/index.js";
 
+export { TiingoProvider } from "./providers/tiingo/index.js";
+export type { TiingoProviderOptions } from "./providers/tiingo/index.js";
+
 // Cache
 export { MemoryCacheDriver } from "./cache/memory.js";
 export type { CacheConfig, CacheDriver, CacheMethod } from "./cache/types.js";

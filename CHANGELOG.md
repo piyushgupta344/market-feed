@@ -1,5 +1,51 @@
 # market-feed Changelog
 
+## 0.7.0 — 2026-03-12
+
+### New provider
+
+**`TiingoProvider`** — Tiingo (free tier: EOD prices, real-time IEX quotes, news).
+
+```ts
+import { MarketFeed, TiingoProvider } from "market-feed";
+
+const feed = new MarketFeed([
+  new TiingoProvider({ apiKey: process.env.TIINGO_KEY! }),
+]);
+
+const quote   = await feed.quote(["AAPL"]);
+const bars    = await feed.historical("AAPL", { period1: "2024-01-01" });
+const results = await feed.search("apple");
+const profile = await feed.company("AAPL");
+const news    = await feed.news("AAPL", { limit: 5 });
+```
+
+Supports: `quote`, `historical`, `search`, `company`, `news`.
+
+| Feature | Detail |
+|---------|--------|
+| Real-time quotes | IEX endpoint — US equities, intraday |
+| Historical | EOD daily bars, includes `adjClose` |
+| Rate limit | ~50 calls/hour (free plan) |
+| Auth | `Authorization: Token KEY` header |
+
+Free plan sign-up: https://www.tiingo.com
+
+### CLI
+
+`--tiingo-key <key>` flag adds `TiingoProvider` to the CLI provider chain.
+
+### Breaking changes
+
+None. All v0.6.x imports continue to work unchanged.
+
+### Other changes
+
+- `TiingoProvider` and `TiingoProviderOptions` exported from main `market-feed` entry point
+- 21 new unit tests (447 total across 23 test files)
+
+---
+
 ## 0.6.0 — 2026-03-12
 
 ### New provider
