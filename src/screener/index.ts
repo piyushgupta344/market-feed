@@ -36,6 +36,8 @@ export type QuoteCriterion =
   | { type: "change_pct_below"; value: number }
   | { type: "volume_above"; value: number }
   | { type: "volume_below"; value: number }
+  | { type: "volume_vs_avg_above"; value: number }
+  | { type: "volume_vs_avg_below"; value: number }
   | { type: "market_cap_above"; value: number }
   | { type: "market_cap_below"; value: number }
   | { type: "pe_above"; value: number }
@@ -139,6 +141,12 @@ function matchesCriterion(quote: Quote, criterion: ScreenerCriterion): boolean {
       return quote.volume > criterion.value;
     case "volume_below":
       return quote.volume < criterion.value;
+    case "volume_vs_avg_above":
+      if (quote.avgVolume === undefined) return true;
+      return quote.volume > quote.avgVolume * criterion.value;
+    case "volume_vs_avg_below":
+      if (quote.avgVolume === undefined) return true;
+      return quote.volume < quote.avgVolume * criterion.value;
     case "market_cap_above":
       return quote.marketCap !== undefined && quote.marketCap > criterion.value;
     case "market_cap_below":

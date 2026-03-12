@@ -191,6 +191,52 @@ describe("screen() — volume criteria", () => {
 });
 
 // ---------------------------------------------------------------------------
+// volume_vs_avg criteria
+// ---------------------------------------------------------------------------
+
+describe("screen() — volume_vs_avg criteria", () => {
+  it("volume_vs_avg_above passes when volume > avgVolume * multiplier", async () => {
+    const source = makeSource([
+      makeQuote({ symbol: "SURGE", volume: 150_000_000, avgVolume: 50_000_000 }), // 3x avg
+      makeQuote({ symbol: "FLAT",  volume: 40_000_000,  avgVolume: 50_000_000 }), // 0.8x avg
+    ]);
+    const results = await screen(source, ["SURGE", "FLAT"], {
+      criteria: [{ type: "volume_vs_avg_above", value: 2 }], // > 2x average
+    });
+    expect(results).toHaveLength(1);
+    expect(results[0]?.symbol).toBe("SURGE");
+  });
+
+  it("volume_vs_avg_below passes when volume < avgVolume * multiplier", async () => {
+    const source = makeSource([
+      makeQuote({ symbol: "QUIET", volume: 5_000_000,  avgVolume: 50_000_000 }), // 0.1x avg
+      makeQuote({ symbol: "BUSY",  volume: 80_000_000, avgVolume: 50_000_000 }), // 1.6x avg
+    ]);
+    const results = await screen(source, ["QUIET", "BUSY"], {
+      criteria: [{ type: "volume_vs_avg_below", value: 0.5 }], // < 0.5x average
+    });
+    expect(results).toHaveLength(1);
+    expect(results[0]?.symbol).toBe("QUIET");
+  });
+
+  it("volume_vs_avg_above passes when avgVolume is undefined", async () => {
+    const source = makeSource([makeQuote({ symbol: "AAPL", volume: 1, avgVolume: undefined })]);
+    const results = await screen(source, ["AAPL"], {
+      criteria: [{ type: "volume_vs_avg_above", value: 999 }],
+    });
+    expect(results).toHaveLength(1); // undefined avgVolume → pass-through
+  });
+
+  it("volume_vs_avg_below passes when avgVolume is undefined", async () => {
+    const source = makeSource([makeQuote({ symbol: "AAPL", volume: 999_999_999, avgVolume: undefined })]);
+    const results = await screen(source, ["AAPL"], {
+      criteria: [{ type: "volume_vs_avg_below", value: 0.001 }],
+    });
+    expect(results).toHaveLength(1); // undefined avgVolume → pass-through
+  });
+});
+
+// ---------------------------------------------------------------------------
 // market_cap criteria
 // ---------------------------------------------------------------------------
 

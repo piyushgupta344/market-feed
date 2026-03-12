@@ -20,7 +20,18 @@
     "financial-data",
     "websocket",
     "realtime",
-    "cli"
+    "cli",
+    "fundamentals",
+    "screener",
+    "react",
+    "hooks",
+    "backtest",
+    "alerts",
+    "streaming",
+    "tiingo",
+    "twelve-data",
+    "options",
+    "market-data"
   ],
   "homepage": "https://github.com/piyushgupta344/market-feed#readme",
   "bugs": {
