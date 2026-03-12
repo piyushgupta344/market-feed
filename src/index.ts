@@ -37,6 +37,8 @@ export {
 // Types
 export type {
   AssetType,
+  BalanceSheet,
+  CashFlowStatement,
   CompanyOptions,
   CompanyProfile,
   DividendEvent,
@@ -44,9 +46,11 @@ export type {
   DividendOptions,
   EarningsEvent,
   EarningsOptions,
+  FundamentalsOptions,
   HistoricalBar,
   HistoricalInterval,
   HistoricalOptions,
+  IncomeStatement,
   MarketProvider,
   MarketStatus,
   MarketStatusOptions,
