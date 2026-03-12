@@ -35,6 +35,8 @@ for (const r of results) {
 | `change_pct_below` | `quote.changePercent < value` (use negative values for down days) |
 | `volume_above` | `quote.volume > value` |
 | `volume_below` | `quote.volume < value` |
+| `volume_vs_avg_above` | `quote.volume > quote.avgVolume * value` — e.g. `value: 2` means 2× average volume (pass-through if avgVolume undefined) |
+| `volume_vs_avg_below` | `quote.volume < quote.avgVolume * value` (pass-through if avgVolume undefined) |
 | `market_cap_above` | `quote.marketCap > value` (excluded if marketCap is undefined) |
 | `market_cap_below` | `quote.marketCap < value` (excluded if marketCap is undefined) |
 | `52w_high_pct_below` | Price is within N% of the 52-week high |
@@ -165,6 +167,18 @@ const results = await screen(feed, universe, {
   criteria: [
     { type: "change_pct_below",  value: -5 },
     { type: "market_cap_above",  value: 10_000_000_000 }, // > $10B
+  ],
+});
+```
+
+### Volume surge — relative to average
+
+```ts
+// Stocks trading at 3× or more their 30-day average volume
+const results = await screen(feed, universe, {
+  criteria: [
+    { type: "volume_vs_avg_above", value: 3 },
+    { type: "price_above",         value: 5 }, // exclude penny stocks
   ],
 });
 ```

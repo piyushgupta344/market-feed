@@ -122,6 +122,26 @@ Yahoo reports CapEx as a negative number, so addition gives the correct result:
 `$114B + (-$11B) = $103B FCF`
 :::
 
+### Using Polygon directly
+
+```ts
+import { PolygonProvider } from "market-feed";
+
+const polygon = new PolygonProvider({ apiKey: process.env.POLYGON_KEY! });
+
+const stmts = await polygon.incomeStatements("AAPL", { quarterly: true, limit: 4 });
+```
+
+### Using Tiingo directly
+
+```ts
+import { TiingoProvider } from "market-feed";
+
+const tiingo = new TiingoProvider({ apiKey: process.env.TIINGO_KEY! });
+
+const sheets = await tiingo.balanceSheets("AAPL");
+```
+
 ## `FundamentalsOptions`
 
 ```ts
@@ -134,4 +154,19 @@ interface FundamentalsOptions {
 
 ## Provider support
 
-Currently, only **Yahoo Finance** implements the fundamentals methods. Yahoo's `quoteSummary` API provides annual and quarterly income statements, balance sheets, and cash flow statements for most publicly traded US equities.
+| Provider | Income Statement | Balance Sheet | Cash Flow |
+|----------|:---:|:---:|:---:|
+| Yahoo Finance | ✓ | ✓ | ✓ |
+| Polygon.io | ✓ | ✓ | ✓ |
+| Tiingo | ✓ | ✓ | ✓ |
+| Alpha Vantage | — | — | — |
+| Finnhub | — | — | — |
+| Twelve Data | — | — | — |
+
+**Yahoo Finance** uses the `quoteSummary` API — provides annual and quarterly data for most publicly traded US equities.
+
+**Polygon.io** uses the `/vX/reference/financials` endpoint — provides XBRL-sourced financial data filed with the SEC. Annual and quarterly.
+
+**Tiingo** uses the `/tiingo/fundamentals/{ticker}/statements` endpoint — provides standardized data codes for income statement, balance sheet, and cash flow.
+
+When using `MarketFeed` with multiple providers, `getFundamentals()` tries each in order until one succeeds:
