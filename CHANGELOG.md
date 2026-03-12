@@ -1,5 +1,66 @@
 # market-feed Changelog
 
+## 0.6.0 — 2026-03-12
+
+### New provider
+
+**`TwelveDataProvider`** — Twelve Data (free tier: 800 credits/day, 8 calls/minute).
+
+```ts
+import { MarketFeed, TwelveDataProvider } from "market-feed";
+
+const feed = new MarketFeed([
+  new TwelveDataProvider({ apiKey: process.env.TWELVE_DATA_KEY! }),
+]);
+
+const quote   = await feed.quote(["AAPL", "BTC/USD", "EUR/USD"]);
+const bars    = await feed.historical("AAPL", { interval: "1wk" });
+const results = await feed.search("apple");
+const profile = await feed.company("AAPL");
+```
+
+Supports: `quote`, `historical`, `search`, `company`.
+
+Strong coverage for global equities, forex, and crypto pairs. Symbol normalisation handles all common formats:
+- US stocks: `AAPL` (unchanged)
+- Crypto: `BTC-USD` / `BTC/USD` / `X:BTCUSD` → `BTC/USD`
+- Forex: `EURUSD=X` / `C:EURUSD` → `EUR/USD`
+
+Free plan sign-up: https://twelvedata.com
+
+#### Interval mapping
+
+| market-feed | Twelve Data |
+|-------------|-------------|
+| `1m` | `1min` |
+| `5m` | `5min` |
+| `15m` | `15min` |
+| `30m` | `30min` |
+| `1h` | `1h` |
+| `1d` | `1day` |
+| `1wk` | `1week` |
+| `1mo` | `1month` |
+
+### New utility
+
+**`toTwelveDataSymbol(symbol)`** — exported from main `market-feed` entry point. Converts any supported symbol format (Yahoo/Polygon/standard) to the slash-pair notation that Twelve Data expects for crypto and forex.
+
+### CLI
+
+`--td-key <key>` flag adds `TwelveDataProvider` to the CLI provider chain.
+
+### Breaking changes
+
+None. All v0.5.x imports continue to work unchanged.
+
+### Other changes
+
+- `TwelveDataProvider` and `TwelveDataProviderOptions` exported from main `market-feed` entry point
+- `toTwelveDataSymbol` exported from main `market-feed` entry point
+- 30 new unit tests (456 total across 22 test files)
+
+---
+
 ## 0.5.1 — 2026-03-12
 
 ### CLI additions

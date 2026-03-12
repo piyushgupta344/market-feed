@@ -8,6 +8,7 @@ import {
   toAlphaVantageSymbol,
   toFinnhubSymbol,
   toPolygonSymbol,
+  toTwelveDataSymbol,
   toYahooSymbol,
 } from "../../../src/utils/symbol.js";
 
@@ -208,5 +209,36 @@ describe("toFinnhubSymbol()", () => {
 
   it("strips exchange suffix", () => {
     expect(toFinnhubSymbol("AAPL.NASDAQ")).toBe("AAPL");
+  });
+});
+
+describe("toTwelveDataSymbol()", () => {
+  it("returns plain ticker for US stocks", () => {
+    expect(toTwelveDataSymbol("AAPL")).toBe("AAPL");
+    expect(toTwelveDataSymbol("aapl")).toBe("AAPL");
+    expect(toTwelveDataSymbol("  MSFT  ")).toBe("MSFT");
+  });
+
+  it("converts Yahoo dash crypto to slash notation", () => {
+    expect(toTwelveDataSymbol("BTC-USD")).toBe("BTC/USD");
+    expect(toTwelveDataSymbol("ETH-USD")).toBe("ETH/USD");
+  });
+
+  it("converts Yahoo forex to slash notation", () => {
+    expect(toTwelveDataSymbol("EURUSD=X")).toBe("EUR/USD");
+    expect(toTwelveDataSymbol("GBPUSD=X")).toBe("GBP/USD");
+  });
+
+  it("converts Polygon crypto prefix to slash notation", () => {
+    expect(toTwelveDataSymbol("X:BTCUSD")).toBe("BTC/USD");
+    expect(toTwelveDataSymbol("X:ETHUSD")).toBe("ETH/USD");
+  });
+
+  it("converts Polygon forex prefix to slash notation", () => {
+    expect(toTwelveDataSymbol("C:EURUSD")).toBe("EUR/USD");
+  });
+
+  it("strips exchange suffix before converting", () => {
+    expect(toTwelveDataSymbol("AAPL.NASDAQ")).toBe("AAPL");
   });
 });

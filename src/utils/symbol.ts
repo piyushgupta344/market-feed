@@ -119,3 +119,31 @@ export function isForex(symbol: string): boolean {
 export function toFinnhubSymbol(symbol: string): string {
   return normalise(stripExchange(symbol));
 }
+
+/**
+ * Convert a symbol to Twelve Data format.
+ * Twelve Data uses slash notation for crypto/forex pairs (e.g. "BTC/USD", "EUR/USD").
+ * US stocks remain unchanged (e.g. "AAPL").
+ */
+export function toTwelveDataSymbol(symbol: string): string {
+  const s = normalise(stripExchange(symbol));
+  // Polygon crypto: "X:BTCUSD" → "BTC/USD"
+  if (s.startsWith("X:") && s.length >= 5) {
+    const pair = s.slice(2);
+    return `${pair.slice(0, 3)}/${pair.slice(3)}`;
+  }
+  // Polygon forex: "C:EURUSD" → "EUR/USD"
+  if (s.startsWith("C:") && s.length >= 5) {
+    const pair = s.slice(2);
+    return `${pair.slice(0, 3)}/${pair.slice(3)}`;
+  }
+  // Yahoo forex: "EURUSD=X" → "EUR/USD"
+  if (/^[A-Z]{6}=X$/.test(s)) {
+    return `${s.slice(0, 3)}/${s.slice(3, 6)}`;
+  }
+  // Yahoo/common dash notation: "BTC-USD" → "BTC/USD"
+  if (s.includes("-") && !s.endsWith("=X")) {
+    return s.replace("-", "/");
+  }
+  return s;
+}

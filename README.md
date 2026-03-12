@@ -1,7 +1,7 @@
 # market-feed
 
 > Unified TypeScript client for financial market data.
-> Wraps Yahoo Finance, Alpha Vantage, Polygon.io, and Finnhub under one consistent interface — with caching and automatic fallback built in.
+> Wraps Yahoo Finance, Alpha Vantage, Polygon.io, Finnhub, and Twelve Data under one consistent interface — with caching and automatic fallback built in.
 
 [![CI](https://github.com/piyushgupta344/market-feed/actions/workflows/ci.yml/badge.svg)](https://github.com/piyushgupta344/market-feed/actions/workflows/ci.yml)
 [![npm version](https://badge.fury.io/js/market-feed.svg)](https://www.npmjs.com/package/market-feed)
@@ -39,7 +39,7 @@ const quote = await feed.quote("AAPL");
 console.log(quote.price); // always a number, always the same key
 ```
 
-One interface. Four providers. Zero API key required for Yahoo Finance.
+One interface. Five providers. Zero API key required for Yahoo Finance.
 
 ---
 
