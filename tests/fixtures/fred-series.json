@@ -1,0 +1,12 @@
+{
+  "seriess": [
+    {
+      "id": "CPIAUCSL",
+      "title": "Consumer Price Index for All Urban Consumers: All Items in U.S. City Average",
+      "units": "Index 1982-1984=100",
+      "frequency": "Monthly",
+      "observation_start": "1947-01-01",
+      "observation_end": "2024-06-01"
+    }
+  ]
+}
