@@ -1,5 +1,76 @@
 # market-feed Changelog
 
+## 1.1.0 — 2026-03-12
+
+### New modules
+
+**`market-feed/options`** — Options chains with full Greeks from Polygon.io.
+
+```ts
+import { getOptionChain } from "market-feed/options";
+import { PolygonProvider } from "market-feed";
+
+const polygon = new PolygonProvider({ apiKey: process.env.POLYGON_KEY! });
+const chain = await getOptionChain(polygon, "AAPL", {
+  expiry: "2024-07-19",
+  type: "call",
+  strikeLow: 170,
+  strikeHigh: 210,
+});
+
+for (const c of chain.calls) {
+  console.log(`Strike $${c.strike}  IV ${(c.impliedVolatility! * 100).toFixed(1)}%  Δ ${c.delta?.toFixed(3)}`);
+}
+```
+
+Fields: `ticker`, `type`, `strike`, `expiry`, `style`, `sharesPerContract`, `bid`, `ask`, `midpoint`, `lastPrice`, `volume`, `openInterest`, `impliedVolatility`, `delta`, `gamma`, `theta`, `vega`, OHLCV.
+
+---
+
+**`market-feed/macro`** — Macroeconomic time-series data from the [FRED API](https://fred.stlouisfed.org/).
+
+```ts
+import { FredProvider, getIndicator, INDICATORS } from "market-feed/macro";
+
+const fred = new FredProvider({ apiKey: process.env.FRED_KEY! });
+const cpi = await getIndicator(fred, INDICATORS.CPI, { limit: 12 });
+
+for (const obs of cpi.observations) {
+  console.log(`${obs.date.toISOString().slice(0, 7)}: ${obs.value}`);
+}
+```
+
+15 named constants in `INDICATORS`: `CPI`, `FED_FUNDS`, `UNEMPLOYMENT`, `GDP`, `M2`, `T10Y`, `T2Y`, `MORTGAGE_30Y`, `PCE`, `PPI`, `INDUSTRIAL_PRODUCTION`, `RETAIL_SALES`, `OIL_WTI`, `HOUSING_STARTS`, `CONSUMER_SENTIMENT`. Any FRED series ID string also accepted.
+
+### Provider enhancements
+
+**Polygon.io** — added `incomeStatements()`, `balanceSheets()`, `cashFlows()` via `/vX/reference/financials`.
+
+**Tiingo** — added `incomeStatements()`, `balanceSheets()`, `cashFlows()` via `/tiingo/fundamentals/{ticker}/statements`.
+
+### Screener additions
+
+Two new criteria in `market-feed/screener`:
+
+| Criterion | Passes when |
+|-----------|-------------|
+| `volume_vs_avg_above` | `quote.volume > quote.avgVolume * value` — e.g. `value: 2` = 2× average volume |
+| `volume_vs_avg_below` | `quote.volume < quote.avgVolume * value` |
+
+Both pass-through when `avgVolume` is `undefined` (consistent with 52-week criteria).
+
+### Client
+
+- `MarketFeed.optionChain(symbol, options?)` — delegates to first provider supporting `optionChain`. Cache TTL: 60s.
+- `CacheMethod` union extended with `"optionChain"`.
+
+### Package
+
+- `market-feed/options` and `market-feed/macro` added to `exports` and `keywords`.
+- Total subpath modules: **14** (`market-feed`, `/calendar`, `/stream`, `/ws`, `/consensus`, `/indicators`, `/portfolio`, `/backtest`, `/alerts`, `/fundamentals`, `/screener`, `/options`, `/macro`, `/react`).
+
+---
+
 ## 1.0.0 — 2026-03-12
 
 ### New module
