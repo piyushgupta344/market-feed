@@ -123,6 +123,8 @@ Unlike `market-feed/stream` (which is HTTP polling), `market-feed/ws` opens a pe
 |----------|-----------|-------|
 | `PolygonProvider` | Native WS | Auth via JSON handshake, subscribes to `T.*` trades |
 | `FinnhubProvider` | Native WS | Token in URL, per-symbol subscribe |
+| `AlpacaProvider` | Native WS | Free IEX or paid SIP feed; key/secret auth |
+| `IbTwsProvider` | Native WS | Local TWS / IB Gateway; level I market data |
 | `YahooProvider` | Polling fallback | Polls `quote()` every 5 s |
 | `AlphaVantageProvider` | Polling fallback | Same as Yahoo |
 
@@ -927,14 +929,16 @@ console.log(profile.sector); // "Technology"
 
 ## Providers
 
-| Provider | API Key | Quote | Historical | Search | Company | News | Fundamentals |
-|----------|---------|:-----:|:----------:|:------:|:-------:|:----:|:------------:|
-| **Yahoo Finance** | Not required | ✓ | ✓ | ✓ | ✓ | — | ✓ |
-| **Alpha Vantage** | Free (25/day) | ✓ | ✓ | ✓ | ✓ | — | — |
-| **Polygon.io** | Free (delayed) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| **Finnhub** | Free (60/min) | ✓ | ✓ | ✓ | ✓ | ✓ | — |
-| **Twelve Data** | Free (800/day) | ✓ | ✓ | ✓ | ✓ | — | ✓ |
-| **Tiingo** | Free (1000/day) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Provider | API Key | Quote | Historical | Search | Company | News | Fundamentals | WebSocket |
+|----------|---------|:-----:|:----------:|:------:|:-------:|:----:|:------------:|:---------:|
+| **Yahoo Finance** | Not required | ✓ | ✓ | ✓ | ✓ | — | ✓ | polling |
+| **Alpha Vantage** | Free (25/day) | ✓ | ✓ | ✓ | ✓ | — | — | polling |
+| **Polygon.io** | Free (delayed) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | native |
+| **Finnhub** | Free (60/min) | ✓ | ✓ | ✓ | ✓ | ✓ | — | native |
+| **Twelve Data** | Free (800/day) | ✓ | ✓ | ✓ | ✓ | — | ✓ | polling |
+| **Tiingo** | Free (1000/day) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | polling |
+| **Alpaca** | Free (IEX) | ✓ | — | — | — | — | — | native |
+| **IB TWS** | Local gateway | — | — | — | — | — | — | native |
 
 Get free keys: [Alpha Vantage](https://www.alphavantage.co/support/#api-key) · [Polygon.io](https://polygon.io/) · [Finnhub](https://finnhub.io/) · [Twelve Data](https://twelvedata.com/) · [Tiingo](https://www.tiingo.com/)
 

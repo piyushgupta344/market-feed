@@ -1,5 +1,9 @@
+import type { AlpacaProvider } from "../providers/alpaca/index.js";
+import type { IbTwsProvider } from "../providers/ibtws/index.js";
 import type { MarketProvider } from "../types/provider.js";
+import { connectAlpaca } from "./adapters/alpaca.js";
 import { connectFinnhub } from "./adapters/finnhub.js";
+import { connectIbTws } from "./adapters/ibtws.js";
 import { connectPolygon } from "./adapters/polygon.js";
 import { connectPolling } from "./adapters/polling.js";
 import { AsyncQueue } from "./queue.js";
@@ -27,6 +31,8 @@ function hasWsApiKey(provider: MarketProvider): provider is MarketProvider & WsC
  *
  * - **`PolygonProvider`** and **`FinnhubProvider`** use native WebSocket trade
  *   feeds (tick-by-tick execution reports).
+ * - **`AlpacaProvider`** uses the Alpaca Streaming API (IEX or SIP feed).
+ * - **`IbTwsProvider`** connects to a locally running IB TWS / IB Gateway.
  * - All other providers (Yahoo Finance, Alpha Vantage) fall back to HTTP
  *   polling every 5 seconds.
  *
@@ -77,6 +83,10 @@ export async function* connect(
     connectPolygon(provider.wsApiKey, symbols, queue, opts);
   } else if (hasWsApiKey(provider) && provider.name === "finnhub") {
     connectFinnhub(provider.wsApiKey, symbols, queue, opts);
+  } else if (provider.name === "alpaca") {
+    connectAlpaca(provider as AlpacaProvider, symbols, queue, opts);
+  } else if (provider.name === "ibtws") {
+    connectIbTws(provider as IbTwsProvider, symbols, queue, opts);
   } else {
     connectPolling(provider, symbols, queue, opts);
   }
