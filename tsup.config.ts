@@ -30,6 +30,7 @@ export default defineConfig([
       fundamentals: "src/fundamentals/index.ts",
       screener:     "src/screener/index.ts",
       react:        "src/react/index.ts",
+      options:      "src/options/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

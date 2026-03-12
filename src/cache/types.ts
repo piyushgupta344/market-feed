@@ -52,4 +52,5 @@ export type CacheMethod =
   | "splits"
   | "incomeStatements"
   | "balanceSheets"
-  | "cashFlows";
+  | "cashFlows"
+  | "optionChain";
