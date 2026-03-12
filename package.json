@@ -1,6 +1,6 @@
 {
   "name": "market-feed",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Unified TypeScript client for financial market data — wraps Yahoo Finance, Alpha Vantage, Polygon.io, and Finnhub under one consistent interface with caching, fallback, and real-time WebSocket streaming.",
   "keywords": [
     "finance",
