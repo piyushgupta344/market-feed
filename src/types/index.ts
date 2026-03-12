@@ -1,4 +1,4 @@
-export type { CompanyOptions, CompanyProfile } from "./company.js";
+export type { CompanyOptions, CompanyProfile, EsgScores } from "./company.js";
 export type {
   BalanceSheet,
   CashFlowStatement,

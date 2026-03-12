@@ -161,7 +161,7 @@ export class YahooProvider implements MarketProvider {
 
     const data = await this.http2.get<YahooQuoteSummaryResponse>(`/v10/finance/quoteSummary/${s}`, {
       params: {
-        modules: "assetProfile,summaryDetail,price",
+        modules: "assetProfile,summaryDetail,price,esgScores",
       },
     });
 

@@ -1,4 +1,4 @@
-import type { CompanyProfile } from "../../types/company.js";
+import type { CompanyProfile, EsgScores } from "../../types/company.js";
 import type { DividendEvent } from "../../types/dividends.js";
 import type { EarningsEvent } from "../../types/earnings.js";
 import type { BalanceSheet, CashFlowStatement, IncomeStatement } from "../../types/fundamentals.js";
@@ -131,9 +131,27 @@ export function transformCompany(
       : summary?.currency !== undefined
         ? { currency: summary.currency }
         : {}),
+    ...(buildEsg(result.esgScores) !== undefined ? { esg: buildEsg(result.esgScores) } : {}),
     provider: PROVIDER,
     ...(raw !== undefined ? { raw } : {}),
   };
+}
+
+function buildEsg(
+  module: import("./types.js").YahooEsgScoresModule | undefined,
+): EsgScores | undefined {
+  if (!module) return undefined;
+  const esg: EsgScores = {};
+  if (module.totalEsg?.raw !== undefined) esg.totalScore = module.totalEsg.raw;
+  if (module.environmentScore?.raw !== undefined) esg.environmentScore = module.environmentScore.raw;
+  if (module.socialScore?.raw !== undefined) esg.socialScore = module.socialScore.raw;
+  if (module.governanceScore?.raw !== undefined) esg.governanceScore = module.governanceScore.raw;
+  if (module.percentile?.raw !== undefined) esg.percentile = module.percentile.raw;
+  if (module.peerGroup !== undefined) esg.peerGroup = module.peerGroup;
+  if (module.esgPerformance !== undefined) esg.esgPerformance = module.esgPerformance;
+  // Return undefined if no fields were set
+  if (Object.keys(esg).length === 0) return undefined;
+  return esg;
 }
 
 // ---------------------------------------------------------------------------

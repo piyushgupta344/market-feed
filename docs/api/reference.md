@@ -330,8 +330,19 @@ interface CompanyProfile {
   exchange?: string;
   currency?: string;
   ipoDate?: Date;
+  esg?: EsgScores;         // populated when provider returns ESG data
   provider: string;
   raw?: unknown;
+}
+
+interface EsgScores {
+  totalScore?: number;        // overall ESG score (0–100)
+  environmentScore?: number;  // environmental pillar
+  socialScore?: number;       // social pillar
+  governanceScore?: number;   // governance pillar
+  percentile?: number;        // rank within peer group
+  peerGroup?: string;         // e.g. "Technology Hardware"
+  esgPerformance?: string;    // "OUT_PERF" | "AVG_PERF" | "UNDER_PERF" | "LAG_PERF"
 }
 ```
 

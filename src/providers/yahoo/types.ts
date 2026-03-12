@@ -90,10 +90,21 @@ export interface YahooQuoteSummaryResponse {
   };
 }
 
+export interface YahooEsgScoresModule {
+  totalEsg?: { raw?: number };
+  environmentScore?: { raw?: number };
+  socialScore?: { raw?: number };
+  governanceScore?: { raw?: number };
+  percentile?: { raw?: number };
+  peerGroup?: string;
+  esgPerformance?: string;
+}
+
 export interface YahooQuoteSummaryResult {
   assetProfile?: YahooAssetProfile;
   summaryDetail?: YahooSummaryDetail;
   price?: YahooPriceModule;
+  esgScores?: YahooEsgScoresModule;
   earningsHistory?: YahooEarningsHistoryModule;
   incomeStatementHistory?: YahooIncomeStatementHistoryModule;
   incomeStatementHistoryQuarterly?: YahooIncomeStatementHistoryModule;

@@ -399,5 +399,64 @@ describe("YahooProvider", () => {
       await expect(provider.company("INVALID")).rejects.toThrow(ProviderError);
       vi.unstubAllGlobals();
     });
+
+    it("includes ESG scores when esgScores module is present", async () => {
+      const fixture = {
+        quoteSummary: {
+          result: [
+            {
+              assetProfile: { sector: "Technology" },
+              summaryDetail: {},
+              price: { longName: "Apple Inc.", exchangeName: "NasdaqGS", currency: "USD" },
+              esgScores: {
+                totalEsg: { raw: 73.45 },
+                environmentScore: { raw: 82.1 },
+                socialScore: { raw: 70.2 },
+                governanceScore: { raw: 68.0 },
+                percentile: { raw: 45.2 },
+                peerGroup: "Technology Hardware",
+                esgPerformance: "UNDER_PERF",
+              },
+            },
+          ],
+          error: null,
+        },
+      };
+
+      mockFetch(fixture);
+      const provider = new YahooProvider();
+      const profile = await provider.company("AAPL");
+
+      expect(profile.esg).toBeDefined();
+      expect(profile.esg?.totalScore).toBeCloseTo(73.45);
+      expect(profile.esg?.environmentScore).toBeCloseTo(82.1);
+      expect(profile.esg?.socialScore).toBeCloseTo(70.2);
+      expect(profile.esg?.governanceScore).toBeCloseTo(68.0);
+      expect(profile.esg?.percentile).toBeCloseTo(45.2);
+      expect(profile.esg?.peerGroup).toBe("Technology Hardware");
+      expect(profile.esg?.esgPerformance).toBe("UNDER_PERF");
+      vi.unstubAllGlobals();
+    });
+
+    it("omits esg field when esgScores module is absent", async () => {
+      const fixture = {
+        quoteSummary: {
+          result: [
+            {
+              assetProfile: {},
+              summaryDetail: {},
+              price: { longName: "Apple Inc." },
+            },
+          ],
+          error: null,
+        },
+      };
+
+      mockFetch(fixture);
+      const provider = new YahooProvider();
+      const profile = await provider.company("AAPL");
+      expect(profile.esg).toBeUndefined();
+      vi.unstubAllGlobals();
+    });
   });
 });
