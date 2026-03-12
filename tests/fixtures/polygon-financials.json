@@ -1,0 +1,45 @@
+{
+  "status": "OK",
+  "results": [
+    {
+      "id": "abc123",
+      "company_name": "Apple Inc.",
+      "cik": "0000320193",
+      "start_date": "2024-07-01",
+      "end_date": "2024-09-30",
+      "filing_date": "2024-11-01",
+      "timeframe": "quarterly",
+      "tickers": ["AAPL"],
+      "financials": {
+        "income_statement": {
+          "revenues": { "value": 94930000000, "unit": "USD", "label": "Revenues", "order": 100 },
+          "cost_of_revenue": { "value": 50481000000, "unit": "USD", "label": "Cost of Revenue", "order": 200 },
+          "gross_profit": { "value": 44449000000, "unit": "USD", "label": "Gross Profit", "order": 300 },
+          "research_and_development": { "value": 7856000000, "unit": "USD", "label": "Research and Development", "order": 400 },
+          "selling_general_and_administrative_expenses": { "value": 6320000000, "unit": "USD", "label": "Selling General and Administrative", "order": 500 },
+          "operating_income_loss": { "value": 29550000000, "unit": "USD", "label": "Operating Income/Loss", "order": 700 },
+          "net_income_loss": { "value": 14736000000, "unit": "USD", "label": "Net Income", "order": 900 },
+          "basic_earnings_per_share": { "value": 0.97, "unit": "USD / shares", "label": "Basic EPS", "order": 1000 },
+          "diluted_earnings_per_share": { "value": 0.97, "unit": "USD / shares", "label": "Diluted EPS", "order": 1100 }
+        },
+        "balance_sheet": {
+          "assets": { "value": 364980000000, "unit": "USD", "label": "Assets", "order": 100 },
+          "current_assets": { "value": 143566000000, "unit": "USD", "label": "Current Assets", "order": 200 },
+          "liabilities": { "value": 308030000000, "unit": "USD", "label": "Liabilities", "order": 300 },
+          "current_liabilities": { "value": 176392000000, "unit": "USD", "label": "Current Liabilities", "order": 400 },
+          "equity": { "value": 56950000000, "unit": "USD", "label": "Equity", "order": 500 },
+          "cash_and_cash_equivalents_and_short_term_investments": { "value": 29943000000, "unit": "USD", "label": "Cash and Short-term Investments", "order": 600 },
+          "long_term_debt": { "value": 97150000000, "unit": "USD", "label": "Long-term Debt", "order": 700 },
+          "retained_earnings": { "value": -19154000000, "unit": "USD", "label": "Retained Earnings", "order": 800 }
+        },
+        "cash_flow_statement": {
+          "net_cash_flow_from_operating_activities": { "value": 26808000000, "unit": "USD", "label": "Net Cash Flow from Operating Activities", "order": 100 },
+          "capital_expenditure": { "value": -2822000000, "unit": "USD", "label": "Capital Expenditure", "order": 150 },
+          "net_cash_flow_from_investing_activities": { "value": -2753000000, "unit": "USD", "label": "Net Cash Flow from Investing Activities", "order": 200 },
+          "net_cash_flow_from_financing_activities": { "value": -28671000000, "unit": "USD", "label": "Net Cash Flow from Financing Activities", "order": 300 },
+          "net_cash_flow": { "value": -4616000000, "unit": "USD", "label": "Net Change in Cash", "order": 400 }
+        }
+      }
+    }
+  ]
+}

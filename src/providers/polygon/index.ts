@@ -2,6 +2,12 @@ import { ProviderError } from "../../errors.js";
 import { HttpClient } from "../../http/client.js";
 import type { CompanyOptions, CompanyProfile } from "../../types/company.js";
 import type { DividendEvent, DividendOptions } from "../../types/dividends.js";
+import type {
+  BalanceSheet,
+  CashFlowStatement,
+  FundamentalsOptions,
+  IncomeStatement,
+} from "../../types/fundamentals.js";
 import type { HistoricalBar, HistoricalOptions } from "../../types/historical.js";
 import type { NewsItem, NewsOptions } from "../../types/news.js";
 import type { MarketProvider } from "../../types/provider.js";
@@ -11,9 +17,12 @@ import type { SplitEvent, SplitOptions } from "../../types/splits.js";
 import { RateLimiter } from "../../utils/rate-limiter.js";
 import { normalise } from "../../utils/symbol.js";
 import {
+  transformBalanceSheet,
+  transformCashFlowStatement,
   transformCompany,
   transformDividend,
   transformHistoricalBar,
+  transformIncomeStatement,
   transformNews,
   transformQuote,
   transformSearch,
@@ -22,6 +31,7 @@ import {
 import type {
   PolygonAggregatesResponse,
   PolygonDividendsResponse,
+  PolygonFinancialsResponse,
   PolygonNewsResponse,
   PolygonSnapshotResponse,
   PolygonSplitsResponse,
@@ -241,6 +251,67 @@ export class PolygonProvider implements MarketProvider {
     this.assertSuccess(data as { status: string; error?: string });
 
     return (data.results ?? []).map((s) => transformSplit(s, options?.raw ? s : undefined));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Fundamentals — income statements, balance sheets, cash flows
+  // ---------------------------------------------------------------------------
+
+  async incomeStatements(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ): Promise<IncomeStatement[]> {
+    const stmts = await this.fetchFinancials(symbol, options);
+    return stmts.map((s) =>
+      transformIncomeStatement(s, symbol.toUpperCase(), options?.raw ? s : undefined),
+    );
+  }
+
+  async balanceSheets(symbol: string, options?: FundamentalsOptions): Promise<BalanceSheet[]> {
+    const stmts = await this.fetchFinancials(symbol, options);
+    return stmts.map((s) =>
+      transformBalanceSheet(s, symbol.toUpperCase(), options?.raw ? s : undefined),
+    );
+  }
+
+  async cashFlows(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ): Promise<CashFlowStatement[]> {
+    const stmts = await this.fetchFinancials(symbol, options);
+    return stmts.map((s) =>
+      transformCashFlowStatement(s, symbol.toUpperCase(), options?.raw ? s : undefined),
+    );
+  }
+
+  private async fetchFinancials(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ) {
+    this.limiter.consume();
+
+    const s = normalise(symbol);
+    const timeframe = options?.quarterly ? "quarterly" : "annual";
+    const limit = options?.limit ?? 4;
+
+    const data = await this.http.get<PolygonFinancialsResponse>("/vX/reference/financials", {
+      params: {
+        ticker: s,
+        timeframe,
+        limit,
+        sort: "period_of_report_date",
+        order: "desc",
+        apiKey: this.options.apiKey,
+      },
+    });
+
+    this.assertSuccess(data as { status: string; error?: string });
+
+    if (!data.results || data.results.length === 0) {
+      throw new ProviderError(`No financials data for "${s}"`, this.name);
+    }
+
+    return data.results;
   }
 
   // ---------------------------------------------------------------------------
