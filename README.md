@@ -71,12 +71,13 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **CLI** — `npx market-feed quote AAPL` — no install required
 - **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
 - **Browser bundle** — `market-feed/browser` with `createFetchWithProxy` / `installCorsProxy`; all providers accept `fetchFn` for CORS proxy routing; works via CDN without a bundler
+- **tRPC / HTTP router** — `market-feed/trpc` exports `createMarketFeedRouter()` and `createHttpHandler()` for exposing market data as typed tRPC procedures, GraphQL resolvers, or a fetch-compatible REST API
 
 ---
 
 ## Subpath modules
 
-`market-feed` ships fourteen optional subpath modules alongside the core client.
+`market-feed` ships fifteen optional subpath modules alongside the core client.
 
 ### `market-feed/ws`
 
@@ -845,6 +846,50 @@ Returns `{ event: WsEvent \| null, latestTrade: WsTrade \| null, error: Error \|
 **`useOrderBook(provider, symbol, options?)`** — drives `getOrderBook()` for live bid/ask updates. Works with Polygon, Alpaca, IB TWS, or polling fallback. Works in React Native.
 
 Returns `{ orderBook: OrderBookEvent \| null, error: Error \| null }`.
+
+---
+
+### `market-feed/trpc`
+
+Framework-agnostic procedure router. `createMarketFeedRouter(feed)` returns a typed plain object of async procedures. Works standalone, with tRPC, as GraphQL resolvers, or as a fetch-compatible HTTP handler.
+
+```ts
+import { createMarketFeedRouter, createHttpHandler } from "market-feed/trpc";
+import { MarketFeed } from "market-feed";
+
+const mf = createMarketFeedRouter(new MarketFeed());
+
+// Call directly
+const { quotes } = await mf.quote({ symbols: ["AAPL", "MSFT"] });
+const company     = await mf.company({ symbol: "TSLA" });
+const news        = await mf.news({ symbol: "AAPL", limit: 5 });
+```
+
+#### tRPC v11
+
+```ts
+import { initTRPC } from "@trpc/server";
+import { z } from "zod";
+
+const t = initTRPC.create();
+
+export const appRouter = t.router({
+  quote:   t.procedure.input(z.object({ symbols: z.array(z.string()) })).query(({ input }) => mf.quote(input)),
+  company: t.procedure.input(z.object({ symbol: z.string() })).query(({ input }) => mf.company(input)),
+  news:    t.procedure.input(z.object({ symbol: z.string(), limit: z.number().optional() })).query(({ input }) => mf.news(input)),
+});
+```
+
+#### HTTP handler (Next.js / Cloudflare Workers)
+
+```ts
+// app/api/market/[procedure]/route.ts
+const handler = createHttpHandler(mf);
+export { handler as POST };
+
+// POST /api/market/quote  {"symbols":["AAPL"]}  → {"quotes":[...]}
+// POST /api/market/company  {"symbol":"AAPL"}   → {"name":"Apple Inc.",...}
+```
 
 ---
 
