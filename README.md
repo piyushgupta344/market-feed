@@ -67,7 +67,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Options chains** — full options chain with Greeks (delta, gamma, theta, vega) from Polygon.io via `market-feed/options`
 - **Macro indicators** — 15 FRED economic series including CPI, GDP, unemployment, and yield curve data via `market-feed/macro`
 - **Stock screener** — filter a universe of symbols by price, volume, market cap, 52-week range, or any custom predicate via `market-feed/screener`
-- **React hooks** — `useQuote`, `useStream`, `useAlerts` for React ≥ 18 via `market-feed/react`
+- **React hooks** — `useQuote`, `useStream`, `useAlerts`, `useWebSocket`, `useOrderBook` for React ≥ 18 and React Native via `market-feed/react`
 - **CLI** — `npx market-feed quote AAPL` — no install required
 - **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
 - **Browser bundle** — `market-feed/browser` with `createFetchWithProxy` / `installCorsProxy`; all providers accept `fetchFn` for CORS proxy routing; works via CDN without a bundler
@@ -837,6 +837,14 @@ Returns `{ event: StreamEvent \| null, error: Error \| null }`.
 **`useAlerts(feed, alerts, options?)`** — drives a `watchAlerts()` async generator. Accumulates triggered events; restarts when alert definitions change.
 
 Returns `{ events: AlertEvent[], error: Error \| null, clearEvents() }`.
+
+**`useWebSocket(provider, symbols, options?)`** — drives a `connect()` WebSocket stream. Works in React Native (native `WebSocket` available globally). Yields trade ticks and connection events in real time.
+
+Returns `{ event: WsEvent \| null, latestTrade: WsTrade \| null, error: Error \| null }`.
+
+**`useOrderBook(provider, symbol, options?)`** — drives `getOrderBook()` for live bid/ask updates. Works with Polygon, Alpaca, IB TWS, or polling fallback. Works in React Native.
+
+Returns `{ orderBook: OrderBookEvent \| null, error: Error \| null }`.
 
 ---
 

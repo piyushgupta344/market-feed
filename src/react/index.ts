@@ -32,6 +32,10 @@ import { watch } from "../stream/index.js";
 import type { StreamEvent, WatchOptions } from "../stream/types.js";
 import type { Quote } from "../types/quote.js";
 import type { MarketFeed } from "../client.js";
+import type { MarketProvider } from "../types/provider.js";
+import { connect, getOrderBook } from "../ws/index.js";
+import type { OrderBookEvent, OrderBookOptions } from "../ws/index.js";
+import type { WsEvent, WsOptions, WsTrade } from "../ws/types.js";
 
 // ---------------------------------------------------------------------------
 // Internal duck-typed source interface
@@ -274,4 +278,142 @@ export function useAlerts(
   const clearEvents = useCallback(() => setEvents([]), []);
 
   return { events, error, clearEvents };
+}
+
+// ---------------------------------------------------------------------------
+// useWebSocket
+// ---------------------------------------------------------------------------
+
+export interface UseWebSocketResult {
+  /** The latest WsEvent, or null before the first event arrives. */
+  event: WsEvent | null;
+  /** Shortcut for the most recent trade event's payload, or null. */
+  latestTrade: WsTrade | null;
+  /** Fatal error thrown by the stream. */
+  error: Error | null;
+}
+
+/**
+ * Subscribe to a real-time WebSocket stream and return the latest event.
+ *
+ * Uses `connect()` from `market-feed/ws`. Works in React Native (native
+ * `WebSocket` is available globally in all RN versions). For Node 18–20, pass
+ * `wsImpl` pointing to the `ws` package.
+ *
+ * The stream starts on mount and restarts automatically when `symbols` changes.
+ * It is stopped when the component unmounts via an internal AbortSignal.
+ *
+ * @param provider - Any MarketProvider (Polygon, Finnhub, Alpaca, IbTws, or polling fallback)
+ * @param symbols - Ticker symbols to subscribe to
+ * @param options - WsOptions (excluding `signal`, which is managed internally)
+ */
+export function useWebSocket(
+  provider: MarketProvider,
+  symbols: string[],
+  options?: Omit<WsOptions, "signal">,
+): UseWebSocketResult {
+  const [event, setEvent] = useState<WsEvent | null>(null);
+  const [latestTrade, setLatestTrade] = useState<WsTrade | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  const providerRef = useRef(provider);
+  providerRef.current = provider;
+
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  const symbolsKey = symbols.join(",");
+
+  useEffect(() => {
+    if (!symbolsKey) return;
+
+    const symbolsArr = symbolsKey.split(",");
+    const controller = new AbortController();
+
+    async function run() {
+      try {
+        for await (const ev of connect(providerRef.current, symbolsArr, {
+          ...optionsRef.current,
+          signal: controller.signal,
+        })) {
+          setEvent(ev);
+          if (ev.type === "trade") {
+            setLatestTrade(ev.trade);
+          }
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
+      }
+    }
+
+    void run();
+    return () => controller.abort();
+  }, [symbolsKey]);
+
+  return { event, latestTrade, error };
+}
+
+// ---------------------------------------------------------------------------
+// useOrderBook
+// ---------------------------------------------------------------------------
+
+export interface UseOrderBookResult {
+  /** The latest order book snapshot, or null before the first update. */
+  orderBook: OrderBookEvent | null;
+  /** Fatal error thrown by the order book generator. */
+  error: Error | null;
+}
+
+/**
+ * Subscribe to top-of-book bid/ask updates for a symbol.
+ *
+ * Uses `getOrderBook()` from `market-feed/ws`. Supports Polygon (Q.* quotes),
+ * Alpaca (native quotes channel), IB TWS (bid/ask fields), and a polling
+ * fallback for all other providers. Works in React Native.
+ *
+ * @param provider - Any MarketProvider
+ * @param symbol - Ticker symbol to watch
+ * @param options - OrderBookOptions (excluding `signal`, which is managed internally)
+ */
+export function useOrderBook(
+  provider: MarketProvider,
+  symbol: string,
+  options?: Omit<OrderBookOptions, "signal">,
+): UseOrderBookResult {
+  const [orderBook, setOrderBook] = useState<OrderBookEvent | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+
+  const providerRef = useRef(provider);
+  providerRef.current = provider;
+
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
+
+  useEffect(() => {
+    if (!symbol) return;
+
+    const controller = new AbortController();
+
+    async function run() {
+      try {
+        for await (const update of getOrderBook(providerRef.current, symbol, {
+          ...optionsRef.current,
+          signal: controller.signal,
+        })) {
+          setOrderBook(update);
+        }
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setError(err instanceof Error ? err : new Error(String(err)));
+        }
+      }
+    }
+
+    void run();
+    return () => controller.abort();
+  }, [symbol]);
+
+  return { orderBook, error };
 }
