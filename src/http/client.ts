@@ -11,6 +11,11 @@ export interface HttpClientOptions {
   retries?: number;
   /** Initial backoff in milliseconds for exponential retry. Defaults to 300. */
   retryDelayMs?: number;
+  /**
+   * Custom fetch implementation. Defaults to `globalThis.fetch`.
+   * Useful for routing requests through a CORS proxy in browsers.
+   */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 export interface RequestOptions {
@@ -48,6 +53,7 @@ export class HttpClient {
   private readonly timeoutMs: number;
   private readonly retries: number;
   private readonly retryDelayMs: number;
+  private readonly fetchFn: typeof globalThis.fetch;
 
   constructor(
     private readonly providerName: string,
@@ -62,6 +68,7 @@ export class HttpClient {
     this.timeoutMs = options.timeoutMs ?? 10_000;
     this.retries = options.retries ?? 2;
     this.retryDelayMs = options.retryDelayMs ?? 300;
+    this.fetchFn = options.fetchFn ?? globalThis.fetch.bind(globalThis);
   }
 
   async get<T>(path: string, options: RequestOptions = {}): Promise<T> {
@@ -81,7 +88,7 @@ export class HttpClient {
       const timer = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        const response = await fetch(url, {
+        const response = await this.fetchFn(url, {
           method: "GET",
           headers,
           signal: controller.signal,

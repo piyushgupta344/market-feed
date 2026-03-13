@@ -70,12 +70,13 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **React hooks** — `useQuote`, `useStream`, `useAlerts` for React ≥ 18 via `market-feed/react`
 - **CLI** — `npx market-feed quote AAPL` — no install required
 - **Crypto & Forex** — `isCrypto()` / `isForex()` helpers, CRYPTO calendar exchange (always open)
+- **Browser bundle** — `market-feed/browser` with `createFetchWithProxy` / `installCorsProxy`; all providers accept `fetchFn` for CORS proxy routing; works via CDN without a bundler
 
 ---
 
 ## Subpath modules
 
-`market-feed` ships thirteen optional subpath modules alongside the core client.
+`market-feed` ships fourteen optional subpath modules alongside the core client.
 
 ### `market-feed/ws`
 
@@ -836,6 +837,64 @@ Returns `{ event: StreamEvent \| null, error: Error \| null }`.
 **`useAlerts(feed, alerts, options?)`** — drives a `watchAlerts()` async generator. Accumulates triggered events; restarts when alert definitions change.
 
 Returns `{ events: AlertEvent[], error: Error \| null, clearEvents() }`.
+
+---
+
+### `market-feed/browser`
+
+Browser-native build with CORS proxy utilities. All providers use the native browser `fetch` and `WebSocket` APIs — no Node.js dependencies required.
+
+```ts
+import { MarketFeed, YahooProvider, createFetchWithProxy } from "market-feed/browser";
+
+// Route requests through a CORS proxy in development
+const proxiedFetch = createFetchWithProxy("https://corsproxy.io/?");
+
+const feed = new MarketFeed({
+  providers: [new YahooProvider({ fetchFn: proxiedFetch })],
+});
+
+const quote = await feed.quote("AAPL");
+console.log(quote.price); // $189.84
+```
+
+Every provider accepts a `fetchFn` option so you can route only specific providers through a proxy, or through your own server-side API route in production.
+
+```ts
+// Production: proxy through your own backend
+const serverFetch = createFetchWithProxy("https://my-app.example.com/api/proxy?url=");
+
+const feed = new MarketFeed({
+  providers: [
+    new PolygonProvider({ apiKey: "...", fetchFn: serverFetch }),
+    new FinnhubProvider({ apiKey: "...", fetchFn: serverFetch }),
+  ],
+});
+```
+
+`installCorsProxy(proxyUrl)` patches `globalThis.fetch` globally and returns a cleanup function — useful for development:
+
+```ts
+import { installCorsProxy } from "market-feed/browser";
+
+const uninstall = installCorsProxy("https://corsproxy.io/?");
+// All fetch() calls in your app now go through the proxy
+uninstall(); // restore original fetch
+```
+
+Works via CDN without a bundler:
+
+```html
+<script type="module">
+  import { MarketFeed, YahooProvider, createFetchWithProxy } from "https://esm.sh/market-feed/browser";
+
+  const feed = new MarketFeed({
+    providers: [new YahooProvider({ fetchFn: createFetchWithProxy("https://corsproxy.io/?") })],
+  });
+  const quote = await feed.quote("AAPL");
+  console.log(quote.price);
+</script>
+```
 
 ---
 

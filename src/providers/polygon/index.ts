@@ -54,6 +54,8 @@ export interface PolygonProviderOptions {
    * Free tier: 5 calls/minute. Unlimited for paid plans.
    */
   rateLimiter?: RateLimiter;
+  /** Custom fetch function, e.g. a CORS proxy wrapper for browser use. */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 /**
@@ -78,6 +80,7 @@ export class PolygonProvider implements MarketProvider {
       baseUrl: "https://api.polygon.io",
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
+      ...(options.fetchFn !== undefined ? { fetchFn: options.fetchFn } : {}),
       headers: { Authorization: `Bearer ${options.apiKey}` },
     });
     // Free tier: 5 calls/minute

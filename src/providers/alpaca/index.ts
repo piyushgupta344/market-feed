@@ -17,6 +17,8 @@ export interface AlpacaProviderOptions {
   feed?: "iex" | "sip";
   baseUrl?: string;
   timeout?: number;
+  /** Custom fetch function, e.g. a CORS proxy wrapper for browser use. */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 const DEFAULT_BASE_URL = "https://data.alpaca.markets";
@@ -69,6 +71,7 @@ export class AlpacaProvider implements MarketProvider {
     this.http = new HttpClient("alpaca", {
       baseUrl: options.baseUrl ?? DEFAULT_BASE_URL,
       timeoutMs: options.timeout,
+      ...(options.fetchFn !== undefined ? { fetchFn: options.fetchFn } : {}),
       headers: {
         "APCA-API-KEY-ID": this.keyId,
         "APCA-API-SECRET-KEY": this.secretKey,

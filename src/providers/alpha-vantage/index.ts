@@ -33,6 +33,8 @@ export interface AlphaVantageProviderOptions {
    * Premium tier: higher — set refillRate accordingly.
    */
   rateLimiter?: RateLimiter;
+  /** Custom fetch function, e.g. a CORS proxy wrapper for browser use. */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 /**
@@ -54,6 +56,7 @@ export class AlphaVantageProvider implements MarketProvider {
       baseUrl: "https://www.alphavantage.co",
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
+      ...(options.fetchFn !== undefined ? { fetchFn: options.fetchFn } : {}),
     });
     // Default: 5 requests/minute burst capacity
     this.limiter = options.rateLimiter ?? new RateLimiter("alpha-vantage", 5, 5 / 60);

@@ -38,6 +38,8 @@ export interface YahooProviderOptions {
   timeoutMs?: number;
   /** Retry attempts on transient failures. Defaults to 2. */
   retries?: number;
+  /** Custom fetch function, e.g. a CORS proxy wrapper for browser use. */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 /**
@@ -56,6 +58,7 @@ export class YahooProvider implements MarketProvider {
     const shared = {
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
+      ...(options.fetchFn !== undefined ? { fetchFn: options.fetchFn } : {}),
       headers: {
         Accept: "application/json",
         "Accept-Language": "en-US,en;q=0.9",
