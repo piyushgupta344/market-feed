@@ -32,6 +32,7 @@ export default defineConfig([
       react:        "src/react/index.ts",
       options:      "src/options/index.ts",
       macro:        "src/macro/index.ts",
+      browser:      "src/browser/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

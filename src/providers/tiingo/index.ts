@@ -45,6 +45,8 @@ export interface TiingoProviderOptions {
    * Free tier: 50 API calls/hour ≈ ~0.0139 tokens/second.
    */
   rateLimiter?: RateLimiter;
+  /** Custom fetch function, e.g. a CORS proxy wrapper for browser use. */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 /**
@@ -70,6 +72,7 @@ export class TiingoProvider implements MarketProvider {
       },
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
+      ...(options.fetchFn !== undefined ? { fetchFn: options.fetchFn } : {}),
     });
     // Free tier: 50 calls/hour ≈ 0.01389 tokens/second
     this.limiter = options.rateLimiter ?? new RateLimiter("tiingo", 50, 50 / 3600);

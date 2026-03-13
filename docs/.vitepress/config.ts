@@ -73,6 +73,7 @@ export default defineConfig({
           { text: "Options Chain", link: "/modules/options" },
           { text: "Macro Indicators", link: "/modules/macro" },
           { text: "React Hooks", link: "/modules/react" },
+          { text: "Browser Bundle", link: "/modules/browser" },
           { text: "CLI", link: "/modules/cli" },
         ],
       },

@@ -15,6 +15,7 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **Streaming fundamentals** — `includeFundamentals: true` option on `watch()` emits `earnings_released` events when a new quarterly report is detected (see [Stream](/modules/stream))
 - **More WebSocket providers** — `AlpacaProvider` (IEX/SIP feed) and `IbTwsProvider` (local TWS/IB Gateway) added to `market-feed/ws` (see [WebSocket Streaming](/modules/ws))
 - **Level II order book** — `getOrderBook()` async generator for top-of-book bid/ask updates from Polygon, Alpaca, IB TWS, or polling fallback (see [WebSocket Streaming](/modules/ws#level-ii-order-book))
+- **Browser-native bundle** — `market-feed/browser` with CORS proxy utilities (`createFetchWithProxy`, `installCorsProxy`); all providers accept `fetchFn` for proxy routing (see [Browser Bundle](/modules/browser))
 
 ## Near-term
 
@@ -22,23 +23,9 @@ This page covers what's planned for future releases. Items are roughly ordered b
 
 ## Medium-term
 
-### Level II order book
-
-```ts
-import { getOrderBook } from "market-feed/ws";
-
-for await (const update of getOrderBook(feed, "AAPL")) {
-  console.log(update.bids[0], update.asks[0]);
-}
-```
-
 ---
 
 ## Longer-term
-
-### Browser-native bundle
-
-A separate `market-feed/browser` build without Node.js dependencies (no `ws` package), suitable for direct use in the browser without a bundler.
 
 ### React Native support
 

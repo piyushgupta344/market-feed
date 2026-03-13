@@ -38,6 +38,8 @@ export interface TwelveDataProviderOptions {
    * Free tier: 8 API calls/minute.
    */
   rateLimiter?: RateLimiter;
+  /** Custom fetch function, e.g. a CORS proxy wrapper for browser use. */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 /**
@@ -60,6 +62,7 @@ export class TwelveDataProvider implements MarketProvider {
       baseUrl: "https://api.twelvedata.com",
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
+      ...(options.fetchFn !== undefined ? { fetchFn: options.fetchFn } : {}),
     });
     // Free tier: 8 calls/minute ≈ 0.1333 tokens/second
     this.limiter = options.rateLimiter ?? new RateLimiter("twelve-data", 8, 8 / 60);

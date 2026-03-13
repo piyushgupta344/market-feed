@@ -37,6 +37,8 @@ export interface FinnhubProviderOptions {
    * Free tier: 60 API calls/minute.
    */
   rateLimiter?: RateLimiter;
+  /** Custom fetch function, e.g. a CORS proxy wrapper for browser use. */
+  fetchFn?: typeof globalThis.fetch;
 }
 
 /**
@@ -61,6 +63,7 @@ export class FinnhubProvider implements MarketProvider {
       baseUrl: "https://finnhub.io",
       ...(options.timeoutMs !== undefined ? { timeoutMs: options.timeoutMs } : {}),
       ...(options.retries !== undefined ? { retries: options.retries } : {}),
+      ...(options.fetchFn !== undefined ? { fetchFn: options.fetchFn } : {}),
       headers: {
         "X-Finnhub-Token": options.apiKey,
         Accept: "application/json",
