@@ -1,11 +1,13 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useAlerts, useQuote, useStream } from "../../../src/react/index.js";
+import { useAlerts, useOrderBook, useQuote, useStream, useWebSocket } from "../../../src/react/index.js";
 import type { AlertConfig, AlertEvent } from "../../../src/alerts/types.js";
 import type { QuoteEvent } from "../../../src/stream/types.js";
 import type { Quote } from "../../../src/types/quote.js";
 import type { MarketFeed } from "../../../src/client.js";
+import type { OrderBookEvent } from "../../../src/ws/index.js";
+import type { WsEvent, WsTrade } from "../../../src/ws/types.js";
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -19,11 +21,19 @@ vi.mock("../../../src/alerts/index.js", () => ({
   watchAlerts: vi.fn(),
 }));
 
+vi.mock("../../../src/ws/index.js", () => ({
+  connect: vi.fn(),
+  getOrderBook: vi.fn(),
+}));
+
 import { watch } from "../../../src/stream/index.js";
 import { watchAlerts } from "../../../src/alerts/index.js";
+import { connect, getOrderBook } from "../../../src/ws/index.js";
 
 const mockWatch = vi.mocked(watch);
 const mockWatchAlerts = vi.mocked(watchAlerts);
+const mockConnect = vi.mocked(connect);
+const mockGetOrderBook = vi.mocked(getOrderBook);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -456,5 +466,216 @@ describe("useAlerts", () => {
       await Promise.resolve();
     });
     expect(mockWatchAlerts).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useWebSocket — React Native compatible real-time WS hook
+// ---------------------------------------------------------------------------
+
+describe("useWebSocket", () => {
+  afterEach(() => vi.clearAllMocks());
+
+  const mockProvider = { name: "finnhub", quote: vi.fn(), historical: vi.fn(), search: vi.fn() };
+
+  function makeTrade(price = 190): WsTrade {
+    return { symbol: "AAPL", price, size: 100, timestamp: new Date() };
+  }
+
+  it("initial state: null event, null latestTrade, null error", () => {
+    mockConnect.mockImplementation(async function* (_provider, _symbols, opts) {
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+    const { result } = renderHook(() => useWebSocket(mockProvider, ["AAPL"]));
+    expect(result.current.event).toBeNull();
+    expect(result.current.latestTrade).toBeNull();
+    expect(result.current.error).toBeNull();
+  });
+
+  it("does not call connect when symbols is empty", () => {
+    const { result } = renderHook(() => useWebSocket(mockProvider, []));
+    expect(mockConnect).not.toHaveBeenCalled();
+    expect(result.current.event).toBeNull();
+  });
+
+  it("updates event and latestTrade when a trade event arrives", async () => {
+    const trade = makeTrade(195);
+    const tradeEvent: WsEvent = { type: "trade", trade };
+
+    mockConnect.mockImplementation(async function* (_provider, _symbols, opts) {
+      yield tradeEvent;
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+
+    const { result } = renderHook(() => useWebSocket(mockProvider, ["AAPL"]));
+
+    await waitFor(() => expect(result.current.event).not.toBeNull());
+    expect(result.current.event).toEqual(tradeEvent);
+    expect(result.current.latestTrade).toEqual(trade);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("updates event for non-trade events but does not change latestTrade", async () => {
+    const connectedEvent: WsEvent = { type: "connected", provider: "finnhub" };
+
+    mockConnect.mockImplementation(async function* (_provider, _symbols, opts) {
+      yield connectedEvent;
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+
+    const { result } = renderHook(() => useWebSocket(mockProvider, ["AAPL"]));
+
+    await waitFor(() => expect(result.current.event).not.toBeNull());
+    expect(result.current.event).toEqual(connectedEvent);
+    expect(result.current.latestTrade).toBeNull();
+  });
+
+  it("sets error when connect throws (non-abort)", async () => {
+    mockConnect.mockImplementation(async function* () {
+      throw new Error("ws failed");
+    });
+
+    const { result } = renderHook(() => useWebSocket(mockProvider, ["AAPL"]));
+
+    await waitFor(() => expect(result.current.error?.message).toBe("ws failed"));
+  });
+
+  it("aborts the generator when unmounted", async () => {
+    let capturedSignal: AbortSignal | undefined;
+
+    mockConnect.mockImplementation(async function* (_provider, _symbols, opts) {
+      capturedSignal = opts?.signal;
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+
+    const { unmount } = renderHook(() => useWebSocket(mockProvider, ["AAPL"]));
+
+    await act(async () => { await Promise.resolve(); });
+
+    expect(capturedSignal?.aborted).toBe(false);
+    unmount();
+    expect(capturedSignal?.aborted).toBe(true);
+  });
+
+  it("restarts stream when symbols change", async () => {
+    mockConnect.mockImplementation(async function* (_provider, _symbols, opts) {
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+
+    const { rerender } = renderHook(
+      ({ symbols }) => useWebSocket(mockProvider, symbols),
+      { initialProps: { symbols: ["AAPL"] } },
+    );
+
+    await act(async () => { await Promise.resolve(); });
+    expect(mockConnect).toHaveBeenCalledTimes(1);
+
+    rerender({ symbols: ["AAPL", "MSFT"] });
+
+    await act(async () => { await Promise.resolve(); });
+    expect(mockConnect).toHaveBeenCalledTimes(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useOrderBook — top-of-book bid/ask hook
+// ---------------------------------------------------------------------------
+
+describe("useOrderBook", () => {
+  afterEach(() => vi.clearAllMocks());
+
+  const mockProvider = { name: "polygon", quote: vi.fn(), historical: vi.fn(), search: vi.fn() };
+
+  function makeOrderBook(bid = 189.9, ask = 190.1): OrderBookEvent {
+    return {
+      symbol: "AAPL",
+      bids: [{ price: bid, size: 200 }],
+      asks: [{ price: ask, size: 150 }],
+      timestamp: new Date(),
+    };
+  }
+
+  it("initial state: null orderBook, null error", () => {
+    mockGetOrderBook.mockImplementation(async function* (_provider, _symbol, opts) {
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+    const { result } = renderHook(() => useOrderBook(mockProvider, "AAPL"));
+    expect(result.current.orderBook).toBeNull();
+    expect(result.current.error).toBeNull();
+  });
+
+  it("updates orderBook when generator yields", async () => {
+    const book = makeOrderBook();
+
+    mockGetOrderBook.mockImplementation(async function* (_provider, _symbol, opts) {
+      yield book;
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+
+    const { result } = renderHook(() => useOrderBook(mockProvider, "AAPL"));
+
+    await waitFor(() => expect(result.current.orderBook).not.toBeNull());
+    expect(result.current.orderBook).toEqual(book);
+    expect(result.current.error).toBeNull();
+  });
+
+  it("holds the latest snapshot when generator yields multiple times", async () => {
+    const book1 = makeOrderBook(189.9, 190.1);
+    const book2 = makeOrderBook(190.0, 190.2);
+
+    mockGetOrderBook.mockImplementation(async function* (_provider, _symbol, opts) {
+      yield book1;
+      yield book2;
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+
+    const { result } = renderHook(() => useOrderBook(mockProvider, "AAPL"));
+
+    await waitFor(() => expect(result.current.orderBook).toEqual(book2));
+  });
+
+  it("sets error when generator throws (non-abort)", async () => {
+    mockGetOrderBook.mockImplementation(async function* () {
+      throw new Error("orderbook failed");
+    });
+
+    const { result } = renderHook(() => useOrderBook(mockProvider, "AAPL"));
+
+    await waitFor(() => expect(result.current.error?.message).toBe("orderbook failed"));
+  });
+
+  it("aborts the generator when unmounted", async () => {
+    let capturedSignal: AbortSignal | undefined;
+
+    mockGetOrderBook.mockImplementation(async function* (_provider, _symbol, opts) {
+      capturedSignal = opts?.signal;
+      await new Promise<void>((resolve) => {
+        opts?.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+    });
+
+    const { unmount } = renderHook(() => useOrderBook(mockProvider, "AAPL"));
+
+    await act(async () => { await Promise.resolve(); });
+
+    expect(capturedSignal?.aborted).toBe(false);
+    unmount();
+    expect(capturedSignal?.aborted).toBe(true);
   });
 });

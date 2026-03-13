@@ -1,6 +1,6 @@
 # React Hooks
 
-`market-feed/react` provides three hooks for integrating live market data into React applications.
+`market-feed/react` provides five hooks for integrating live market data into React and React Native applications.
 
 ## Installation
 
@@ -173,6 +173,110 @@ Fired events accumulate in the `events` array — they are never removed. The ge
 
 ---
 
+## `useWebSocket`
+
+Subscribes to a real-time WebSocket stream via `connect()` from `market-feed/ws`. Works on React Native — `WebSocket` is available natively in all RN versions.
+
+```tsx
+import { useWebSocket } from "market-feed/react";
+import { FinnhubProvider } from "market-feed";
+
+const provider = new FinnhubProvider({ apiKey: process.env.EXPO_PUBLIC_FINNHUB_KEY! });
+
+function LiveTrades({ symbols }: { symbols: string[] }) {
+  const { event, latestTrade, error } = useWebSocket(provider, symbols);
+
+  if (error) return <Text>Stream error: {error.message}</Text>;
+  if (!latestTrade) return <Text>Connecting…</Text>;
+
+  return (
+    <Text>
+      {latestTrade.symbol}: ${latestTrade.price.toFixed(2)} × {latestTrade.size}
+    </Text>
+  );
+}
+```
+
+### Options
+
+```ts
+interface WsOptions {
+  /** Custom WebSocket constructor (for Node 18–20). Not needed in React Native. */
+  wsImpl?: typeof globalThis.WebSocket;
+  /** Max reconnect attempts. Default: 10 */
+  maxReconnectAttempts?: number;
+  /** Base reconnect delay in ms. Default: 1000 */
+  reconnectDelayMs?: number;
+}
+```
+
+### Return value
+
+```ts
+interface UseWebSocketResult {
+  /** The latest WsEvent (trade, connected, disconnected, error) — or null. */
+  event: WsEvent | null;
+  /** Shortcut for the most recent trade, or null before the first trade arrives. */
+  latestTrade: WsTrade | null;
+  /** Fatal error if the stream throws unexpectedly. */
+  error: Error | null;
+}
+```
+
+The stream restarts automatically when the `symbols` list changes. It is stopped on unmount via an internal `AbortSignal`.
+
+---
+
+## `useOrderBook`
+
+Subscribes to top-of-book bid/ask updates via `getOrderBook()` from `market-feed/ws`. Works on React Native.
+
+```tsx
+import { useOrderBook } from "market-feed/react";
+import { PolygonProvider } from "market-feed";
+
+const provider = new PolygonProvider({ apiKey: process.env.EXPO_PUBLIC_POLYGON_KEY! });
+
+function OrderBook({ symbol }: { symbol: string }) {
+  const { orderBook, error } = useOrderBook(provider, symbol);
+
+  if (error) return <Text>Error: {error.message}</Text>;
+  if (!orderBook) return <Text>Waiting for quotes…</Text>;
+
+  const bid = orderBook.bids[0];
+  const ask = orderBook.asks[0];
+
+  return (
+    <View>
+      <Text>Bid: ${bid?.price.toFixed(2)} × {bid?.size}</Text>
+      <Text>Ask: ${ask?.price.toFixed(2)} × {ask?.size}</Text>
+    </View>
+  );
+}
+```
+
+### Supported providers
+
+| Provider | Data source |
+|----------|-------------|
+| `PolygonProvider` | Native WS — `Q.*` NBBO quotes |
+| `AlpacaProvider` | Native WS — quotes channel |
+| `IbTwsProvider` | Native WS — bid/ask fields |
+| All others | Polling fallback — synthesises spread from `quote()` |
+
+### Return value
+
+```ts
+interface UseOrderBookResult {
+  /** Latest top-of-book snapshot, or null before the first update. */
+  orderBook: OrderBookEvent | null;
+  /** Fatal error if the generator throws unexpectedly. */
+  error: Error | null;
+}
+```
+
+---
+
 ## Stable references
 
 All three hooks keep refs to `source`/`feed` and `options` internally, so passing a new object reference on every render does **not** restart the subscription. Only changes to key values (`symbol`, `symbols` content, `alerts` content, `intervalMs`, `enabled`) trigger a restart.
@@ -217,3 +321,53 @@ import { YahooProvider } from "market-feed";
 const yahoo = new YahooProvider();
 const { data } = useQuote(yahoo, "AAPL");
 ```
+
+---
+
+## React Native
+
+All five hooks work in React Native (Expo and bare workflow). React Native provides `fetch`, `WebSocket`, and `AbortController` natively, so no polyfills are needed on modern versions.
+
+### Setup (Expo)
+
+```bash
+npx expo install market-feed react
+```
+
+```tsx
+import { useQuote, useWebSocket } from "market-feed/react";
+import { FinnhubProvider } from "market-feed";
+
+const provider = new FinnhubProvider({
+  apiKey: process.env.EXPO_PUBLIC_FINNHUB_KEY!,
+});
+
+export default function App() {
+  const { data } = useQuote(provider, "AAPL", { intervalMs: 10_000 });
+  const { latestTrade } = useWebSocket(provider, ["AAPL", "MSFT", "TSLA"]);
+
+  return (
+    <View>
+      <Text>REST: ${data?.price.toFixed(2)}</Text>
+      <Text>WS: ${latestTrade?.price.toFixed(2)}</Text>
+    </View>
+  );
+}
+```
+
+### AbortController
+
+`AbortController` is available natively since React Native 0.71. For older versions, install the polyfill:
+
+```bash
+npm install abortcontroller-polyfill
+```
+
+```ts
+// index.js — before any other imports
+import "abortcontroller-polyfill/dist/abortcontroller-polyfill-only";
+```
+
+### Metro bundler
+
+No special Metro config is needed. `market-feed` ships both ESM and CJS, and Metro resolves CJS by default.

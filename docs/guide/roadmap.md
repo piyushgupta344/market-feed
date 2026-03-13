@@ -16,6 +16,7 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **More WebSocket providers** — `AlpacaProvider` (IEX/SIP feed) and `IbTwsProvider` (local TWS/IB Gateway) added to `market-feed/ws` (see [WebSocket Streaming](/modules/ws))
 - **Level II order book** — `getOrderBook()` async generator for top-of-book bid/ask updates from Polygon, Alpaca, IB TWS, or polling fallback (see [WebSocket Streaming](/modules/ws#level-ii-order-book))
 - **Browser-native bundle** — `market-feed/browser` with CORS proxy utilities (`createFetchWithProxy`, `installCorsProxy`); all providers accept `fetchFn` for proxy routing (see [Browser Bundle](/modules/browser))
+- **React Native support** — `useWebSocket` and `useOrderBook` hooks added to `market-feed/react`; all five hooks work with React Native (Expo and bare workflow) with no polyfills needed on RN 0.71+ (see [React Hooks](/modules/react))
 
 ## Near-term
 
@@ -26,10 +27,6 @@ This page covers what's planned for future releases. Items are roughly ordered b
 ---
 
 ## Longer-term
-
-### React Native support
-
-Ensure all hooks in `market-feed/react` work in React Native (Hermes engine, no DOM).
 
 ### GraphQL / tRPC adapter
 
