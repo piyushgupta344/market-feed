@@ -2,6 +2,14 @@
   "$schema": "https://jsr.io/schema/config-file.v1.json",
   "name": "@piyushgupta344/market-feed",
   "version": "1.1.1",
+  "description": "Unified TypeScript client for financial market data — Yahoo Finance, Alpha Vantage, Polygon.io, Finnhub, Twelve Data & Tiingo. Caching, fallback, WebSocket streaming, React hooks, and 16 subpath modules.",
+  "runtimeCompat": {
+    "node": true,
+    "deno": true,
+    "bun": true,
+    "workerd": true,
+    "browser": false
+  },
   "exports": {
     ".": "./src/index.ts",
     "./calendar": "./src/calendar/index.ts",

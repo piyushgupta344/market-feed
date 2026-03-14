@@ -48,4 +48,4 @@ jobs:
       # Publish TypeScript source directly — JSR compiles it natively.
       # --allow-slow-types lets us skip explicit return types on re-exports.
       - name: Publish to JSR
-        run: npx jsr publish --allow-slow-types
+        run: npx jsr publish
