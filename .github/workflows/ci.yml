@@ -60,7 +60,7 @@ jobs:
       - run: pnpm test:coverage
       - name: Upload coverage
         if: matrix.node == 20
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: ./coverage/lcov.info
           fail_ci_if_error: false
