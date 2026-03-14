@@ -1,11 +1,13 @@
 name: Publish to JSR
 
-# Changesets creates tags in the form: market-feed@<version>
-# This workflow triggers on those tags to publish to jsr.io automatically.
+# Triggers on both tag formats:
+#   market-feed@<version>  — manually pushed JSR tags
+#   v<version>             — automatically created by Changesets after npm publish
 on:
   push:
     tags:
       - "market-feed@*"
+      - "v[0-9]*"
 
 jobs:
   publish:
@@ -29,10 +31,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Sync jsr.json version from the git tag (e.g. market-feed@1.2.0 → 1.2.0)
+      # Sync jsr.json version from the git tag
+      # Handles both "market-feed@1.2.0" and "v1.2.0" formats
       - name: Sync version from tag
         run: |
-          VERSION="${GITHUB_REF_NAME#market-feed@}"
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#market-feed@}"
+          VERSION="${VERSION#v}"
           node -e "
             const fs = require('fs');
             const cfg = JSON.parse(fs.readFileSync('jsr.json', 'utf8'));
