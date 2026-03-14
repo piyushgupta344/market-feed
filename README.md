@@ -140,9 +140,9 @@ Unlike `market-feed/stream` (which is HTTP polling), `market-feed/ws` opens a pe
 | `reconnectDelayMs` | `number` | `1000` | Base delay (doubles per attempt, max 30 s) |
 | `signal` | `AbortSignal` | — | Stop the stream |
 
-#### Node 18–20
+#### Node 20
 
-Node 21+, Bun, Deno, and Cloudflare Workers expose `WebSocket` globally. For Node 18–20, install the `ws` package and inject it:
+Node 21+, Bun, Deno, and Cloudflare Workers expose `WebSocket` globally. For Node 20, install the `ws` package and inject it:
 
 ```ts
 import WebSocket from "ws";
