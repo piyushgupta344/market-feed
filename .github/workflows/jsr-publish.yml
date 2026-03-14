@@ -1,13 +1,12 @@
 name: Publish to JSR
 
-# Triggers on both tag formats:
-#   market-feed@<version>  — manually pushed JSR tags
-#   v<version>             — automatically created by Changesets after npm publish
+# Manual override: push a "market-feed@<version>" tag to publish a specific
+# version to JSR without triggering a full npm release.
+# Automatic JSR publishing for npm releases is handled in release.yml.
 on:
   push:
     tags:
       - "market-feed@*"
-      - "v[0-9]*"
 
 jobs:
   publish:
@@ -18,26 +17,24 @@ jobs:
       id-token: write # required for JSR OIDC authentication
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      # Sync jsr.json version from the git tag
-      # Handles both "market-feed@1.2.0" and "v1.2.0" formats
+      # Sync jsr.json version from the git tag (format: "market-feed@1.2.0")
       - name: Sync version from tag
         run: |
           TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#market-feed@}"
-          VERSION="${VERSION#v}"
           node -e "
             const fs = require('fs');
             const cfg = JSON.parse(fs.readFileSync('jsr.json', 'utf8'));
@@ -45,7 +42,5 @@ jobs:
             fs.writeFileSync('jsr.json', JSON.stringify(cfg, null, 2) + '\n');
           "
 
-      # Publish TypeScript source directly — JSR compiles it natively.
-      # --allow-slow-types lets us skip explicit return types on re-exports.
       - name: Publish to JSR
         run: npx jsr publish

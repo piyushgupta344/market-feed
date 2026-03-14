@@ -16,10 +16,10 @@ jobs:
       contents: write       # create tags and GitHub releases
       issues: write         # comment on issues
       pull-requests: write  # comment on PRs
-      id-token: write       # npm provenance via OIDC
+      id-token: write       # npm provenance + JSR OIDC
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0    # semantic-release needs full history
 
@@ -27,7 +27,7 @@ jobs:
         with:
           version: 9
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
@@ -37,9 +37,45 @@ jobs:
 
       - run: pnpm build
 
+      - name: Get latest tag before release
+        id: before
+        run: |
+          git fetch --tags
+          LATEST=$(git tag --sort=-creatordate | grep '^v' | head -1 || echo '')
+          echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+
       - name: Release
         run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Detect new release
+        id: after
+        run: |
+          git fetch --tags
+          LATEST=$(git tag --sort=-creatordate | grep '^v' | head -1 || echo '')
+          echo "tag=$LATEST" >> "$GITHUB_OUTPUT"
+          if [ -n "$LATEST" ] && [ "$LATEST" != "${{ steps.before.outputs.tag }}" ]; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "version=${LATEST#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync jsr.json version
+        if: steps.after.outputs.released == 'true'
+        run: |
+          VERSION="${{ steps.after.outputs.version }}"
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('jsr.json', 'utf8'));
+            cfg.version = '$VERSION';
+            fs.writeFileSync('jsr.json', JSON.stringify(cfg, null, 2) + '\n');
+          "
+
+      - name: Publish to JSR
+        if: steps.after.outputs.released == 'true'
+        run: npx jsr publish
