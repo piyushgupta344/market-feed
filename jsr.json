@@ -1,0 +1,35 @@
+{
+  "$schema": "https://jsr.io/schema/config-file.v1.json",
+  "name": "@piyushgupta344/market-feed",
+  "version": "1.1.0",
+  "exports": {
+    ".": "./src/index.ts",
+    "./calendar": "./src/calendar/index.ts",
+    "./stream": "./src/stream/index.ts",
+    "./consensus": "./src/consensus/index.ts",
+    "./indicators": "./src/indicators/index.ts",
+    "./portfolio": "./src/portfolio/index.ts",
+    "./ws": "./src/ws/index.ts",
+    "./backtest": "./src/backtest/index.ts",
+    "./alerts": "./src/alerts/index.ts",
+    "./fundamentals": "./src/fundamentals/index.ts",
+    "./screener": "./src/screener/index.ts",
+    "./options": "./src/options/index.ts",
+    "./macro": "./src/macro/index.ts",
+    "./browser": "./src/browser/index.ts",
+    "./trpc": "./src/trpc/index.ts",
+    "./cache": "./src/cache/index.ts"
+  },
+  "publish": {
+    "include": [
+      "src/**/*.ts",
+      "README.md",
+      "LICENSE",
+      "CHANGELOG.md",
+      "jsr.json"
+    ],
+    "exclude": [
+      "src/**/*.test.ts"
+    ]
+  }
+}
