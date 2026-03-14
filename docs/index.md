@@ -40,7 +40,7 @@ features:
 
   - icon: 🦾
     title: Strict TypeScript
-    details: No any. Every response is fully typed with complete autocomplete. Works in Node 18+, Bun, Deno, and Cloudflare Workers.
+    details: No any. Every response is fully typed with complete autocomplete. Works in Node 20+, Bun, Deno (via JSR), and Cloudflare Workers.
 
   - icon: 📦
     title: Zero production dependencies
@@ -82,4 +82,7 @@ That's it. No API keys, no boilerplate.
 | `market-feed/screener` | Filter symbols by price, volume, market cap, and more |
 | `market-feed/options` | Options chains with Greeks from Polygon.io |
 | `market-feed/macro` | FRED macroeconomic indicators (CPI, GDP, Fed Funds…) |
-| `market-feed/react` | `useQuote`, `useStream`, `useAlerts` hooks (React ≥ 18) |
+| `market-feed/react` | `useQuote`, `useStream`, `useAlerts`, `useWebSocket`, `useOrderBook` hooks (React ≥ 18 + React Native) |
+| `market-feed/browser` | CORS proxy utilities for browser-side use |
+| `market-feed/trpc` | tRPC router + fetch-compatible HTTP handler |
+| `market-feed/cache` | Persistent cache drivers: Redis, Upstash, SQLite |

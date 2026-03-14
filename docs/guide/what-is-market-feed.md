@@ -46,7 +46,7 @@ One interface. Six providers. Cache, retry, fallback — all built in.
 | **Strict TypeScript** | No `any`. Full inference. Works with `strict: true` |
 | **Smart defaults** | Works out-of-the-box with Yahoo Finance — no API key required |
 | **Transparent** | `raw: true` exposes the original provider response when you need it |
-| **Modular** | Eleven optional subpath modules — import only what you use |
+| **Modular** | Sixteen optional subpath modules — import only what you use |
 
 ## Beyond the core client
 
@@ -62,10 +62,18 @@ market-feed ships a full analysis toolkit as opt-in subpath modules:
 - **[Price Alerts](/modules/alerts)** — fire events when price, change%, or volume conditions are met
 - **[Fundamentals](/modules/fundamentals)** — income statements, balance sheets, cash flow statements
 - **[Stock Screener](/modules/screener)** — filter a universe of symbols by any criteria
-- **[React Hooks](/modules/react)** — `useQuote`, `useStream`, `useAlerts` for React ≥ 18
+- **[Options Chain](/modules/options)** — full options chain with Greeks from Polygon.io
+- **[Macro Indicators](/modules/macro)** — 15 FRED economic series (CPI, GDP, Fed Funds…)
+- **[React Hooks](/modules/react)** — `useQuote`, `useStream`, `useAlerts`, `useWebSocket`, `useOrderBook` for React ≥ 18 and React Native
+- **[Browser Bundle](/modules/browser)** — CORS proxy utilities for running market-feed client-side
+- **[tRPC / HTTP Router](/modules/trpc)** — expose market data as typed tRPC procedures or a REST API
+- **[Persistent Cache Drivers](/modules/cache)** — Redis, Upstash, and SQLite drivers for `market-feed/cache`
 
 ## What market-feed is NOT
 
 - A **paid data service** — it wraps free APIs that have rate limits and data delays
-- A browser library — financial APIs block CORS; run market-feed server-side
 - A **trading platform** — the data is for informational use only
+
+::: tip Browser usage
+Most financial APIs block CORS requests from browsers. Run market-feed server-side (API routes, server components, edge functions) and pass data to the client. If you need browser-side fetching, `market-feed/browser` provides CORS proxy utilities.
+:::
