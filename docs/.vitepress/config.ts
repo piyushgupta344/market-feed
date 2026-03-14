@@ -6,7 +6,7 @@ export default defineConfig({
   base: "/market-feed/",
 
   head: [
-    ["link", { rel: "icon", href: "/market-feed/favicon.ico" }],
+    ["link", { rel: "icon", type: "image/svg+xml", href: "/market-feed/favicon.svg" }],
     ["meta", { name: "og:type", content: "website" }],
     ["meta", { name: "og:title", content: "market-feed" }],
     ["meta", { name: "og:description", content: "Unified TypeScript client for financial market data" }],
@@ -14,6 +14,7 @@ export default defineConfig({
 
   themeConfig: {
     logo: { light: "/logo-light.svg", dark: "/logo-dark.svg", alt: "market-feed" },
+    siteTitle: "market-feed",
 
     nav: [
       { text: "Guide", link: "/guide/getting-started" },
