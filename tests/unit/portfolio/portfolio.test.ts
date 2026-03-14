@@ -136,11 +136,11 @@ describe("Portfolio", () => {
 
       const pos = snap.positions[0]!;
       expect(pos.currentPrice).toBe(190);
-      expect(pos.marketValue).toBe(1900);        // 10 * 190
-      expect(pos.costBasis).toBe(1500);          // 10 * 150
-      expect(pos.unrealizedPnl).toBe(400);       // 1900 - 1500
+      expect(pos.marketValue).toBe(1900); // 10 * 190
+      expect(pos.costBasis).toBe(1500); // 10 * 150
+      expect(pos.unrealizedPnl).toBe(400); // 1900 - 1500
       expect(pos.unrealizedPnlPct).toBeCloseTo(400 / 1500, 5);
-      expect(pos.dayChange).toBe(20);            // 10 * 2
+      expect(pos.dayChange).toBe(20); // 10 * 2
       expect(pos.dayChangePct).toBe(1.06);
     });
 
@@ -151,9 +151,9 @@ describe("Portfolio", () => {
       const snap = await p.snapshot(feed);
 
       const pos = snap.positions[0]!;
-      expect(pos.marketValue).toBe(-900);        // -5 * 180
-      expect(pos.costBasis).toBe(-1000);         // -5 * 200
-      expect(pos.unrealizedPnl).toBe(100);       // -900 - (-1000)
+      expect(pos.marketValue).toBe(-900); // -5 * 180
+      expect(pos.costBasis).toBe(-1000); // -5 * 200
+      expect(pos.unrealizedPnl).toBe(100); // -900 - (-1000)
       expect(pos.unrealizedPnlPct).toBeCloseTo(100 / 1000, 5);
     });
 
@@ -162,15 +162,12 @@ describe("Portfolio", () => {
         { symbol: "AAPL", quantity: 10, avgCost: 150 },
         { symbol: "MSFT", quantity: 5, avgCost: 280 },
       ]);
-      const feed = mockFeed([
-        makeQuote("AAPL", 190, 2, 1.06),
-        makeQuote("MSFT", 300, 5, 1.69),
-      ]);
+      const feed = mockFeed([makeQuote("AAPL", 190, 2, 1.06), makeQuote("MSFT", 300, 5, 1.69)]);
       const snap = await p.snapshot(feed);
 
-      expect(snap.totalCostBasis).toBe(10 * 150 + 5 * 280);   // 1500 + 1400 = 2900
+      expect(snap.totalCostBasis).toBe(10 * 150 + 5 * 280); // 1500 + 1400 = 2900
       expect(snap.totalMarketValue).toBe(10 * 190 + 5 * 300); // 1900 + 1500 = 3400
-      expect(snap.totalUnrealizedPnl).toBe(3400 - 2900);      // 500
+      expect(snap.totalUnrealizedPnl).toBe(3400 - 2900); // 500
       expect(snap.totalUnrealizedPnlPct).toBeCloseTo(500 / 2900, 5);
     });
 
@@ -179,15 +176,10 @@ describe("Portfolio", () => {
         { symbol: "AAPL", quantity: 1, avgCost: 100 },
         { symbol: "MSFT", quantity: 1, avgCost: 200 },
       ]);
-      const feed = mockFeed([
-        makeQuote("AAPL", 110, 1, 0.9),
-        makeQuote("MSFT", 210, 1, 0.5),
-      ]);
+      const feed = mockFeed([makeQuote("AAPL", 110, 1, 0.9), makeQuote("MSFT", 210, 1, 0.5)]);
       await p.snapshot(feed);
 
-      expect(feed.quote).toHaveBeenCalledWith(
-        expect.arrayContaining(["AAPL", "MSFT"]),
-      );
+      expect(feed.quote).toHaveBeenCalledWith(expect.arrayContaining(["AAPL", "MSFT"]));
     });
 
     it("includes quote in each PositionSnapshot", async () => {

@@ -95,7 +95,7 @@ export class PolygonProvider implements MarketProvider {
 
     const tickers = symbols.map(normalise).join(",");
     const data = await this.http.get<PolygonSnapshotResponse>(
-      `/v2/snapshot/locale/us/markets/stocks/tickers`,
+      "/v2/snapshot/locale/us/markets/stocks/tickers",
       { params: { tickers, apiKey: this.options.apiKey } },
     );
 
@@ -221,7 +221,8 @@ export class PolygonProvider implements MarketProvider {
       sort: "ex_dividend_date",
       apiKey: this.options.apiKey,
     };
-    if (options?.from) params["ex_dividend_date.gte"] = toDateString(new Date(options.from as string));
+    if (options?.from)
+      params["ex_dividend_date.gte"] = toDateString(new Date(options.from as string));
     if (options?.to) params["ex_dividend_date.lte"] = toDateString(new Date(options.to as string));
 
     const data = await this.http.get<PolygonDividendsResponse>("/v3/reference/dividends", {
@@ -248,7 +249,8 @@ export class PolygonProvider implements MarketProvider {
       sort: "execution_date",
       apiKey: this.options.apiKey,
     };
-    if (options?.from) params["execution_date.gte"] = toDateString(new Date(options.from as string));
+    if (options?.from)
+      params["execution_date.gte"] = toDateString(new Date(options.from as string));
     if (options?.to) params["execution_date.lte"] = toDateString(new Date(options.to as string));
 
     const data = await this.http.get<PolygonSplitsResponse>("/v3/reference/splits", {
@@ -280,10 +282,9 @@ export class PolygonProvider implements MarketProvider {
     if (options?.strikeHigh !== undefined) params["strike_price.lte"] = options.strikeHigh;
     if (options?.type) params["contract_type"] = options.type;
 
-    const data = await this.http.get<PolygonOptionsSnapshotResponse>(
-      `/v3/snapshot/options/${s}`,
-      { params },
-    );
+    const data = await this.http.get<PolygonOptionsSnapshotResponse>(`/v3/snapshot/options/${s}`, {
+      params,
+    });
 
     this.assertSuccess(data as { status: string; error?: string });
 
@@ -315,20 +316,14 @@ export class PolygonProvider implements MarketProvider {
     );
   }
 
-  async cashFlows(
-    symbol: string,
-    options?: FundamentalsOptions,
-  ): Promise<CashFlowStatement[]> {
+  async cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]> {
     const stmts = await this.fetchFinancials(symbol, options);
     return stmts.map((s) =>
       transformCashFlowStatement(s, symbol.toUpperCase(), options?.raw ? s : undefined),
     );
   }
 
-  private async fetchFinancials(
-    symbol: string,
-    options?: FundamentalsOptions,
-  ) {
+  private async fetchFinancials(symbol: string, options?: FundamentalsOptions) {
     this.limiter.consume();
 
     const s = normalise(symbol);

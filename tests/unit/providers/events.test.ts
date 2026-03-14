@@ -3,12 +3,12 @@ import { ProviderError } from "../../../src/errors.js";
 import { FinnhubProvider } from "../../../src/providers/finnhub/index.js";
 import { PolygonProvider } from "../../../src/providers/polygon/index.js";
 import { YahooProvider } from "../../../src/providers/yahoo/index.js";
-import yahooEarningsFixture from "../../fixtures/yahoo-earnings.json";
-import yahooDividendsFixture from "../../fixtures/yahoo-dividends.json";
-import yahooSplitsFixture from "../../fixtures/yahoo-splits.json";
+import finnhubEarningsFixture from "../../fixtures/finnhub-earnings.json";
 import polygonDividendsFixture from "../../fixtures/polygon-dividends.json";
 import polygonSplitsFixture from "../../fixtures/polygon-splits.json";
-import finnhubEarningsFixture from "../../fixtures/finnhub-earnings.json";
+import yahooDividendsFixture from "../../fixtures/yahoo-dividends.json";
+import yahooEarningsFixture from "../../fixtures/yahoo-earnings.json";
+import yahooSplitsFixture from "../../fixtures/yahoo-splits.json";
 
 function mockFetch(fixture: unknown, ok = true, status = 200) {
   vi.stubGlobal(
@@ -38,7 +38,7 @@ describe("YahooProvider.earnings()", () => {
     expect(e.symbol).toBe("AAPL");
     expect(e.date).toBeInstanceOf(Date);
     expect(e.epsActual).toBe(1.53);
-    expect(e.epsEstimate).toBe(1.50);
+    expect(e.epsEstimate).toBe(1.5);
     expect(e.epsSurprisePct).toBe(2.0);
     expect(e.provider).toBe("yahoo");
 
@@ -51,6 +51,7 @@ describe("YahooProvider.earnings()", () => {
     const events = await provider.earnings("AAPL");
 
     for (let i = 1; i < events.length; i++) {
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
       expect(events[i - 1]!.date.getTime()).toBeGreaterThanOrEqual(events[i]!.date.getTime());
     }
 
@@ -78,7 +79,9 @@ describe("YahooProvider.earnings()", () => {
   });
 
   it("throws ProviderError when quoteSummary result is empty", async () => {
-    mockFetch({ quoteSummary: { result: null, error: { code: "Not Found", description: "No data" } } });
+    mockFetch({
+      quoteSummary: { result: null, error: { code: "Not Found", description: "No data" } },
+    });
     const provider = new YahooProvider();
 
     await expect(provider.earnings("INVALID")).rejects.toThrow(ProviderError);
@@ -114,6 +117,7 @@ describe("YahooProvider.dividends()", () => {
     const events = await provider.dividends("AAPL");
 
     for (let i = 1; i < events.length; i++) {
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
       expect(events[i - 1]!.exDate.getTime()).toBeGreaterThanOrEqual(events[i]!.exDate.getTime());
     }
 
@@ -238,7 +242,7 @@ describe("PolygonProvider.splits()", () => {
     const e = events[0]!;
     expect(e.symbol).toBe("AAPL");
     expect(e.date.toISOString().startsWith("2020-08-31")).toBe(true);
-    expect(e.ratio).toBe(4);       // split_to / split_from = 4 / 1
+    expect(e.ratio).toBe(4); // split_to / split_from = 4 / 1
     expect(e.description).toBe("4:1");
     expect(e.provider).toBe("polygon");
 
@@ -275,7 +279,7 @@ describe("FinnhubProvider.earnings()", () => {
     expect(e.date).toBeInstanceOf(Date);
     expect(e.date.getFullYear()).toBe(2024);
     expect(e.epsActual).toBe(1.53);
-    expect(e.epsEstimate).toBe(1.50);
+    expect(e.epsEstimate).toBe(1.5);
     expect(e.epsSurprisePct).toBe(2.0);
     expect(e.provider).toBe("finnhub");
 
@@ -284,7 +288,16 @@ describe("FinnhubProvider.earnings()", () => {
 
   it("handles null actual/estimate gracefully", async () => {
     mockFetch([
-      { actual: null, estimate: null, period: "2024-06-30", quarter: 3, surprise: null, surprisePercent: null, symbol: "AAPL", year: 2024 },
+      {
+        actual: null,
+        estimate: null,
+        period: "2024-06-30",
+        quarter: 3,
+        surprise: null,
+        surprisePercent: null,
+        symbol: "AAPL",
+        year: 2024,
+      },
     ]);
     const provider = new FinnhubProvider({ apiKey: "key" });
     const events = await provider.earnings("AAPL");

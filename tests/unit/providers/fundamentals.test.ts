@@ -3,10 +3,10 @@ import { PolygonProvider } from "../../../src/providers/polygon/index.js";
 import { TiingoProvider } from "../../../src/providers/tiingo/index.js";
 import { TwelveDataProvider } from "../../../src/providers/twelve-data/index.js";
 import polygonFinancialsFixture from "../../fixtures/polygon-financials.json";
-import tiingoFundamentalsFixture from "../../fixtures/tiingo-fundamentals.json";
 import tdBalanceSheetFixture from "../../fixtures/td-balance-sheet.json";
 import tdCashFlowFixture from "../../fixtures/td-cash-flow.json";
 import tdIncomeStatementFixture from "../../fixtures/td-income-statement.json";
+import tiingoFundamentalsFixture from "../../fixtures/tiingo-fundamentals.json";
 
 function mockFetch(fixture: unknown, ok = true, status = 200) {
   vi.stubGlobal(
@@ -62,7 +62,9 @@ describe("PolygonProvider.incomeStatements()", () => {
   it("throws ProviderError when results is empty", async () => {
     mockFetch({ status: "OK", results: [] });
     const provider = new PolygonProvider({ apiKey: "test-key" });
-    await expect(provider.incomeStatements("AAPL")).rejects.toThrow('No financials data for "AAPL"');
+    await expect(provider.incomeStatements("AAPL")).rejects.toThrow(
+      'No financials data for "AAPL"',
+    );
     vi.unstubAllGlobals();
   });
 
@@ -131,9 +133,9 @@ describe("PolygonProvider.cashFlows()", () => {
 
   it("omits freeCashFlow when capitalExpenditures is missing", async () => {
     const fixture = structuredClone(polygonFinancialsFixture);
-    delete (fixture.results[0]!.financials.cash_flow_statement as Record<string, unknown>)[
+    (fixture.results[0]?.financials.cash_flow_statement as Record<string, unknown>)[
       "capital_expenditure"
-    ];
+    ] = undefined;
     mockFetch(fixture);
     const provider = new PolygonProvider({ apiKey: "test-key" });
     const flows = await provider.cashFlows("AAPL");
@@ -179,8 +181,8 @@ describe("TiingoProvider.incomeStatements()", () => {
     const stmts = await provider.incomeStatements("AAPL");
 
     expect(stmts).toHaveLength(1);
-    expect(stmts[0]!.periodType).toBe("annual");
-    expect(stmts[0]!.revenue).toBe(383285000000);
+    expect(stmts[0]?.periodType).toBe("annual");
+    expect(stmts[0]?.revenue).toBe(383285000000);
     vi.unstubAllGlobals();
   });
 
@@ -288,8 +290,8 @@ describe("TwelveDataProvider.incomeStatements()", () => {
     const stmts = await provider.incomeStatements("AAPL");
 
     expect(stmts).toHaveLength(1);
-    expect(stmts[0]!.periodType).toBe("annual");
-    expect(stmts[0]!.revenue).toBe(383285000000);
+    expect(stmts[0]?.periodType).toBe("annual");
+    expect(stmts[0]?.revenue).toBe(383285000000);
     vi.unstubAllGlobals();
   });
 
@@ -349,8 +351,8 @@ describe("TwelveDataProvider.balanceSheets()", () => {
     mockFetch(tdBalanceSheetFixture);
     const provider = new TwelveDataProvider({ apiKey: "test-key" });
     const sheets = await provider.balanceSheets("AAPL");
-    expect(sheets[0]!.periodType).toBe("annual");
-    expect(sheets[0]!.totalAssets).toBe(352583000000);
+    expect(sheets[0]?.periodType).toBe("annual");
+    expect(sheets[0]?.totalAssets).toBe(352583000000);
     vi.unstubAllGlobals();
   });
 });
@@ -384,8 +386,8 @@ describe("TwelveDataProvider.cashFlows()", () => {
     mockFetch(tdCashFlowFixture);
     const provider = new TwelveDataProvider({ apiKey: "test-key" });
     const flows = await provider.cashFlows("AAPL");
-    expect(flows[0]!.periodType).toBe("annual");
-    expect(flows[0]!.operatingCashFlow).toBe(113260000000);
+    expect(flows[0]?.periodType).toBe("annual");
+    expect(flows[0]?.operatingCashFlow).toBe(113260000000);
     vi.unstubAllGlobals();
   });
 });

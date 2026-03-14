@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  createFetchWithProxy,
-  installCorsProxy,
-} from "../../../src/browser/index.js";
+import { createFetchWithProxy, installCorsProxy } from "../../../src/browser/index.js";
 
 // ---------------------------------------------------------------------------
 // createFetchWithProxy
@@ -19,7 +16,7 @@ describe("createFetchWithProxy", () => {
     expect(mockFetch).toHaveBeenCalledOnce();
     const calledUrl = mockFetch.mock.calls[0]?.[0] as string;
     expect(calledUrl).toBe(
-      "https://corsproxy.io/?" + encodeURIComponent("https://api.example.com/data"),
+      `https://corsproxy.io/?${encodeURIComponent("https://api.example.com/data")}`,
     );
     vi.unstubAllGlobals();
   });

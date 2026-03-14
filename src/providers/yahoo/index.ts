@@ -191,10 +191,7 @@ export class YahooProvider implements MarketProvider {
     const result = data.quoteSummary.result?.[0];
     if (!result) {
       const err = data.quoteSummary.error;
-      throw new ProviderError(
-        err?.description ?? `No earnings data for symbol "${s}"`,
-        this.name,
-      );
+      throw new ProviderError(err?.description ?? `No earnings data for symbol "${s}"`, this.name);
     }
 
     return transformEarnings(symbol, result, options?.raw ? data : undefined).slice(0, limit);
@@ -217,10 +214,7 @@ export class YahooProvider implements MarketProvider {
     const result = data.chart.result?.[0];
     if (!result) {
       const err = data.chart.error;
-      throw new ProviderError(
-        err?.description ?? `No dividend data for symbol "${s}"`,
-        this.name,
-      );
+      throw new ProviderError(err?.description ?? `No dividend data for symbol "${s}"`, this.name);
     }
 
     return transformDividends(symbol, result, options?.raw ? data : undefined).slice(0, limit);
@@ -229,7 +223,10 @@ export class YahooProvider implements MarketProvider {
   // ---------------------------------------------------------------------------
   // Fundamentals: income statements
   // ---------------------------------------------------------------------------
-  async incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]> {
+  async incomeStatements(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ): Promise<IncomeStatement[]> {
     const s = toYahooSymbol(symbol);
     const limit = options?.limit ?? 4;
     const quarterly = options?.quarterly ?? false;
@@ -318,10 +315,7 @@ export class YahooProvider implements MarketProvider {
     const result = data.quoteSummary.result?.[0];
     if (!result) {
       const err = data.quoteSummary.error;
-      throw new ProviderError(
-        err?.description ?? `No cash flow data for symbol "${s}"`,
-        this.name,
-      );
+      throw new ProviderError(err?.description ?? `No cash flow data for symbol "${s}"`, this.name);
     }
 
     const statements = quarterly
@@ -357,10 +351,7 @@ export class YahooProvider implements MarketProvider {
     const result = data.chart.result?.[0];
     if (!result) {
       const err = data.chart.error;
-      throw new ProviderError(
-        err?.description ?? `No split data for symbol "${s}"`,
-        this.name,
-      );
+      throw new ProviderError(err?.description ?? `No split data for symbol "${s}"`, this.name);
     }
 
     return transformSplits(symbol, result, options?.raw ? data : undefined).slice(0, limit);

@@ -109,7 +109,7 @@ describe("RateLimitError", () => {
 
 describe("AllProvidersFailedError", () => {
   it("sets name to AllProvidersFailedError", () => {
-    const err = new AllProvidersFailedError([], "quote");
+    const _err = new AllProvidersFailedError([], "quote");
   });
 
   it("includes operation name in message", () => {

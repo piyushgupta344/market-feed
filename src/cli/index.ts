@@ -219,9 +219,7 @@ async function runSearch(feed: MarketFeed, query: string, args: CliArgs): Promis
   console.log(`${pad("Symbol", 10)} ${pad("Name", 36)} ${pad("Type", 12)} Exchange`);
   console.log("-".repeat(72));
   for (const r of results) {
-    console.log(
-      `${pad(r.symbol, 10)} ${pad(r.name, 36)} ${pad(r.type, 12)} ${r.exchange ?? ""}`,
-    );
+    console.log(`${pad(r.symbol, 10)} ${pad(r.name, 36)} ${pad(r.type, 12)} ${r.exchange ?? ""}`);
   }
 }
 

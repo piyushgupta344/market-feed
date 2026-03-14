@@ -1,11 +1,17 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { useAlerts, useOrderBook, useQuote, useStream, useWebSocket } from "../../../src/react/index.js";
 import type { AlertConfig, AlertEvent } from "../../../src/alerts/types.js";
+import type { MarketFeed } from "../../../src/client.js";
+import {
+  useAlerts,
+  useOrderBook,
+  useQuote,
+  useStream,
+  useWebSocket,
+} from "../../../src/react/index.js";
 import type { QuoteEvent } from "../../../src/stream/types.js";
 import type { Quote } from "../../../src/types/quote.js";
-import type { MarketFeed } from "../../../src/client.js";
 import type { OrderBookEvent } from "../../../src/ws/index.js";
 import type { WsEvent, WsTrade } from "../../../src/ws/types.js";
 
@@ -26,8 +32,8 @@ vi.mock("../../../src/ws/index.js", () => ({
   getOrderBook: vi.fn(),
 }));
 
-import { watch } from "../../../src/stream/index.js";
 import { watchAlerts } from "../../../src/alerts/index.js";
+import { watch } from "../../../src/stream/index.js";
 import { connect, getOrderBook } from "../../../src/ws/index.js";
 
 const mockWatch = vi.mocked(watch);
@@ -130,10 +136,9 @@ describe("useQuote — basic polling", () => {
 
   it("resets state and refetches when symbol changes", async () => {
     const source = { quote: vi.fn().mockResolvedValue([makeQuote({ symbol: "AAPL" })]) };
-    const { result, rerender } = renderHook(
-      ({ symbol }) => useQuote(source, symbol),
-      { initialProps: { symbol: "AAPL" } },
-    );
+    const { result, rerender } = renderHook(({ symbol }) => useQuote(source, symbol), {
+      initialProps: { symbol: "AAPL" },
+    });
 
     await waitFor(() => expect(result.current.data?.symbol).toBe("AAPL"));
 
@@ -258,6 +263,7 @@ describe("useStream", () => {
   });
 
   it("sets error when generator throws (non-abort)", async () => {
+    // biome-ignore lint/correctness/useYield: intentionally non-yielding mock generator
     mockWatch.mockImplementation(async function* () {
       throw new Error("stream failed");
     });
@@ -297,10 +303,9 @@ describe("useStream", () => {
       });
     });
 
-    const { rerender } = renderHook(
-      ({ symbols }) => useStream(mockFeed, symbols),
-      { initialProps: { symbols: ["AAPL"] } },
-    );
+    const { rerender } = renderHook(({ symbols }) => useStream(mockFeed, symbols), {
+      initialProps: { symbols: ["AAPL"] },
+    });
 
     await act(async () => {
       await Promise.resolve();
@@ -337,6 +342,7 @@ describe("useAlerts", () => {
   });
 
   it("initial state: empty events, null error", () => {
+    // biome-ignore lint/correctness/useYield: intentionally non-yielding mock generator
     mockWatchAlerts.mockImplementation(async function* () {
       return;
     });
@@ -411,6 +417,7 @@ describe("useAlerts", () => {
   });
 
   it("sets error when generator throws (non-abort)", async () => {
+    // biome-ignore lint/correctness/useYield: intentionally non-yielding mock generator
     mockWatchAlerts.mockImplementation(async function* () {
       throw new Error("alerts failed");
     });
@@ -450,10 +457,9 @@ describe("useAlerts", () => {
       });
     });
 
-    const { rerender } = renderHook(
-      ({ alerts }) => useAlerts(mockFeed, alerts),
-      { initialProps: { alerts: [makeAlert("AAPL", 200)] } },
-    );
+    const { rerender } = renderHook(({ alerts }) => useAlerts(mockFeed, alerts), {
+      initialProps: { alerts: [makeAlert("AAPL", 200)] },
+    });
 
     await act(async () => {
       await Promise.resolve();
@@ -537,6 +543,7 @@ describe("useWebSocket", () => {
   });
 
   it("sets error when connect throws (non-abort)", async () => {
+    // biome-ignore lint/correctness/useYield: intentionally non-yielding mock generator
     mockConnect.mockImplementation(async function* () {
       throw new Error("ws failed");
     });
@@ -558,7 +565,9 @@ describe("useWebSocket", () => {
 
     const { unmount } = renderHook(() => useWebSocket(mockProvider, ["AAPL"]));
 
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(capturedSignal?.aborted).toBe(false);
     unmount();
@@ -572,17 +581,20 @@ describe("useWebSocket", () => {
       });
     });
 
-    const { rerender } = renderHook(
-      ({ symbols }) => useWebSocket(mockProvider, symbols),
-      { initialProps: { symbols: ["AAPL"] } },
-    );
+    const { rerender } = renderHook(({ symbols }) => useWebSocket(mockProvider, symbols), {
+      initialProps: { symbols: ["AAPL"] },
+    });
 
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     expect(mockConnect).toHaveBeenCalledTimes(1);
 
     rerender({ symbols: ["AAPL", "MSFT"] });
 
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
     expect(mockConnect).toHaveBeenCalledTimes(2);
   });
 });
@@ -651,6 +663,7 @@ describe("useOrderBook", () => {
   });
 
   it("sets error when generator throws (non-abort)", async () => {
+    // biome-ignore lint/correctness/useYield: intentionally non-yielding mock generator
     mockGetOrderBook.mockImplementation(async function* () {
       throw new Error("orderbook failed");
     });
@@ -672,7 +685,9 @@ describe("useOrderBook", () => {
 
     const { unmount } = renderHook(() => useOrderBook(mockProvider, "AAPL"));
 
-    await act(async () => { await Promise.resolve(); });
+    await act(async () => {
+      await Promise.resolve();
+    });
 
     expect(capturedSignal?.aborted).toBe(false);
     unmount();

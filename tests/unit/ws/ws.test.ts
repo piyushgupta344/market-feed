@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderError } from "../../../src/errors.js";
-import { AsyncQueue } from "../../../src/ws/queue.js";
-import { connect } from "../../../src/ws/index.js";
 import type { MarketProvider } from "../../../src/types/provider.js";
 import type { Quote } from "../../../src/types/quote.js";
+import { connect } from "../../../src/ws/index.js";
+import { AsyncQueue } from "../../../src/ws/queue.js";
 import type { WsEvent } from "../../../src/ws/types.js";
 
 // ---------------------------------------------------------------------------
@@ -70,10 +70,7 @@ class MockWebSocket {
   }
 
   close(code?: number, reason?: string) {
-    if (
-      this.readyState === MockWebSocket.OPEN ||
-      this.readyState === MockWebSocket.CONNECTING
-    ) {
+    if (this.readyState === MockWebSocket.OPEN || this.readyState === MockWebSocket.CONNECTING) {
       this.readyState = MockWebSocket.CLOSED;
       // When we close intentionally, onclose fires — but adapters set intentionalClose=true
       // before calling ws.close(), so this is a no-op from the adapter's perspective.
@@ -712,7 +709,9 @@ describe("connect() — Alpaca WebSocket", () => {
     // trade
     const p2 = gen.next();
     ws.simulateMessage(
-      JSON.stringify([{ T: "t", S: "AAPL", p: 189.84, s: 100, t: "2024-07-01T14:00:00.000Z", x: "D" }]),
+      JSON.stringify([
+        { T: "t", S: "AAPL", p: 189.84, s: 100, t: "2024-07-01T14:00:00.000Z", x: "D" },
+      ]),
     );
     const e2 = await p2;
     expect(e2.value).toMatchObject({ type: "trade" });
@@ -756,7 +755,11 @@ describe("connect() — Alpaca WebSocket", () => {
     ws.simulateClose(1006, "Abnormal closure");
 
     const e2 = await p2;
-    expect(e2.value).toMatchObject({ type: "disconnected", provider: "alpaca", reconnecting: true });
+    expect(e2.value).toMatchObject({
+      type: "disconnected",
+      provider: "alpaca",
+      reconnecting: true,
+    });
 
     controller.abort();
   });
@@ -796,7 +799,10 @@ describe("connect() — IB TWS WebSocket", () => {
     const p = gen.next();
     const ws = MockWebSocket.latest;
     ws.simulateMessage(
-      JSON.stringify({ topic: "sts", args: { authenticated: true, competing: false, message: "" } }),
+      JSON.stringify({
+        topic: "sts",
+        args: { authenticated: true, competing: false, message: "" },
+      }),
     );
 
     const event = await p;
@@ -817,7 +823,10 @@ describe("connect() — IB TWS WebSocket", () => {
     const p = gen.next();
     const ws = MockWebSocket.latest;
     ws.simulateMessage(
-      JSON.stringify({ topic: "sts", args: { authenticated: false, competing: false, message: "" } }),
+      JSON.stringify({
+        topic: "sts",
+        args: { authenticated: false, competing: false, message: "" },
+      }),
     );
 
     await expect(p).rejects.toThrow("not authenticated");
@@ -832,14 +841,22 @@ describe("connect() — IB TWS WebSocket", () => {
     const p1 = gen.next();
     const ws = MockWebSocket.latest;
     ws.simulateMessage(
-      JSON.stringify({ topic: "sts", args: { authenticated: true, competing: false, message: "" } }),
+      JSON.stringify({
+        topic: "sts",
+        args: { authenticated: true, competing: false, message: "" },
+      }),
     );
     await p1;
 
     // market data update for AAPL conid 265598
     const p2 = gen.next();
     ws.simulateMessage(
-      JSON.stringify({ topic: "smd+265598", "31": "189.84", "7702": "100", _updated: 1712345678000 }),
+      JSON.stringify({
+        topic: "smd+265598",
+        "31": "189.84",
+        "7702": "100",
+        _updated: 1712345678000,
+      }),
     );
     const e2 = await p2;
 
@@ -861,7 +878,10 @@ describe("connect() — IB TWS WebSocket", () => {
     const p1 = gen.next();
     const ws = MockWebSocket.latest;
     ws.simulateMessage(
-      JSON.stringify({ topic: "sts", args: { authenticated: true, competing: false, message: "" } }),
+      JSON.stringify({
+        topic: "sts",
+        args: { authenticated: true, competing: false, message: "" },
+      }),
     );
     await p1;
 
@@ -870,9 +890,7 @@ describe("connect() — IB TWS WebSocket", () => {
 
     // A real AAPL update follows — should be the next event
     const p2 = gen.next();
-    ws.simulateMessage(
-      JSON.stringify({ topic: "smd+265598", "31": "189.84", "7702": "50" }),
-    );
+    ws.simulateMessage(JSON.stringify({ topic: "smd+265598", "31": "189.84", "7702": "50" }));
     const e2 = await p2;
     expect(e2.value).toMatchObject({ type: "trade" });
     if (e2.value?.type === "trade") {

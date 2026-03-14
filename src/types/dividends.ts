@@ -1,9 +1,4 @@
-export type DividendFrequency =
-  | "annual"
-  | "semi-annual"
-  | "quarterly"
-  | "monthly"
-  | "irregular";
+export type DividendFrequency = "annual" | "semi-annual" | "quarterly" | "monthly" | "irregular";
 
 export interface DividendEvent {
   symbol: string;

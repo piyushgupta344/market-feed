@@ -38,7 +38,7 @@ describe("RateLimiter", () => {
         expect(err).toBeInstanceOf(RateLimitError);
         const retryAfter = (err as RateLimitError).retryAfter;
         expect(retryAfter).toBeInstanceOf(Date);
-        expect(retryAfter!.getTime()).toBeGreaterThan(Date.now());
+        expect(retryAfter?.getTime()).toBeGreaterThan(Date.now());
       }
     });
 

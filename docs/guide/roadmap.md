@@ -18,6 +18,7 @@ This page covers what's planned for future releases. Items are roughly ordered b
 - **Browser-native bundle** — `market-feed/browser` with CORS proxy utilities (`createFetchWithProxy`, `installCorsProxy`); all providers accept `fetchFn` for proxy routing (see [Browser Bundle](/modules/browser))
 - **React Native support** — `useWebSocket` and `useOrderBook` hooks added to `market-feed/react`; all five hooks work with React Native (Expo and bare workflow) with no polyfills needed on RN 0.71+ (see [React Hooks](/modules/react))
 - **GraphQL / tRPC adapter** — `market-feed/trpc` exports `createMarketFeedRouter()` (typed procedure router) and `createHttpHandler()` (fetch-compatible REST handler); adapts to tRPC v11, GraphQL resolvers, Next.js, and Cloudflare Workers (see [tRPC / HTTP Router](/modules/trpc))
+- **Persistent cache drivers** — `market-feed/cache` ships three drivers: `createRedisCacheDriver` (ioredis/redis@4), `createUpstashCacheDriver` (REST, edge-compatible), `createSqliteCacheDriver` (better-sqlite3/bun:sqlite/node:sqlite) (see [Persistent Cache Drivers](/modules/cache))
 
 ## Near-term
 
@@ -28,14 +29,6 @@ This page covers what's planned for future releases. Items are roughly ordered b
 ---
 
 ## Longer-term
-
-### Persistent cache drivers
-
-Official cache driver packages:
-
-- `market-feed-cache-redis` — Redis via `ioredis`
-- `market-feed-cache-upstash` — Upstash REST API (edge-compatible)
-- `market-feed-cache-sqlite` — SQLite via `better-sqlite3` (local persistence)
 
 ---
 

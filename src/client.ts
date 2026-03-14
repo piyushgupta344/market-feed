@@ -279,7 +279,10 @@ export class MarketFeed {
   // incomeStatements
   // ---------------------------------------------------------------------------
 
-  async incomeStatements(symbol: string, options?: FundamentalsOptions): Promise<IncomeStatement[]> {
+  async incomeStatements(
+    symbol: string,
+    options?: FundamentalsOptions,
+  ): Promise<IncomeStatement[]> {
     const cacheKey = `incomeStatements:${symbol}:${options?.quarterly ?? false}:${options?.limit ?? 4}`;
     const cached = await this.getCache<IncomeStatement[]>(cacheKey);
     if (cached) return cached;
@@ -341,8 +344,7 @@ export class MarketFeed {
     if (cached) return cached;
 
     const result = await this.withFallback("optionChain", (provider) => {
-      if (!provider.optionChain)
-        throw new UnsupportedOperationError(provider.name, "optionChain");
+      if (!provider.optionChain) throw new UnsupportedOperationError(provider.name, "optionChain");
       return provider.optionChain(symbol, options);
     });
 

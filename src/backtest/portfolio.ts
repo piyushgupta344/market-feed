@@ -99,8 +99,7 @@ export function portfolioBacktest(
 ): PortfolioBacktestResult {
   const initialCapital = options?.initialCapital ?? 100_000;
   const commission = options?.commission ?? 0;
-  const globalSizing: PositionSizing =
-    options?.sizing ?? { type: "fixed_quantity", quantity: 1 };
+  const globalSizing: PositionSizing = options?.sizing ?? { type: "fixed_quantity", quantity: 1 };
 
   if (assets.length === 0) {
     return emptyResult(initialCapital);
@@ -235,7 +234,9 @@ export function portfolioBacktest(
   // Sharpe (annualised, risk-free = 0)
   const dailyReturns: number[] = [];
   for (let i = 1; i < equityCurve.length; i++) {
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     const prev = equityCurve[i - 1]!.equity;
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     dailyReturns.push(prev > 0 ? (equityCurve[i]!.equity - prev) / prev : 0);
   }
   const n = dailyReturns.length;
@@ -258,7 +259,8 @@ export function portfolioBacktest(
   const winRate = allTrades.length > 0 ? wins.length / allTrades.length : 0;
   const grossProfit = wins.reduce((s, t) => s + t.pnl, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
-  const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
+  const profitFactor =
+    grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Number.POSITIVE_INFINITY : 0;
 
   // Per-asset summary
   const byAsset: Record<string, PortfolioAssetSummary> = {};
@@ -271,7 +273,7 @@ export function portfolioBacktest(
     byAsset[asset.symbol] = {
       totalTrades: assetTrades.length,
       winRate: assetTrades.length > 0 ? aWins.length / assetTrades.length : 0,
-      profitFactor: agl > 0 ? agp / agl : agp > 0 ? Infinity : 0,
+      profitFactor: agl > 0 ? agp / agl : agp > 0 ? Number.POSITIVE_INFINITY : 0,
       totalPnl: assetTrades.reduce((s, t) => s + t.pnl, 0),
       trades: assetTrades,
     };
@@ -302,7 +304,9 @@ export function portfolioBacktest(
     trades: allTrades.sort((a, b) => a.exitDate.getTime() - b.exitDate.getTime()),
     equityCurve,
     byAsset,
-    ...(benchmarkReturn !== undefined ? { benchmarkReturn, benchmarkAnnualizedReturn, benchmarkSymbol } : {}),
+    ...(benchmarkReturn !== undefined
+      ? { benchmarkReturn, benchmarkAnnualizedReturn, benchmarkSymbol }
+      : {}),
   };
 }
 
@@ -337,7 +341,7 @@ function computeQty(sizing: PositionSizing, price: number, equity: number): numb
   return Math.floor((equity * sizing.pct) / 100 / price);
 }
 
-function emptyResult(initialCapital: number): PortfolioBacktestResult {
+function emptyResult(_initialCapital: number): PortfolioBacktestResult {
   return {
     totalReturn: 0,
     annualizedReturn: 0,

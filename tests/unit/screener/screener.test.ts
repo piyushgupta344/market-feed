@@ -42,10 +42,7 @@ function makeSource(quotes: Quote[]) {
 
 describe("screen() — basic", () => {
   it("returns all symbols when no criteria filter anything out", async () => {
-    const source = makeSource([
-      makeQuote({ symbol: "AAPL" }),
-      makeQuote({ symbol: "MSFT" }),
-    ]);
+    const source = makeSource([makeQuote({ symbol: "AAPL" }), makeQuote({ symbol: "MSFT" })]);
 
     const results = await screen(source, ["AAPL", "MSFT"], {
       criteria: [{ type: "price_above", value: 0 }],
@@ -198,7 +195,7 @@ describe("screen() — volume_vs_avg criteria", () => {
   it("volume_vs_avg_above passes when volume > avgVolume * multiplier", async () => {
     const source = makeSource([
       makeQuote({ symbol: "SURGE", volume: 150_000_000, avgVolume: 50_000_000 }), // 3x avg
-      makeQuote({ symbol: "FLAT",  volume: 40_000_000,  avgVolume: 50_000_000 }), // 0.8x avg
+      makeQuote({ symbol: "FLAT", volume: 40_000_000, avgVolume: 50_000_000 }), // 0.8x avg
     ]);
     const results = await screen(source, ["SURGE", "FLAT"], {
       criteria: [{ type: "volume_vs_avg_above", value: 2 }], // > 2x average
@@ -209,8 +206,8 @@ describe("screen() — volume_vs_avg criteria", () => {
 
   it("volume_vs_avg_below passes when volume < avgVolume * multiplier", async () => {
     const source = makeSource([
-      makeQuote({ symbol: "QUIET", volume: 5_000_000,  avgVolume: 50_000_000 }), // 0.1x avg
-      makeQuote({ symbol: "BUSY",  volume: 80_000_000, avgVolume: 50_000_000 }), // 1.6x avg
+      makeQuote({ symbol: "QUIET", volume: 5_000_000, avgVolume: 50_000_000 }), // 0.1x avg
+      makeQuote({ symbol: "BUSY", volume: 80_000_000, avgVolume: 50_000_000 }), // 1.6x avg
     ]);
     const results = await screen(source, ["QUIET", "BUSY"], {
       criteria: [{ type: "volume_vs_avg_below", value: 0.5 }], // < 0.5x average
@@ -228,7 +225,9 @@ describe("screen() — volume_vs_avg criteria", () => {
   });
 
   it("volume_vs_avg_below passes when avgVolume is undefined", async () => {
-    const source = makeSource([makeQuote({ symbol: "AAPL", volume: 999_999_999, avgVolume: undefined })]);
+    const source = makeSource([
+      makeQuote({ symbol: "AAPL", volume: 999_999_999, avgVolume: undefined }),
+    ]);
     const results = await screen(source, ["AAPL"], {
       criteria: [{ type: "volume_vs_avg_below", value: 0.001 }],
     });
@@ -322,7 +321,7 @@ describe("screen() — multiple criteria (AND)", () => {
     const source = makeSource([
       makeQuote({ symbol: "AAPL", price: 190, changePercent: 3 }),
       makeQuote({ symbol: "TSLA", price: 190, changePercent: 0.5 }), // fails change_pct
-      makeQuote({ symbol: "AMZN", price: 50, changePercent: 3 }),    // fails price
+      makeQuote({ symbol: "AMZN", price: 50, changePercent: 3 }), // fails price
     ]);
 
     const results = await screen(source, ["AAPL", "TSLA", "AMZN"], {

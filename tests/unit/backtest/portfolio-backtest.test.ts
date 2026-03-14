@@ -3,7 +3,14 @@ import { portfolioBacktest } from "../../../src/backtest/index.js";
 import type { HistoricalBar } from "../../../src/types/historical.js";
 
 function makeBar(close: number, date: string): HistoricalBar {
-  return { date: new Date(date), open: close, high: close * 1.01, low: close * 0.99, close, volume: 1_000_000 };
+  return {
+    date: new Date(date),
+    open: close,
+    high: close * 1.01,
+    low: close * 0.99,
+    close,
+    volume: 1_000_000,
+  };
 }
 
 function makeBars(closes: number[], startDate = "2023-01-02"): HistoricalBar[] {
@@ -122,9 +129,9 @@ describe("portfolioBacktest()", () => {
       { initialCapital: 10_000, sizing: { type: "fixed_quantity", quantity: 1 } },
     );
     expect(result.byAsset["AAPL"]).toBeDefined();
-    expect(result.byAsset["AAPL"]!.totalTrades).toBe(1);
-    expect(result.byAsset["AAPL"]!.winRate).toBe(1);
-    expect(result.byAsset["AAPL"]!.totalPnl).toBeCloseTo(10);
+    expect(result.byAsset["AAPL"]?.totalTrades).toBe(1);
+    expect(result.byAsset["AAPL"]?.winRate).toBe(1);
+    expect(result.byAsset["AAPL"]?.totalPnl).toBeCloseTo(10);
   });
 
   it("handles benchmark comparison", () => {

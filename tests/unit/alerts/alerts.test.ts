@@ -61,7 +61,7 @@ describe("watchAlerts() — price_above", () => {
     const feed = makeFeed(makeQuote({ price: 190 }));
 
     const gen = watchAlerts(feed, [alert], { intervalMs: 100 });
-    const { value } = await gen.next() as { value: AlertEvent; done: false };
+    const { value } = (await gen.next()) as { value: AlertEvent; done: false };
 
     expect(value.type).toBe("triggered");
     expect(value.alert).toBe(alert);
@@ -102,7 +102,7 @@ describe("watchAlerts() — price_below", () => {
     const feed = makeFeed(makeQuote({ price: 190 }));
 
     const gen = watchAlerts(feed, [alert], { intervalMs: 100 });
-    const { value } = await gen.next() as { value: AlertEvent };
+    const { value } = (await gen.next()) as { value: AlertEvent };
 
     expect(value.type).toBe("triggered");
     expect(value.quote.price).toBe(190);
@@ -123,7 +123,7 @@ describe("watchAlerts() — change_pct conditions", () => {
     const feed = makeFeed(makeQuote({ changePercent: 1.5 }));
 
     const gen = watchAlerts(feed, [alert], { intervalMs: 100 });
-    const { value } = await gen.next() as { value: AlertEvent };
+    const { value } = (await gen.next()) as { value: AlertEvent };
 
     expect(value.type).toBe("triggered");
   });
@@ -137,7 +137,7 @@ describe("watchAlerts() — change_pct conditions", () => {
     const feed = makeFeed(makeQuote({ changePercent: -2 }));
 
     const gen = watchAlerts(feed, [alert], { intervalMs: 100 });
-    const { value } = await gen.next() as { value: AlertEvent };
+    const { value } = (await gen.next()) as { value: AlertEvent };
 
     expect(value.type).toBe("triggered");
   });
@@ -157,7 +157,7 @@ describe("watchAlerts() — volume_above", () => {
     const feed = makeFeed(makeQuote({ volume: 50_000_000 }));
 
     const gen = watchAlerts(feed, [alert], { intervalMs: 100 });
-    const { value } = await gen.next() as { value: AlertEvent };
+    const { value } = (await gen.next()) as { value: AlertEvent };
 
     expect(value.type).toBe("triggered");
   });

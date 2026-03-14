@@ -75,6 +75,7 @@ export default defineConfig({
           { text: "React Hooks", link: "/modules/react" },
           { text: "Browser Bundle", link: "/modules/browser" },
           { text: "tRPC / HTTP Router", link: "/modules/trpc" },
+          { text: "Persistent Cache Drivers", link: "/modules/cache" },
           { text: "CLI", link: "/modules/cli" },
         ],
       },

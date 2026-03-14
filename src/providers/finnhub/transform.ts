@@ -15,11 +15,7 @@ import type {
 
 const PROVIDER = "finnhub";
 
-export function transformQuote(
-  symbol: string,
-  data: FinnhubQuoteResponse,
-  raw?: unknown,
-): Quote {
+export function transformQuote(symbol: string, data: FinnhubQuoteResponse, raw?: unknown): Quote {
   return {
     symbol: symbol.toUpperCase(),
     name: symbol.toUpperCase(),
@@ -40,10 +36,7 @@ export function transformQuote(
   };
 }
 
-export function transformHistorical(
-  data: FinnhubCandlesResponse,
-  raw?: unknown,
-): HistoricalBar[] {
+export function transformHistorical(data: FinnhubCandlesResponse, raw?: unknown): HistoricalBar[] {
   if (data.s !== "ok") return [];
 
   return data.t.map((timestamp, i) => ({

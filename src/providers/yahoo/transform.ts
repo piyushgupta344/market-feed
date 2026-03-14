@@ -143,7 +143,8 @@ function buildEsg(
   if (!module) return undefined;
   const esg: EsgScores = {};
   if (module.totalEsg?.raw !== undefined) esg.totalScore = module.totalEsg.raw;
-  if (module.environmentScore?.raw !== undefined) esg.environmentScore = module.environmentScore.raw;
+  if (module.environmentScore?.raw !== undefined)
+    esg.environmentScore = module.environmentScore.raw;
   if (module.socialScore?.raw !== undefined) esg.socialScore = module.socialScore.raw;
   if (module.governanceScore?.raw !== undefined) esg.governanceScore = module.governanceScore.raw;
   if (module.percentile?.raw !== undefined) esg.percentile = module.percentile.raw;
