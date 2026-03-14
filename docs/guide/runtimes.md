@@ -2,9 +2,9 @@
 
 market-feed uses only the native `fetch` API and standard ES2022 features — no Node.js-specific APIs. It runs on any modern JavaScript runtime.
 
-## Node.js 18+
+## Node.js 20+
 
-Native `fetch` was added in Node 18. No polyfills needed.
+Node.js 20 is the minimum supported version. No polyfills needed.
 
 ```ts
 // CommonJS
@@ -31,12 +31,24 @@ const quote = await feed.quote("AAPL");
 
 ## Deno 2+
 
+market-feed is published to [JSR](https://jsr.io/@piyushgupta344/market-feed) — the TypeScript-first registry for Deno. The JSR version is the recommended import for Deno as it skips the npm compatibility layer entirely.
+
+```bash
+deno add jsr:@piyushgupta344/market-feed
+```
+
 ```ts
-import { MarketFeed } from "npm:market-feed";
+import { MarketFeed } from "@piyushgupta344/market-feed";
 
 const feed = new MarketFeed();
 const quote = await feed.quote("AAPL");
 console.log(quote.price);
+```
+
+You can also import directly from npm if preferred:
+
+```ts
+import { MarketFeed } from "npm:market-feed";
 ```
 
 ## Cloudflare Workers

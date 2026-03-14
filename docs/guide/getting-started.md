@@ -20,11 +20,15 @@ bun add market-feed
 yarn add market-feed
 ```
 
+```bash [Deno (JSR)]
+deno add jsr:@piyushgupta344/market-feed
+```
+
 :::
 
 ## Requirements
 
-- **Node.js** 18+ (uses native `fetch`)
+- **Node.js** 20+ (uses native `fetch`)
 - **TypeScript** 5+ (recommended, but not required)
 
 ## Your first quote

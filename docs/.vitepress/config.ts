@@ -20,8 +20,9 @@ export default defineConfig({
       { text: "Modules", link: "/modules/calendar" },
       { text: "API", link: "/api/reference" },
       { text: "npm", link: "https://www.npmjs.com/package/market-feed" },
+      { text: "jsr", link: "https://jsr.io/@piyushgupta344/market-feed" },
       {
-        text: "v1.0.0",
+        text: "v1.1.0",
         items: [
           { text: "Changelog", link: "https://github.com/piyushgupta344/market-feed/blob/main/CHANGELOG.md" },
           { text: "Roadmap", link: "/guide/roadmap" },
