@@ -1,5 +1,11 @@
 # market-feed Changelog
 
+## 1.1.1
+
+### Patch Changes
+
+- Maintenance: update dev tooling to vitest 4 / vite 6, add @types/node, patch devDep vulnerabilities, fix docs logo and Node 20+ references
+
 ## 1.1.0 — 2026-03-12
 
 ### New modules
@@ -19,7 +25,11 @@ const chain = await getOptionChain(polygon, "AAPL", {
 });
 
 for (const c of chain.calls) {
-  console.log(`Strike $${c.strike}  IV ${(c.impliedVolatility! * 100).toFixed(1)}%  Δ ${c.delta?.toFixed(3)}`);
+  console.log(
+    `Strike $${c.strike}  IV ${(c.impliedVolatility! * 100).toFixed(
+      1
+    )}%  Δ ${c.delta?.toFixed(3)}`
+  );
 }
 ```
 
@@ -52,10 +62,10 @@ for (const obs of cpi.observations) {
 
 Two new criteria in `market-feed/screener`:
 
-| Criterion | Passes when |
-|-----------|-------------|
+| Criterion             | Passes when                                                                    |
+| --------------------- | ------------------------------------------------------------------------------ |
 | `volume_vs_avg_above` | `quote.volume > quote.avgVolume * value` — e.g. `value: 2` = 2× average volume |
-| `volume_vs_avg_below` | `quote.volume < quote.avgVolume * value` |
+| `volume_vs_avg_below` | `quote.volume < quote.avgVolume * value`                                       |
 
 Both pass-through when `avgVolume` is `undefined` (consistent with 52-week criteria).
 
@@ -88,24 +98,40 @@ function StockPrice({ symbol }: { symbol: string }) {
   const { data, loading, error } = useQuote(feed, symbol);
   if (loading) return <span>…</span>;
   if (error) return <span>Error: {error.message}</span>;
-  return <span>{symbol}: ${data?.price.toFixed(2)}</span>;
+  return (
+    <span>
+      {symbol}: ${data?.price.toFixed(2)}
+    </span>
+  );
 }
 
 // Subscribe to a live stream
 function LiveFeed() {
   const { event } = useStream(feed, ["AAPL", "MSFT", "GOOGL"]);
   if (!event || event.type !== "quote") return null;
-  return <p>{event.symbol}: ${event.quote.price}</p>;
+  return (
+    <p>
+      {event.symbol}: ${event.quote.price}
+    </p>
+  );
 }
 
 // Collect price alerts
 function AlertLog() {
   const { events, clearEvents } = useAlerts(feed, [
-    { symbol: "AAPL", condition: { type: "price_above", threshold: 200 }, once: false },
+    {
+      symbol: "AAPL",
+      condition: { type: "price_above", threshold: 200 },
+      once: false,
+    },
   ]);
   return (
     <ul>
-      {events.map((e, i) => <li key={i}>{e.alert.symbol} triggered @ ${e.quote.price}</li>)}
+      {events.map((e, i) => (
+        <li key={i}>
+          {e.alert.symbol} triggered @ ${e.quote.price}
+        </li>
+      ))}
       <button onClick={clearEvents}>Clear</button>
     </ul>
   );
@@ -116,10 +142,10 @@ function AlertLog() {
 
 **`useQuote(source, symbol, options?)`**
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `intervalMs` | `5000` | Poll interval in milliseconds |
-| `enabled` | `true` | Set to `false` to suspend polling |
+| Option       | Default | Description                       |
+| ------------ | ------- | --------------------------------- |
+| `intervalMs` | `5000`  | Poll interval in milliseconds     |
+| `enabled`    | `true`  | Set to `false` to suspend polling |
 
 Returns `{ data: Quote \| null, loading: boolean, error: Error \| null, refetch() }`.
 
@@ -172,25 +198,25 @@ console.log(results.map((r) => `${r.symbol} @ ${r.quote.price}`));
 
 #### Criterion types
 
-| Type | Description |
-|------|-------------|
-| `price_above` / `price_below` | Filter by current price |
-| `change_pct_above` / `change_pct_below` | Filter by daily % change |
-| `volume_above` / `volume_below` | Filter by trading volume |
-| `market_cap_above` / `market_cap_below` | Filter by market cap |
-| `52w_high_pct_below` | Price is within N% of the 52-week high |
-| `52w_low_pct_above` | Price is at least N% above the 52-week low |
-| `custom` | Arbitrary predicate: `{ type: "custom", fn: (quote) => boolean }` |
+| Type                                    | Description                                                       |
+| --------------------------------------- | ----------------------------------------------------------------- |
+| `price_above` / `price_below`           | Filter by current price                                           |
+| `change_pct_above` / `change_pct_below` | Filter by daily % change                                          |
+| `volume_above` / `volume_below`         | Filter by trading volume                                          |
+| `market_cap_above` / `market_cap_below` | Filter by market cap                                              |
+| `52w_high_pct_below`                    | Price is within N% of the 52-week high                            |
+| `52w_low_pct_above`                     | Price is at least N% above the 52-week low                        |
+| `custom`                                | Arbitrary predicate: `{ type: "custom", fn: (quote) => boolean }` |
 
 All criteria are evaluated with **AND logic** — a symbol must pass every criterion to be included.
 
 #### Options
 
-| Option | Description |
-|--------|-------------|
-| `criteria` | Array of `ScreenerCriterion` (required) |
+| Option      | Description                                             |
+| ----------- | ------------------------------------------------------- |
+| `criteria`  | Array of `ScreenerCriterion` (required)                 |
 | `batchSize` | Max symbols per quote fetch call (default: all at once) |
-| `limit` | Max number of results to return |
+| `limit`     | Max number of results to return                         |
 
 #### Result shape
 
@@ -217,45 +243,52 @@ import { getFundamentals } from "market-feed/fundamentals";
 import { MarketFeed } from "market-feed";
 
 const feed = new MarketFeed();
-const { incomeStatements, balanceSheets, cashFlows } = await getFundamentals(feed, "AAPL");
+const { incomeStatements, balanceSheets, cashFlows } = await getFundamentals(
+  feed,
+  "AAPL"
+);
 
 console.log(`Revenue: $${(incomeStatements[0]!.revenue! / 1e9).toFixed(1)}B`);
-console.log(`Total assets: $${(balanceSheets[0]!.totalAssets! / 1e9).toFixed(1)}B`);
-console.log(`Free cash flow: $${(cashFlows[0]!.freeCashFlow! / 1e9).toFixed(1)}B`);
+console.log(
+  `Total assets: $${(balanceSheets[0]!.totalAssets! / 1e9).toFixed(1)}B`
+);
+console.log(
+  `Free cash flow: $${(cashFlows[0]!.freeCashFlow! / 1e9).toFixed(1)}B`
+);
 ```
 
 `getFundamentals()` fetches all three statements in parallel via `Promise.allSettled` — a failure on one statement still returns the others.
 
 #### `IncomeStatement`
 
-| Field | Description |
-|-------|-------------|
-| `revenue` | Total revenue |
-| `grossProfit` | Revenue - cost of revenue |
-| `operatingIncome` | EBIT (operating) |
-| `netIncome` | Bottom-line net income |
-| `ebitda` | EBITDA when available |
-| `dilutedEps` | Diluted EPS |
+| Field             | Description               |
+| ----------------- | ------------------------- |
+| `revenue`         | Total revenue             |
+| `grossProfit`     | Revenue - cost of revenue |
+| `operatingIncome` | EBIT (operating)          |
+| `netIncome`       | Bottom-line net income    |
+| `ebitda`          | EBITDA when available     |
+| `dilutedEps`      | Diluted EPS               |
 
 #### `BalanceSheet`
 
-| Field | Description |
-|-------|-------------|
-| `totalAssets` | Total assets |
-| `totalLiabilities` | Total liabilities |
-| `totalStockholdersEquity` | Book value of equity |
-| `cashAndCashEquivalents` | Cash + cash equivalents |
-| `totalDebt` | Short + long-term debt |
+| Field                     | Description             |
+| ------------------------- | ----------------------- |
+| `totalAssets`             | Total assets            |
+| `totalLiabilities`        | Total liabilities       |
+| `totalStockholdersEquity` | Book value of equity    |
+| `cashAndCashEquivalents`  | Cash + cash equivalents |
+| `totalDebt`               | Short + long-term debt  |
 
 #### `CashFlowStatement`
 
-| Field | Description |
-|-------|-------------|
-| `operatingCashFlow` | Cash from operations |
-| `capitalExpenditures` | CapEx (negative = outflow) |
-| `freeCashFlow` | operatingCashFlow + capitalExpenditures |
-| `investingCashFlow` | Cash from investing |
-| `financingCashFlow` | Cash from financing |
+| Field                 | Description                             |
+| --------------------- | --------------------------------------- |
+| `operatingCashFlow`   | Cash from operations                    |
+| `capitalExpenditures` | CapEx (negative = outflow)              |
+| `freeCashFlow`        | operatingCashFlow + capitalExpenditures |
+| `investingCashFlow`   | Cash from investing                     |
+| `financingCashFlow`   | Cash from financing                     |
 
 All three types include `symbol`, `date` (period end), `periodType` (`"annual"` | `"quarterly"`), and `provider`.
 
@@ -264,20 +297,20 @@ All three types include `symbol`, `date` (period end), `periodType` (`"annual"` 
 ```ts
 const feed = new MarketFeed();
 
-const income  = await feed.incomeStatements("AAPL", { limit: 4 });
+const income = await feed.incomeStatements("AAPL", { limit: 4 });
 const balance = await feed.balanceSheets("AAPL", { quarterly: true });
-const cash    = await feed.cashFlows("AAPL");
+const cash = await feed.cashFlows("AAPL");
 ```
 
 `FundamentalsOptions`: `quarterly?` (default `false`), `limit?` (default `4`), `raw?`.
 
 ### Provider support
 
-| Method | `YahooProvider` | others |
-|--------|-----------------|--------|
-| `incomeStatements` | ✓ `incomeStatementHistory` / `incomeStatementHistoryQuarterly` | — |
-| `balanceSheets` | ✓ `balanceSheetHistory` / `balanceSheetHistoryQuarterly` | — |
-| `cashFlows` | ✓ `cashflowStatementHistory` / `cashflowStatementHistoryQuarterly` | — |
+| Method             | `YahooProvider`                                                    | others |
+| ------------------ | ------------------------------------------------------------------ | ------ |
+| `incomeStatements` | ✓ `incomeStatementHistory` / `incomeStatementHistoryQuarterly`     | —      |
+| `balanceSheets`    | ✓ `balanceSheetHistory` / `balanceSheetHistoryQuarterly`           | —      |
+| `cashFlows`        | ✓ `cashflowStatementHistory` / `cashflowStatementHistoryQuarterly` | —      |
 
 ### Breaking changes
 
@@ -305,21 +338,21 @@ const feed = new MarketFeed([
   new TiingoProvider({ apiKey: process.env.TIINGO_KEY! }),
 ]);
 
-const quote   = await feed.quote(["AAPL"]);
-const bars    = await feed.historical("AAPL", { period1: "2024-01-01" });
+const quote = await feed.quote(["AAPL"]);
+const bars = await feed.historical("AAPL", { period1: "2024-01-01" });
 const results = await feed.search("apple");
 const profile = await feed.company("AAPL");
-const news    = await feed.news("AAPL", { limit: 5 });
+const news = await feed.news("AAPL", { limit: 5 });
 ```
 
 Supports: `quote`, `historical`, `search`, `company`, `news`.
 
-| Feature | Detail |
-|---------|--------|
+| Feature          | Detail                               |
+| ---------------- | ------------------------------------ |
 | Real-time quotes | IEX endpoint — US equities, intraday |
-| Historical | EOD daily bars, includes `adjClose` |
-| Rate limit | ~50 calls/hour (free plan) |
-| Auth | `Authorization: Token KEY` header |
+| Historical       | EOD daily bars, includes `adjClose`  |
+| Rate limit       | ~50 calls/hour (free plan)           |
+| Auth             | `Authorization: Token KEY` header    |
 
 Free plan sign-up: https://www.tiingo.com
 
@@ -351,8 +384,8 @@ const feed = new MarketFeed([
   new TwelveDataProvider({ apiKey: process.env.TWELVE_DATA_KEY! }),
 ]);
 
-const quote   = await feed.quote(["AAPL", "BTC/USD", "EUR/USD"]);
-const bars    = await feed.historical("AAPL", { interval: "1wk" });
+const quote = await feed.quote(["AAPL", "BTC/USD", "EUR/USD"]);
+const bars = await feed.historical("AAPL", { interval: "1wk" });
 const results = await feed.search("apple");
 const profile = await feed.company("AAPL");
 ```
@@ -360,6 +393,7 @@ const profile = await feed.company("AAPL");
 Supports: `quote`, `historical`, `search`, `company`.
 
 Strong coverage for global equities, forex, and crypto pairs. Symbol normalisation handles all common formats:
+
 - US stocks: `AAPL` (unchanged)
 - Crypto: `BTC-USD` / `BTC/USD` / `X:BTCUSD` → `BTC/USD`
 - Forex: `EURUSD=X` / `C:EURUSD` → `EUR/USD`
@@ -369,15 +403,15 @@ Free plan sign-up: https://twelvedata.com
 #### Interval mapping
 
 | market-feed | Twelve Data |
-|-------------|-------------|
-| `1m` | `1min` |
-| `5m` | `5min` |
-| `15m` | `15min` |
-| `30m` | `30min` |
-| `1h` | `1h` |
-| `1d` | `1day` |
-| `1wk` | `1week` |
-| `1mo` | `1month` |
+| ----------- | ----------- |
+| `1m`        | `1min`      |
+| `5m`        | `5min`      |
+| `15m`       | `15min`     |
+| `30m`       | `30min`     |
+| `1h`        | `1h`        |
+| `1d`        | `1day`      |
+| `1wk`       | `1week`     |
+| `1mo`       | `1month`    |
 
 ### New utility
 
@@ -429,8 +463,10 @@ None.
 import { backtest } from "market-feed/backtest";
 import type { EntrySignal, ExitSignal } from "market-feed/backtest";
 
-const entry: EntrySignal = (bars, i) => i > 0 && bars[i]!.close > bars[i - 1]!.close;
-const exit: ExitSignal  = (bars, i) => i > 0 && bars[i]!.close < bars[i - 1]!.close;
+const entry: EntrySignal = (bars, i) =>
+  i > 0 && bars[i]!.close > bars[i - 1]!.close;
+const exit: ExitSignal = (bars, i) =>
+  i > 0 && bars[i]!.close < bars[i - 1]!.close;
 
 const result = backtest("AAPL", bars, entry, exit, { initialCapital: 10_000 });
 console.log(`Total return: ${(result.totalReturn * 100).toFixed(2)}%`);
@@ -438,16 +474,16 @@ console.log(`Sharpe ratio: ${result.sharpeRatio.toFixed(2)}`);
 console.log(`Max drawdown: ${(result.maxDrawdown * 100).toFixed(2)}%`);
 ```
 
-| Field | Description |
-|-------|-------------|
-| `totalReturn` | Fraction, e.g. 0.25 = 25% |
-| `annualizedReturn` | CAGR as a fraction |
-| `sharpeRatio` | Annualised Sharpe (risk-free rate = 0) |
-| `maxDrawdown` | Peak-to-trough as a positive fraction |
-| `winRate` | Fraction of profitable trades |
-| `profitFactor` | Gross profit / gross loss (`Infinity` when no losses) |
-| `totalTrades` | Number of completed round-trip trades |
-| `trades` | Full `BacktestTrade[]` ledger |
+| Field              | Description                                           |
+| ------------------ | ----------------------------------------------------- |
+| `totalReturn`      | Fraction, e.g. 0.25 = 25%                             |
+| `annualizedReturn` | CAGR as a fraction                                    |
+| `sharpeRatio`      | Annualised Sharpe (risk-free rate = 0)                |
+| `maxDrawdown`      | Peak-to-trough as a positive fraction                 |
+| `winRate`          | Fraction of profitable trades                         |
+| `profitFactor`     | Gross profit / gross loss (`Infinity` when no losses) |
+| `totalTrades`      | Number of completed round-trip trades                 |
+| `trades`           | Full `BacktestTrade[]` ledger                         |
 
 **`market-feed/alerts`** — Poll a feed and yield `AlertEvent` when conditions are met.
 
@@ -458,21 +494,33 @@ import { MarketFeed } from "market-feed";
 const feed = new MarketFeed();
 const controller = new AbortController();
 
-for await (const event of watchAlerts(feed, [
-  { symbol: "AAPL", condition: { type: "price_above", threshold: 200 }, once: true },
-  { symbol: "TSLA", condition: { type: "change_pct_below", threshold: -5 }, debounceMs: 60_000 },
-], { signal: controller.signal })) {
+for await (const event of watchAlerts(
+  feed,
+  [
+    {
+      symbol: "AAPL",
+      condition: { type: "price_above", threshold: 200 },
+      once: true,
+    },
+    {
+      symbol: "TSLA",
+      condition: { type: "change_pct_below", threshold: -5 },
+      debounceMs: 60_000,
+    },
+  ],
+  { signal: controller.signal }
+)) {
   console.log(`${event.alert.symbol} triggered: $${event.quote.price}`);
 }
 ```
 
-| Condition type | Description |
-|----------------|-------------|
-| `price_above` | `quote.price > threshold` |
-| `price_below` | `quote.price < threshold` |
-| `change_pct_above` | Daily `%` change exceeds threshold |
+| Condition type     | Description                            |
+| ------------------ | -------------------------------------- |
+| `price_above`      | `quote.price > threshold`              |
+| `price_below`      | `quote.price < threshold`              |
+| `change_pct_above` | Daily `%` change exceeds threshold     |
 | `change_pct_below` | Daily `%` change falls below threshold |
-| `volume_above` | `quote.volume > threshold` |
+| `volume_above`     | `quote.volume > threshold`             |
 
 `AlertConfig` options: `once` (fire at most once), `debounceMs` (suppress re-fires within window).
 
@@ -483,27 +531,33 @@ Three new methods on `MarketFeed` (and on individual providers):
 ```ts
 const feed = new MarketFeed([new PolygonProvider({ apiKey: "..." })]);
 
-const earnings  = await feed.earnings("AAPL", { limit: 8 });
+const earnings = await feed.earnings("AAPL", { limit: 8 });
 const dividends = await feed.dividends("AAPL");
-const splits    = await feed.splits("AAPL");
+const splits = await feed.splits("AAPL");
 ```
 
 #### Provider support
 
-| Method | `YahooProvider` | `PolygonProvider` | `FinnhubProvider` | `AlphaVantageProvider` |
-|--------|-----------------|-------------------|-------------------|------------------------|
-| `earnings` | ✓ quoteSummary `earningsHistory` | — | ✓ `/stock/earnings` | — |
-| `dividends` | ✓ chart `events=div` | ✓ `/v3/reference/dividends` | — | — |
-| `splits` | ✓ chart `events=split` | ✓ `/v3/reference/splits` | — | — |
+| Method      | `YahooProvider`                  | `PolygonProvider`           | `FinnhubProvider`   | `AlphaVantageProvider` |
+| ----------- | -------------------------------- | --------------------------- | ------------------- | ---------------------- |
+| `earnings`  | ✓ quoteSummary `earningsHistory` | —                           | ✓ `/stock/earnings` | —                      |
+| `dividends` | ✓ chart `events=div`             | ✓ `/v3/reference/dividends` | —                   | —                      |
+| `splits`    | ✓ chart `events=split`           | ✓ `/v3/reference/splits`    | —                   | —                      |
 
 #### `EarningsEvent`
 
 ```ts
 interface EarningsEvent {
-  symbol: string; date: Date; period?: string;
-  epsActual?: number; epsEstimate?: number; epsSurprisePct?: number;
-  revenueActual?: number; revenueEstimate?: number;
-  provider: string; raw?: unknown;
+  symbol: string;
+  date: Date;
+  period?: string;
+  epsActual?: number;
+  epsEstimate?: number;
+  epsSurprisePct?: number;
+  revenueActual?: number;
+  revenueEstimate?: number;
+  provider: string;
+  raw?: unknown;
 }
 ```
 
@@ -511,10 +565,15 @@ interface EarningsEvent {
 
 ```ts
 interface DividendEvent {
-  symbol: string; exDate: Date; payDate?: Date; declaredDate?: Date;
-  amount: number; currency: string;
+  symbol: string;
+  exDate: Date;
+  payDate?: Date;
+  declaredDate?: Date;
+  amount: number;
+  currency: string;
   frequency?: "annual" | "semi-annual" | "quarterly" | "monthly" | "irregular";
-  provider: string; raw?: unknown;
+  provider: string;
+  raw?: unknown;
 }
 ```
 
@@ -522,10 +581,12 @@ interface DividendEvent {
 
 ```ts
 interface SplitEvent {
-  symbol: string; date: Date;
-  ratio: number;      // 4-for-1 forward split → 4; 1-for-10 reverse → 0.1
+  symbol: string;
+  date: Date;
+  ratio: number; // 4-for-1 forward split → 4; 1-for-10 reverse → 0.1
   description?: string;
-  provider: string; raw?: unknown;
+  provider: string;
+  raw?: unknown;
 }
 ```
 
@@ -558,10 +619,14 @@ import { FinnhubProvider } from "market-feed";
 const provider = new FinnhubProvider({ apiKey: process.env.FINNHUB_KEY! });
 const controller = new AbortController();
 
-for await (const event of connect(provider, ["AAPL", "MSFT"], { signal: controller.signal })) {
+for await (const event of connect(provider, ["AAPL", "MSFT"], {
+  signal: controller.signal,
+})) {
   switch (event.type) {
     case "trade":
-      console.log(`${event.trade.symbol}: $${event.trade.price} × ${event.trade.size}`);
+      console.log(
+        `${event.trade.symbol}: $${event.trade.price} × ${event.trade.size}`
+      );
       break;
     case "connected":
       console.log(`Connected to ${event.provider}`);
@@ -578,23 +643,23 @@ for await (const event of connect(provider, ["AAPL", "MSFT"], { signal: controll
 
 #### Provider support
 
-| Provider | WebSocket | Notes |
-|----------|-----------|-------|
-| **PolygonProvider** | Native WS | `wss://socket.polygon.io/stocks` — auth via JSON handshake, subscribes to `T.*` trade channel |
-| **FinnhubProvider** | Native WS | `wss://ws.finnhub.io?token=KEY` — per-symbol subscribe, batched trade messages |
-| **YahooProvider** | Polling fallback | Polls `provider.quote()` every 5 s; emits `WsTrade` from quote data |
-| **AlphaVantageProvider** | Polling fallback | Same as Yahoo |
+| Provider                 | WebSocket        | Notes                                                                                         |
+| ------------------------ | ---------------- | --------------------------------------------------------------------------------------------- |
+| **PolygonProvider**      | Native WS        | `wss://socket.polygon.io/stocks` — auth via JSON handshake, subscribes to `T.*` trade channel |
+| **FinnhubProvider**      | Native WS        | `wss://ws.finnhub.io?token=KEY` — per-symbol subscribe, batched trade messages                |
+| **YahooProvider**        | Polling fallback | Polls `provider.quote()` every 5 s; emits `WsTrade` from quote data                           |
+| **AlphaVantageProvider** | Polling fallback | Same as Yahoo                                                                                 |
 
 The `connect()` function detects provider capability automatically — no configuration required.
 
 #### `WsEvent` union
 
-| `type` | Payload | When |
-|--------|---------|------|
-| `"connected"` | `provider: string` | WS opened (and after each reconnect) |
-| `"trade"` | `trade: WsTrade` | Each trade tick |
-| `"disconnected"` | `provider`, `reconnecting`, `attempt` | WS closed unexpectedly |
-| `"error"` | `error`, `recoverable` | Protocol or network error |
+| `type`           | Payload                               | When                                 |
+| ---------------- | ------------------------------------- | ------------------------------------ |
+| `"connected"`    | `provider: string`                    | WS opened (and after each reconnect) |
+| `"trade"`        | `trade: WsTrade`                      | Each trade tick                      |
+| `"disconnected"` | `provider`, `reconnecting`, `attempt` | WS closed unexpectedly               |
+| `"error"`        | `error`, `recoverable`                | Protocol or network error            |
 
 #### `WsTrade`
 
@@ -602,7 +667,7 @@ The `connect()` function detects provider capability automatically — no config
 interface WsTrade {
   symbol: string;
   price: number;
-  size: number;         // shares / units
+  size: number; // shares / units
   timestamp: Date;
   conditions?: number[]; // provider-specific condition codes
 }
@@ -610,12 +675,12 @@ interface WsTrade {
 
 #### `WsOptions`
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `wsImpl` | `typeof globalThis.WebSocket` | `globalThis.WebSocket` | Custom WS constructor for Node 18–20 |
-| `maxReconnectAttempts` | `number` | `10` | Reconnect attempts before closing |
-| `reconnectDelayMs` | `number` | `1000` | Base delay (doubles per attempt, max 30 s) |
-| `signal` | `AbortSignal` | — | Stop the stream |
+| Option                 | Type                          | Default                | Description                                |
+| ---------------------- | ----------------------------- | ---------------------- | ------------------------------------------ |
+| `wsImpl`               | `typeof globalThis.WebSocket` | `globalThis.WebSocket` | Custom WS constructor for Node 18–20       |
+| `maxReconnectAttempts` | `number`                      | `10`                   | Reconnect attempts before closing          |
+| `reconnectDelayMs`     | `number`                      | `1000`                 | Base delay (doubles per attempt, max 30 s) |
+| `signal`               | `AbortSignal`                 | —                      | Stop the stream                            |
 
 #### Node 18–20 compatibility
 
@@ -623,7 +688,9 @@ Node 21+ exposes `WebSocket` globally. For Node 18/20, install the `ws` package 
 
 ```ts
 import WebSocket from "ws";
-connect(provider, ["AAPL"], { wsImpl: WebSocket as unknown as typeof globalThis.WebSocket })
+connect(provider, ["AAPL"], {
+  wsImpl: WebSocket as unknown as typeof globalThis.WebSocket,
+});
 ```
 
 ### Other changes
@@ -644,6 +711,7 @@ None. All v0.3.0 imports continue to work unchanged.
 ### New provider
 
 **`FinnhubProvider`** — Finnhub.io (free tier: real-time US stock data, 60 calls/minute).
+
 - `quote`, `historical` (candles), `search`, `company`, `news`
 - API key required — get one free at https://finnhub.io
 - Uses `X-Finnhub-Token` header; rate-limited client-side at 60 req/min
@@ -653,6 +721,7 @@ None. All v0.3.0 imports continue to work unchanged.
 ### New modules
 
 **`market-feed/indicators`** — Technical indicators as pure functions over `HistoricalBar[]`.
+
 - `sma(bars, period)` — Simple Moving Average (O(1) sliding window)
 - `ema(bars, period)` — Exponential Moving Average (k = 2/(period+1), SMA-seeded)
 - `rsi(bars, period?)` — Relative Strength Index via Wilder's smoothing (default period: 14)
@@ -665,6 +734,7 @@ None. All v0.3.0 imports continue to work unchanged.
 - All functions return typed result arrays (`IndicatorPoint[]`, `MACDPoint[]`, `BollingerPoint[]`, `StochasticPoint[]`)
 
 **`market-feed/portfolio`** — Track positions and compute live P&L.
+
 - `new Portfolio(positions?)` — construct with an array of `Position` objects
 - `portfolio.add(position)` / `portfolio.remove(symbol)` — mutable, chainable
 - `portfolio.snapshot(feed)` — fetches live quotes and returns `PortfolioSnapshot` with per-position and aggregate P&L
@@ -717,6 +787,7 @@ None. All v0.2.0 imports continue to work unchanged.
 ### New modules
 
 **`market-feed/calendar`** — Synchronous exchange calendar. No network required.
+
 - `isMarketOpen(exchange, at?)` — boolean, DST-correct via `Intl`
 - `getSession(exchange, at?)` — `"pre" | "regular" | "post" | "closed"`
 - `nextSessionOpen(exchange, from?)` / `nextSessionClose(exchange, from?)` — next UTC Date
@@ -728,6 +799,7 @@ None. All v0.2.0 imports continue to work unchanged.
 - Early-close days (NYSE: day before Thanksgiving, Independence Day, Christmas Eve)
 
 **`market-feed/stream`** — Market-hours-aware observable quote stream.
+
 - `watch(feed, symbols, options)` — async generator yielding typed `StreamEvent` union
 - Polls at `interval.open` (default 5s) during regular hours, `interval.prepost` (default 30s) pre/post, pauses at `interval.closed` (default 60s) when closed — saves API quota overnight and on weekends
 - Emits `market-open` / `market-close` events at session transitions
@@ -736,6 +808,7 @@ None. All v0.2.0 imports continue to work unchanged.
 - Configurable `maxErrors` before the generator throws
 
 **`market-feed/consensus`** — Multi-provider parallel price consensus.
+
 - `consensus(providers, symbol, options)` — queries all providers simultaneously via `Promise.allSettled`
 - Median-based outlier detection (avoids the all-outlier edge case of mean-based approaches)
 - Staleness detection: providers with quotes older than `stalenessThreshold` receive half weight
@@ -760,11 +833,13 @@ None. All v0.1.0 imports continue to work unchanged.
 ### Initial release
 
 **Providers**
+
 - `YahooProvider` — Yahoo Finance (no API key required): quote, historical, search, company
 - `AlphaVantageProvider` — Alpha Vantage (free: 25/day): quote, historical, search, company
 - `PolygonProvider` — Polygon.io (free: 15-min delayed): quote, historical, search, company, news
 
 **Core**
+
 - Unified `Quote`, `HistoricalBar`, `CompanyProfile`, `NewsItem`, `SearchResult`, `MarketStatus` types
 - `MarketFeed` client with provider chain, automatic fallback, and LRU caching
 - `MemoryCacheDriver` — zero-dependency LRU cache with TTL and configurable max size
@@ -775,6 +850,7 @@ None. All v0.1.0 imports continue to work unchanged.
 - Error hierarchy: `MarketFeedError`, `ProviderError`, `RateLimitError`, `UnsupportedOperationError`, `AllProvidersFailedError`
 
 **DX**
+
 - Zero production dependencies (native `fetch` only)
 - Strict TypeScript — `strict: true`, `noUncheckedIndexedAccess`, `noImplicitOverride`
 - ESM + CJS + `.d.ts` dual build
