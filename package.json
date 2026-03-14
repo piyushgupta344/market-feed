@@ -173,15 +173,16 @@
     "@testing-library/react": "^16.3.2",
     "@types/react": "^18.3.28",
     "@types/react-dom": "^18",
-    "@vitest/coverage-v8": "^2.1.8",
+    "@vitest/coverage-v8": "^4.1.0",
     "jsdom": "^28.1.0",
     "react": "^18.3.1",
     "react-dom": "^18",
-    "tsup": "^8.3.5",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2",
+    "vite": "^6",
     "vitepress": "^1.6.4",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.0"
   },
   "engines": {
     "node": ">=20.0.0"
