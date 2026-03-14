@@ -51,7 +51,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 - **Automatic fallback** — if Yahoo is down, tries Alpha Vantage, then Polygon
 - **Rate-limit aware** — won't silently burn your free Alpha Vantage / Polygon quota
 - **Strict TypeScript** — no `any`, full autocomplete, compile-time safety
-- **Multi-runtime** — Node 18+, Bun 1+, Deno 2+, Cloudflare Workers
+- **Multi-runtime** — Node 20+, Bun 1+, Deno 2+ (via JSR), Cloudflare Workers
 - **Escape hatch** — pass `{ raw: true }` to get the original provider response
 - **Exchange calendar** — synchronous, offline-capable holiday and session detection for 8 exchanges + crypto (24/7)
 - **WebSocket streaming** — `market-feed/ws` opens a persistent WS connection to Polygon, Finnhub, Alpaca, or IB TWS; polling fallback for others; `getOrderBook()` for top-of-book bid/ask
@@ -1012,11 +1012,13 @@ npx market-feed splits AAPL
 ## Install
 
 ```bash
+# npm / pnpm / bun
 npm install market-feed
-# or
 pnpm add market-feed
-# or
 bun add market-feed
+
+# Deno (JSR)
+deno add jsr:@piyushgupta344/market-feed
 ```
 
 ---
@@ -1288,11 +1290,11 @@ const feed = new MarketFeed({ providers: [new MyProvider()] });
 
 | Runtime | Version | Notes |
 |---------|---------|-------|
-| Node.js | 18+ | `fetch` available since Node 18; `WebSocket` global available since Node 21. For Node 18–20, inject the `ws` package via `wsImpl` for `market-feed/ws`. |
+| Node.js | 20+ | `fetch` and `WebSocket` global built-in. Node 18 reached EOL April 2025. |
 | Bun | 1+ | Fully supported |
-| Deno | 2+ | Fully supported |
+| Deno | 2+ | Install via JSR: `deno add jsr:@piyushgupta344/market-feed` |
 | Cloudflare Workers | Latest | Fully supported |
-| Browser | — | Not supported — Yahoo Finance blocks CORS. Use a server-side proxy. |
+| Browser | — | Use `market-feed/browser` with a CORS proxy — most providers block direct browser requests. |
 
 ---
 

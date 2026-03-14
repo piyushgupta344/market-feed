@@ -1,0 +1,46 @@
+name: Publish to JSR
+
+# Changesets creates tags in the form: market-feed@<version>
+# This workflow triggers on those tags to publish to jsr.io automatically.
+on:
+  push:
+    tags:
+      - "market-feed@*"
+
+jobs:
+  publish:
+    name: Publish to JSR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # required for JSR OIDC authentication
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Sync jsr.json version from the git tag (e.g. market-feed@1.2.0 → 1.2.0)
+      - name: Sync version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#market-feed@}"
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('jsr.json', 'utf8'));
+            cfg.version = '$VERSION';
+            fs.writeFileSync('jsr.json', JSON.stringify(cfg, null, 2) + '\n');
+          "
+
+      # Publish TypeScript source directly — JSR compiles it natively.
+      # --allow-slow-types lets us skip explicit return types on re-exports.
+      - name: Publish to JSR
+        run: npx jsr publish --allow-slow-types
