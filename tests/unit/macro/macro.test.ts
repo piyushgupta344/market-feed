@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  FredProvider,
-  INDICATORS,
-  getIndicator,
-} from "../../../src/macro/index.js";
+import { FredProvider, INDICATORS, getIndicator } from "../../../src/macro/index.js";
 import fredObsFixture from "../../fixtures/fred-observations.json";
 import fredSeriesFixture from "../../fixtures/fred-series.json";
 
@@ -54,6 +50,7 @@ describe("FredProvider.getSeries()", () => {
     const series = await fred.getSeries("CPIAUCSL");
 
     for (let i = 1; i < series.observations.length; i++) {
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
       expect(series.observations[i - 1]!.date.getTime()).toBeLessThan(
         series.observations[i]!.date.getTime(),
       );
@@ -113,7 +110,7 @@ describe("FredProvider.getSeries()", () => {
     const series = await fred.getSeries("CPIAUCSL");
 
     expect(series.observations).toHaveLength(2);
-    expect(series.observations.every((o) => !isNaN(o.value))).toBe(true);
+    expect(series.observations.every((o) => !Number.isNaN(o.value))).toBe(true);
     vi.unstubAllGlobals();
   });
 
@@ -124,7 +121,10 @@ describe("FredProvider.getSeries()", () => {
         ok: true,
         status: 200,
         headers: { get: () => "application/json" },
-        json: async () => ({ error_code: 400, error_message: "Bad Request. Variable series_id is not defined." }),
+        json: async () => ({
+          error_code: 400,
+          error_message: "Bad Request. Variable series_id is not defined.",
+        }),
       }),
     );
     const fred = new FredProvider({ apiKey: "test-key" });

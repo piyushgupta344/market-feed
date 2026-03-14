@@ -1,5 +1,5 @@
 import { normalise } from "../utils/symbol.js";
-import type { Position, PortfolioSnapshot, PositionSnapshot, QuoteFetcher } from "./types.js";
+import type { PortfolioSnapshot, Position, PositionSnapshot, QuoteFetcher } from "./types.js";
 
 export type { Position, PortfolioSnapshot, PositionSnapshot, QuoteFetcher } from "./types.js";
 

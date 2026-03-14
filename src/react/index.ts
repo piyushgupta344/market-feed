@@ -26,13 +26,13 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { AlertConfig, AlertEvent, AlertsOptions } from "../alerts/types.js";
 import { watchAlerts } from "../alerts/index.js";
+import type { AlertConfig, AlertEvent, AlertsOptions } from "../alerts/types.js";
+import type { MarketFeed } from "../client.js";
 import { watch } from "../stream/index.js";
 import type { StreamEvent, WatchOptions } from "../stream/types.js";
-import type { Quote } from "../types/quote.js";
-import type { MarketFeed } from "../client.js";
 import type { MarketProvider } from "../types/provider.js";
+import type { Quote } from "../types/quote.js";
 import { connect, getOrderBook } from "../ws/index.js";
 import type { OrderBookEvent, OrderBookOptions } from "../ws/index.js";
 import type { WsEvent, WsOptions, WsTrade } from "../ws/types.js";

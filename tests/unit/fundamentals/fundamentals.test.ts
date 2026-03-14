@@ -60,8 +60,9 @@ describe("YahooProvider.incomeStatements()", () => {
         result: [
           {
             incomeStatementHistoryQuarterly: {
-              incomeStatementHistory: fundamentalsFixture.quoteSummary.result[0]!
-                .incomeStatementHistory!.incomeStatementHistory,
+              incomeStatementHistory:
+                fundamentalsFixture.quoteSummary.result[0]?.incomeStatementHistory
+                  ?.incomeStatementHistory,
             },
           },
         ],
@@ -84,7 +85,9 @@ describe("YahooProvider.incomeStatements()", () => {
   });
 
   it("throws ProviderError on null result", async () => {
-    mockFetch({ quoteSummary: { result: null, error: { code: "Not Found", description: "Not found" } } });
+    mockFetch({
+      quoteSummary: { result: null, error: { code: "Not Found", description: "Not found" } },
+    });
     const provider = new YahooProvider();
     await expect(provider.incomeStatements("INVALID")).rejects.toThrow(ProviderError);
     vi.unstubAllGlobals();
@@ -117,7 +120,9 @@ describe("YahooProvider.balanceSheets()", () => {
   });
 
   it("throws ProviderError on null result", async () => {
-    mockFetch({ quoteSummary: { result: null, error: { code: "Not Found", description: "Not found" } } });
+    mockFetch({
+      quoteSummary: { result: null, error: { code: "Not Found", description: "Not found" } },
+    });
     const provider = new YahooProvider();
     await expect(provider.balanceSheets("INVALID")).rejects.toThrow(ProviderError);
     vi.unstubAllGlobals();
@@ -150,7 +155,9 @@ describe("YahooProvider.cashFlows()", () => {
   });
 
   it("throws ProviderError on null result", async () => {
-    mockFetch({ quoteSummary: { result: null, error: { code: "Not Found", description: "Not found" } } });
+    mockFetch({
+      quoteSummary: { result: null, error: { code: "Not Found", description: "Not found" } },
+    });
     const provider = new YahooProvider();
     await expect(provider.cashFlows("INVALID")).rejects.toThrow(ProviderError);
     vi.unstubAllGlobals();
@@ -191,18 +198,22 @@ describe("getFundamentals()", () => {
   });
 
   it("partial failure — missing statement still returns others", async () => {
-    let callCount = 0;
+    let _callCount = 0;
     const partialSource = {
       incomeStatements: async () => {
-        callCount++;
-        return [{ symbol: "AAPL", date: new Date(), periodType: "annual" as const, provider: "test" }];
+        _callCount++;
+        return [
+          { symbol: "AAPL", date: new Date(), periodType: "annual" as const, provider: "test" },
+        ];
       },
       balanceSheets: async (): Promise<never> => {
         throw new Error("no balance sheet");
       },
       cashFlows: async () => {
-        callCount++;
-        return [{ symbol: "AAPL", date: new Date(), periodType: "annual" as const, provider: "test" }];
+        _callCount++;
+        return [
+          { symbol: "AAPL", date: new Date(), periodType: "annual" as const, provider: "test" },
+        ];
       },
     };
 

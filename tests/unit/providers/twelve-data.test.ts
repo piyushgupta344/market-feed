@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { ProviderError } from "../../../src/errors.js";
 import { TwelveDataProvider } from "../../../src/providers/twelve-data/index.js";
 import { RateLimiter } from "../../../src/utils/rate-limiter.js";
+import tdProfileFixture from "../../fixtures/twelve-data-profile.json";
 import tdQuoteFixture from "../../fixtures/twelve-data-quote.json";
 import tdSearchFixture from "../../fixtures/twelve-data-search.json";
 import tdTimeSeriesFixture from "../../fixtures/twelve-data-time-series.json";
-import tdProfileFixture from "../../fixtures/twelve-data-profile.json";
 
 function mockFetch(fixture: unknown, ok = true, status = 200) {
   vi.stubGlobal(

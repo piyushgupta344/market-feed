@@ -185,7 +185,8 @@ describe("bollingerBands()", () => {
 
     expect(bbResult).toHaveLength(smaResult.length);
     for (let i = 0; i < bbResult.length; i++) {
-      expect(bbResult[i]?.middle).toBeCloseTo(smaResult[i]!.value, 10);
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
+      expect(bbResult[i]!.middle).toBeCloseTo(smaResult[i]!.value, 10);
     }
   });
 

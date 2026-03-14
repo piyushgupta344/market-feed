@@ -2,8 +2,8 @@ import type { CompanyProfile } from "../../types/company.js";
 import type { DividendEvent, DividendFrequency } from "../../types/dividends.js";
 import type { BalanceSheet, CashFlowStatement, IncomeStatement } from "../../types/fundamentals.js";
 import type { HistoricalBar } from "../../types/historical.js";
-import type { OptionChain, OptionContract } from "../../types/options.js";
 import type { NewsItem } from "../../types/news.js";
+import type { OptionChain, OptionContract } from "../../types/options.js";
 import type { Quote } from "../../types/quote.js";
 import type { AssetType, SearchResult } from "../../types/search.js";
 import type { SplitEvent } from "../../types/splits.js";
@@ -201,21 +201,19 @@ export function transformIncomeStatement(
       : {}),
     ...(val(is, "selling_general_and_administrative_expenses") !== undefined
       ? {
-          sellingGeneralAdministrative: val(
-            is,
-            "selling_general_and_administrative_expenses",
-          ),
+          sellingGeneralAdministrative: val(is, "selling_general_and_administrative_expenses"),
         }
       : {}),
     ...(val(is, "operating_expenses") !== undefined
       ? { totalOperatingExpenses: val(is, "operating_expenses") }
       : {}),
     ...(val(is, "operating_income_loss") !== undefined
-      ? { operatingIncome: val(is, "operating_income_loss"), ebit: val(is, "operating_income_loss") }
+      ? {
+          operatingIncome: val(is, "operating_income_loss"),
+          ebit: val(is, "operating_income_loss"),
+        }
       : {}),
-    ...(val(is, "net_income_loss") !== undefined
-      ? { netIncome: val(is, "net_income_loss") }
-      : {}),
+    ...(val(is, "net_income_loss") !== undefined ? { netIncome: val(is, "net_income_loss") } : {}),
     ...(val(is, "basic_earnings_per_share") !== undefined
       ? { eps: val(is, "basic_earnings_per_share") }
       : {}),
@@ -245,20 +243,13 @@ export function transformBalanceSheet(
     ...(val(bs, "current_liabilities") !== undefined
       ? { totalCurrentLiabilities: val(bs, "current_liabilities") }
       : {}),
-    ...(val(bs, "equity") !== undefined
-      ? { totalStockholdersEquity: val(bs, "equity") }
-      : {}),
+    ...(val(bs, "equity") !== undefined ? { totalStockholdersEquity: val(bs, "equity") } : {}),
     ...(val(bs, "cash_and_cash_equivalents_and_short_term_investments") !== undefined
       ? {
-          cashAndCashEquivalents: val(
-            bs,
-            "cash_and_cash_equivalents_and_short_term_investments",
-          ),
+          cashAndCashEquivalents: val(bs, "cash_and_cash_equivalents_and_short_term_investments"),
         }
       : {}),
-    ...(val(bs, "long_term_debt") !== undefined
-      ? { longTermDebt: val(bs, "long_term_debt") }
-      : {}),
+    ...(val(bs, "long_term_debt") !== undefined ? { longTermDebt: val(bs, "long_term_debt") } : {}),
     ...(val(bs, "retained_earnings") !== undefined
       ? { retainedEarnings: val(bs, "retained_earnings") }
       : {}),

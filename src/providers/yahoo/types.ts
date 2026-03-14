@@ -22,12 +22,15 @@ export interface YahooChartResult {
 
 export interface YahooChartEvents {
   dividends?: Record<string, { amount: number; date: number }>;
-  splits?: Record<string, {
-    numerator: number;
-    denominator: number;
-    splitRatio: string;
-    date: number;
-  }>;
+  splits?: Record<
+    string,
+    {
+      numerator: number;
+      denominator: number;
+      splitRatio: string;
+      date: number;
+    }
+  >;
 }
 
 export interface YahooChartMeta {

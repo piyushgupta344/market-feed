@@ -202,7 +202,8 @@ export function createMarketFeedRouter(feed: FeedLike): MarketFeedRouter {
     search: ({ query, limit }) => feed.search(query, { limit }),
 
     company: ({ symbol }) => {
-      if (!feed.company) return Promise.reject(new Error("company() is not supported by this feed"));
+      if (!feed.company)
+        return Promise.reject(new Error("company() is not supported by this feed"));
       return feed.company(symbol);
     },
 
@@ -212,12 +213,14 @@ export function createMarketFeedRouter(feed: FeedLike): MarketFeedRouter {
     },
 
     earnings: ({ symbol }) => {
-      if (!feed.earnings) return Promise.reject(new Error("earnings() is not supported by this feed"));
+      if (!feed.earnings)
+        return Promise.reject(new Error("earnings() is not supported by this feed"));
       return feed.earnings(symbol);
     },
 
     dividends: ({ symbol }) => {
-      if (!feed.dividends) return Promise.reject(new Error("dividends() is not supported by this feed"));
+      if (!feed.dividends)
+        return Promise.reject(new Error("dividends() is not supported by this feed"));
       return feed.dividends(symbol);
     },
 
@@ -227,22 +230,26 @@ export function createMarketFeedRouter(feed: FeedLike): MarketFeedRouter {
     },
 
     incomeStatements: ({ symbol, options }) => {
-      if (!feed.incomeStatements) return Promise.reject(new Error("incomeStatements() is not supported by this feed"));
+      if (!feed.incomeStatements)
+        return Promise.reject(new Error("incomeStatements() is not supported by this feed"));
       return feed.incomeStatements(symbol, options);
     },
 
     balanceSheets: ({ symbol, options }) => {
-      if (!feed.balanceSheets) return Promise.reject(new Error("balanceSheets() is not supported by this feed"));
+      if (!feed.balanceSheets)
+        return Promise.reject(new Error("balanceSheets() is not supported by this feed"));
       return feed.balanceSheets(symbol, options);
     },
 
     cashFlows: ({ symbol, options }) => {
-      if (!feed.cashFlows) return Promise.reject(new Error("cashFlows() is not supported by this feed"));
+      if (!feed.cashFlows)
+        return Promise.reject(new Error("cashFlows() is not supported by this feed"));
       return feed.cashFlows(symbol, options);
     },
 
     optionChain: ({ symbol, options }) => {
-      if (!feed.optionChain) return Promise.reject(new Error("optionChain() is not supported by this feed"));
+      if (!feed.optionChain)
+        return Promise.reject(new Error("optionChain() is not supported by this feed"));
       return feed.optionChain(symbol, options);
     },
   };
@@ -281,10 +288,10 @@ export function createHttpHandler(
     const procedure = url.pathname.split("/").filter(Boolean).pop() ?? "";
 
     if (!(procedure in router)) {
-      return new Response(
-        JSON.stringify({ error: `Unknown procedure: ${procedure}` }),
-        { status: 404, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: `Unknown procedure: ${procedure}` }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     let input: unknown;
@@ -292,10 +299,10 @@ export function createHttpHandler(
       const text = await request.text();
       input = text ? JSON.parse(text) : {};
     } catch {
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Invalid JSON in request body" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     try {
@@ -307,10 +314,10 @@ export function createHttpHandler(
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
-      return new Response(
-        JSON.stringify({ error: message }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: message }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
     }
   };
 }

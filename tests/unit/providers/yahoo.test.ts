@@ -64,7 +64,7 @@ describe("YahooProvider", () => {
 
       expect(quotes).toHaveLength(3);
       // fetch should have been called 3 times (one per symbol)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // biome-ignore lint/suspicious/noExplicitAny: test helper accessing stubbed global
       expect((global as any).fetch).toHaveBeenCalledTimes(3);
 
       vi.unstubAllGlobals();

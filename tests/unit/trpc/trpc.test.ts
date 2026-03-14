@@ -1,13 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  createHttpHandler,
-  createMarketFeedRouter,
-} from "../../../src/trpc/index.js";
-import type { Quote } from "../../../src/types/quote.js";
-import type { HistoricalBar } from "../../../src/types/historical.js";
-import type { SearchResult } from "../../../src/types/search.js";
+import { createHttpHandler, createMarketFeedRouter } from "../../../src/trpc/index.js";
 import type { CompanyProfile } from "../../../src/types/company.js";
+import type { HistoricalBar } from "../../../src/types/historical.js";
 import type { NewsItem } from "../../../src/types/news.js";
+import type { Quote } from "../../../src/types/quote.js";
+import type { SearchResult } from "../../../src/types/search.js";
 
 // ---------------------------------------------------------------------------
 // Minimal feed mock
@@ -41,7 +38,6 @@ function makeBar(date = "2026-03-11"): HistoricalBar {
     low: 187,
     close: 190,
     volume: 50_000_000,
-    provider: "test",
   };
 }
 
@@ -50,7 +46,7 @@ function makeSearchResult(): SearchResult {
     symbol: "AAPL",
     name: "Apple Inc.",
     exchange: "NASDAQ",
-    type: "equity",
+    type: "stock",
     provider: "test",
   };
 }
@@ -72,7 +68,8 @@ function makeCompany(): CompanyProfile {
 
 function makeNews(): NewsItem {
   return {
-    headline: "AAPL beats estimates",
+    id: "news-1",
+    title: "AAPL beats estimates",
     summary: "Apple reported record earnings.",
     url: "https://example.com/news/1",
     publishedAt: new Date("2026-03-12T10:00:00Z"),
@@ -95,7 +92,9 @@ function makeFeed() {
     incomeStatements: vi.fn().mockResolvedValue([]),
     balanceSheets: vi.fn().mockResolvedValue([]),
     cashFlows: vi.fn().mockResolvedValue([]),
-    optionChain: vi.fn().mockResolvedValue({ calls: [], puts: [], symbol: "AAPL", provider: "test" }),
+    optionChain: vi
+      .fn()
+      .mockResolvedValue({ calls: [], puts: [], underlyingSymbol: "AAPL", fetchedAt: new Date() }),
   };
 }
 
@@ -158,9 +157,7 @@ describe("createMarketFeedRouter", () => {
     const feed = { quote: vi.fn(), historical: vi.fn(), search: vi.fn() };
     const router = createMarketFeedRouter(feed);
 
-    await expect(router.company({ symbol: "AAPL" })).rejects.toThrow(
-      "company() is not supported",
-    );
+    await expect(router.company({ symbol: "AAPL" })).rejects.toThrow("company() is not supported");
   });
 
   it("news() delegates to feed.news() with limit", async () => {
@@ -198,7 +195,7 @@ describe("createMarketFeedRouter", () => {
     const result = await router.optionChain({ symbol: "AAPL" });
 
     expect(feed.optionChain).toHaveBeenCalledWith("AAPL", undefined);
-    expect(result.symbol).toBe("AAPL");
+    expect(result.underlyingSymbol).toBe("AAPL");
   });
 });
 
@@ -223,7 +220,7 @@ describe("createHttpHandler", () => {
     const res = await handler(makeRequest("quote", { symbols: ["AAPL"] }));
 
     expect(res.status).toBe(200);
-    const body = await res.json() as { quotes: Quote[] };
+    const body = (await res.json()) as { quotes: Quote[] };
     expect(body.quotes[0]?.symbol).toBe("AAPL");
     expect(res.headers.get("Content-Type")).toBe("application/json");
   });
@@ -236,7 +233,7 @@ describe("createHttpHandler", () => {
     const res = await handler(makeRequest("fooBar", {}));
 
     expect(res.status).toBe(404);
-    const body = await res.json() as { error: string };
+    const body = (await res.json()) as { error: string };
     expect(body.error).toContain("fooBar");
   });
 
@@ -252,7 +249,7 @@ describe("createHttpHandler", () => {
     const res = await handler(req);
 
     expect(res.status).toBe(400);
-    const body = await res.json() as { error: string };
+    const body = (await res.json()) as { error: string };
     expect(body.error).toContain("JSON");
   });
 
@@ -265,7 +262,7 @@ describe("createHttpHandler", () => {
     const res = await handler(makeRequest("quote", { symbols: ["AAPL"] }));
 
     expect(res.status).toBe(500);
-    const body = await res.json() as { error: string };
+    const body = (await res.json()) as { error: string };
     expect(body.error).toBe("provider down");
   });
 

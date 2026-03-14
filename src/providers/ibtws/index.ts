@@ -94,10 +94,7 @@ export class IbTwsProvider implements MarketProvider {
   }
 
   async historical(_symbol: string, _options?: HistoricalOptions): Promise<HistoricalBar[]> {
-    throw new ProviderError(
-      "historical() is not yet supported by IbTwsProvider",
-      this.name,
-    );
+    throw new ProviderError("historical() is not yet supported by IbTwsProvider", this.name);
   }
 
   async search(_query: string): Promise<SearchResult[]> {

@@ -21,7 +21,12 @@ export type {
   IncomeStatement,
 } from "../types/fundamentals.js";
 
-import type { BalanceSheet, CashFlowStatement, FundamentalsOptions, IncomeStatement } from "../types/fundamentals.js";
+import type {
+  BalanceSheet,
+  CashFlowStatement,
+  FundamentalsOptions,
+  IncomeStatement,
+} from "../types/fundamentals.js";
 
 /** Minimal duck-type interface for the feed/provider expected by getFundamentals() */
 interface FundamentalsSource {

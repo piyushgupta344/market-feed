@@ -19,9 +19,12 @@ export function sma(bars: HistoricalBar[], period: number): IndicatorPoint[] {
   let sum = 0;
 
   for (let i = 0; i < bars.length; i++) {
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     sum += bars[i]!.close;
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     if (i >= period) sum -= bars[i - period]!.close;
     if (i >= period - 1) {
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
       result.push({ date: bars[i]!.date, value: sum / period });
     }
   }
@@ -43,6 +46,7 @@ export function ema(bars: HistoricalBar[], period: number): IndicatorPoint[] {
   if (bars.length < period || period < 1) return [];
   const closes = bars.map((b) => b.close);
   const values = emaFromValues(closes, period);
+  // biome-ignore lint/style/noNonNullAssertion: index period-1+i is within bounds (values.length = bars.length - period + 1)
   return values.map((v, i) => ({ date: bars[period - 1 + i]!.date, value: v }));
 }
 
@@ -63,6 +67,7 @@ export function rsi(bars: HistoricalBar[], period = 14): IndicatorPoint[] {
   let avgGain = 0;
   let avgLoss = 0;
   for (let i = 1; i <= period; i++) {
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     const delta = bars[i]!.close - bars[i - 1]!.close;
     if (delta > 0) avgGain += delta;
     else avgLoss -= delta;
@@ -71,16 +76,19 @@ export function rsi(bars: HistoricalBar[], period = 14): IndicatorPoint[] {
   avgLoss /= period;
 
   const firstRsi = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+  // biome-ignore lint/style/noNonNullAssertion: bars.length > period guaranteed by guard
   result.push({ date: bars[period]!.date, value: firstRsi });
 
   // Wilder smoothing for subsequent bars
   for (let i = period + 1; i < bars.length; i++) {
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     const delta = bars[i]!.close - bars[i - 1]!.close;
     const gain = delta > 0 ? delta : 0;
     const loss = delta < 0 ? -delta : 0;
     avgGain = (avgGain * (period - 1) + gain) / period;
     avgLoss = (avgLoss * (period - 1) + loss) / period;
     const rsiValue = avgLoss === 0 ? 100 : 100 - 100 / (1 + avgGain / avgLoss);
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     result.push({ date: bars[i]!.date, value: rsiValue });
   }
 
@@ -104,8 +112,8 @@ export function macd(bars: HistoricalBar[], fast = 12, slow = 26, signal = 9): M
   if (bars.length < slow + signal - 1 || fast >= slow || fast < 1) return [];
 
   const closes = bars.map((b) => b.close);
-  const fastVals = emaFromValues(closes, fast);  // length = n - fast + 1
-  const slowVals = emaFromValues(closes, slow);  // length = n - slow + 1
+  const fastVals = emaFromValues(closes, fast); // length = n - fast + 1
+  const slowVals = emaFromValues(closes, slow); // length = n - slow + 1
 
   // Align fast to slow: fastVals[slow - fast + j] ↔ slowVals[j]
   const offset = slow - fast;
@@ -120,6 +128,7 @@ export function macd(bars: HistoricalBar[], fast = 12, slow = 26, signal = 9): M
   return signalVals.map((sig, i) => {
     const m = macdLine[signal - 1 + i]!;
     return {
+      // biome-ignore lint/style/noNonNullAssertion: startBarIdx + i is within bounds
       date: bars[startBarIdx + i]!.date,
       macd: m,
       signal: sig,
@@ -148,17 +157,20 @@ export function bollingerBands(
 
   for (let i = period - 1; i < bars.length; i++) {
     let sum = 0;
+    // biome-ignore lint/style/noNonNullAssertion: j stays within [i-period+1, i] ⊆ [0, bars.length)
     for (let j = i - period + 1; j <= i; j++) sum += bars[j]!.close;
     const middle = sum / period;
 
     let variance = 0;
     for (let j = i - period + 1; j <= i; j++) {
+      // biome-ignore lint/style/noNonNullAssertion: j stays within [i-period+1, i] ⊆ [0, bars.length)
       const diff = bars[j]!.close - middle;
       variance += diff * diff;
     }
     const stdDev = Math.sqrt(variance / period);
 
     result.push({
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
       date: bars[i]!.date,
       upper: middle + stdDevMult * stdDev,
       middle,
@@ -201,11 +213,13 @@ export function atr(bars: HistoricalBar[], period = 14): IndicatorPoint[] {
   let atrVal = 0;
   for (let i = 0; i < period; i++) atrVal += trueRanges[i]!;
   atrVal /= period;
+  // biome-ignore lint/style/noNonNullAssertion: bars.length > period guaranteed by guard
   result.push({ date: bars[period]!.date, value: atrVal });
 
   // Wilder smoothing
   for (let i = period; i < trueRanges.length; i++) {
     atrVal = (atrVal * (period - 1) + trueRanges[i]!) / period;
+    // biome-ignore lint/style/noNonNullAssertion: i+1 ≤ bars.length-1 since i < trueRanges.length = bars.length-1
     result.push({ date: bars[i + 1]!.date, value: atrVal });
   }
 
@@ -248,25 +262,25 @@ export function vwap(bars: HistoricalBar[]): IndicatorPoint[] {
  *
  * Requires at least `kPeriod + dPeriod − 1` bars to produce any output.
  */
-export function stochastic(
-  bars: HistoricalBar[],
-  kPeriod = 14,
-  dPeriod = 3,
-): StochasticPoint[] {
+export function stochastic(bars: HistoricalBar[], kPeriod = 14, dPeriod = 3): StochasticPoint[] {
   if (bars.length < kPeriod + dPeriod - 1 || kPeriod < 1) return [];
 
   // Compute raw %K values
   const kValues: { date: Date; k: number }[] = [];
   for (let i = kPeriod - 1; i < bars.length; i++) {
-    let hh = -Infinity;
-    let ll = Infinity;
+    let hh = Number.NEGATIVE_INFINITY;
+    let ll = Number.POSITIVE_INFINITY;
     for (let j = i - kPeriod + 1; j <= i; j++) {
+      // biome-ignore lint/style/noNonNullAssertion: j stays within [i-kPeriod+1, i] ⊆ [0, bars.length)
       hh = Math.max(hh, bars[j]!.high);
+      // biome-ignore lint/style/noNonNullAssertion: j stays within [i-kPeriod+1, i] ⊆ [0, bars.length)
       ll = Math.min(ll, bars[j]!.low);
     }
     const range = hh - ll;
     // When all prices are identical, treat as neutral (50)
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     const k = range === 0 ? 50 : (100 * (bars[i]!.close - ll)) / range;
+    // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
     kValues.push({ date: bars[i]!.date, k });
   }
 
@@ -274,9 +288,12 @@ export function stochastic(
   const result: StochasticPoint[] = [];
   for (let i = dPeriod - 1; i < kValues.length; i++) {
     let sum = 0;
+    // biome-ignore lint/style/noNonNullAssertion: j stays within [i-dPeriod+1, i] ⊆ [0, kValues.length)
     for (let j = i - dPeriod + 1; j <= i; j++) sum += kValues[j]!.k;
     result.push({
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
       date: kValues[i]!.date,
+      // biome-ignore lint/style/noNonNullAssertion: bounds-checked by loop condition
       k: kValues[i]!.k,
       d: sum / dPeriod,
     });

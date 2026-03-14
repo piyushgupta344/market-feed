@@ -67,7 +67,7 @@ export async function* watch(
   let consecutiveErrors = 0;
 
   // Per-symbol earnings tracking (only used when includeFundamentals: true)
-  const lastEarningsTs = new Map<string, number>();   // symbol → last known earnings timestamp
+  const lastEarningsTs = new Map<string, number>(); // symbol → last known earnings timestamp
   const lastEarningsCheck = new Map<string, number>(); // symbol → last check time
 
   while (!signal?.aborted) {

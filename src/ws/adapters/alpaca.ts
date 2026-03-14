@@ -135,10 +135,7 @@ export function connectAlpaca(
         } else if (msg.T === "error") {
           intentionalClose = true;
           queue.close(
-            new ProviderError(
-              `Alpaca WebSocket error ${msg.code}: ${msg.msg}`,
-              "alpaca",
-            ),
+            new ProviderError(`Alpaca WebSocket error ${msg.code}: ${msg.msg}`, "alpaca"),
           );
           ws.close();
         } else if (msg.T === "t") {

@@ -7,10 +7,14 @@ import type {
   ExitSignal,
 } from "./types.js";
 
-export type { BacktestOptions, BacktestResult, BacktestTrade, EntrySignal, ExitSignal } from "./types.js";
-export {
-  portfolioBacktest,
-} from "./portfolio.js";
+export type {
+  BacktestOptions,
+  BacktestResult,
+  BacktestTrade,
+  EntrySignal,
+  ExitSignal,
+} from "./types.js";
+export { portfolioBacktest } from "./portfolio.js";
 export type {
   PortfolioAsset,
   PortfolioAssetSummary,
@@ -112,10 +116,9 @@ export function backtest(
   const last = bars[bars.length - 1];
   let annualizedReturn = totalReturn;
   if (first && last && bars.length > 1) {
-    const years =
-      (last.date.getTime() - first.date.getTime()) / (365.25 * 24 * 3_600 * 1_000);
+    const years = (last.date.getTime() - first.date.getTime()) / (365.25 * 24 * 3_600 * 1_000);
     if (years > 0) {
-      annualizedReturn = Math.pow(1 + totalReturn, 1 / years) - 1;
+      annualizedReturn = (1 + totalReturn) ** (1 / years) - 1;
     }
   }
 
@@ -146,7 +149,8 @@ export function backtest(
   const winRate = trades.length > 0 ? wins.length / trades.length : 0;
   const grossProfit = wins.reduce((s, t) => s + t.pnl, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
-  const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Infinity : 0;
+  const profitFactor =
+    grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? Number.POSITIVE_INFINITY : 0;
 
   return {
     symbol,

@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ProviderError } from "../../../src/errors.js";
-import { getOrderBook } from "../../../src/ws/index.js";
 import type { MarketProvider } from "../../../src/types/provider.js";
 import type { Quote } from "../../../src/types/quote.js";
+import { getOrderBook } from "../../../src/ws/index.js";
 
 // ---------------------------------------------------------------------------
 // MockWebSocket
@@ -24,7 +24,9 @@ class MockWebSocket {
     MockWebSocket.instances.push(this);
   }
 
-  static reset() { MockWebSocket.instances = []; }
+  static reset() {
+    MockWebSocket.instances = [];
+  }
   static get latest(): MockWebSocket {
     const i = MockWebSocket.instances[MockWebSocket.instances.length - 1];
     if (!i) throw new Error("No MockWebSocket instances");
@@ -40,7 +42,9 @@ class MockWebSocket {
     this.onclose?.({ code, wasClean: code === 1000 } as unknown as CloseEvent);
   }
 
-  send(data: string) { this.sentMessages.push(data); }
+  send(data: string) {
+    this.sentMessages.push(data);
+  }
   close() {
     this.readyState = 3;
     this.onclose?.({ code: 1000, wasClean: true } as unknown as CloseEvent);
@@ -51,10 +55,19 @@ const WS_IMPL = MockWebSocket as unknown as typeof globalThis.WebSocket;
 
 function makeQuote(price: number): Quote {
   return {
-    symbol: "AAPL", name: "Apple Inc.", price,
-    change: 0, changePercent: 0, open: price, high: price, low: price,
-    close: price, previousClose: price, volume: 1_000_000,
-    currency: "USD", exchange: "XNAS",
+    symbol: "AAPL",
+    name: "Apple Inc.",
+    price,
+    change: 0,
+    changePercent: 0,
+    open: price,
+    high: price,
+    low: price,
+    close: price,
+    previousClose: price,
+    volume: 1_000_000,
+    currency: "USD",
+    exchange: "XNAS",
     timestamp: new Date("2026-03-12T14:00:00Z"),
     provider: "yahoo",
   };
@@ -89,8 +102,8 @@ describe("getOrderBook() — polling fallback", () => {
     expect(e1.value).toMatchObject({ symbol: "AAPL" });
     expect(e1.value?.bids).toHaveLength(1);
     expect(e1.value?.asks).toHaveLength(1);
-    expect(e1.value!.bids[0]!.price).toBeLessThan(189.84);
-    expect(e1.value!.asks[0]!.price).toBeGreaterThan(189.84);
+    expect(e1.value?.bids[0]?.price).toBeLessThan(189.84);
+    expect(e1.value?.asks[0]?.price).toBeGreaterThan(189.84);
   });
 
   it("stops cleanly on AbortSignal", async () => {
@@ -186,16 +199,18 @@ describe("getOrderBook() — Polygon", () => {
     ws.simulateMessage('[{"ev":"status","status":"connected"}]');
     ws.simulateMessage('[{"ev":"status","status":"auth_success"}]');
     ws.simulateMessage(
-      JSON.stringify([{ ev: "Q", sym: "AAPL", bp: 189.83, bs: 5, ap: 189.85, as: 3, t: 1712345678000 }]),
+      JSON.stringify([
+        { ev: "Q", sym: "AAPL", bp: 189.83, bs: 5, ap: 189.85, as: 3, t: 1712345678000 },
+      ]),
     );
 
     const e = await p;
     controller.abort();
 
     expect(e.value).toMatchObject({ symbol: "AAPL" });
-    expect(e.value!.bids[0]).toEqual({ price: 189.83, size: 5 });
-    expect(e.value!.asks[0]).toEqual({ price: 189.85, size: 3 });
-    expect(e.value!.timestamp).toBeInstanceOf(Date);
+    expect(e.value?.bids[0]).toEqual({ price: 189.83, size: 5 });
+    expect(e.value?.asks[0]).toEqual({ price: 189.85, size: 3 });
+    expect(e.value?.timestamp).toBeInstanceOf(Date);
   });
 
   it("closes queue on auth_failed", async () => {
@@ -247,14 +262,16 @@ describe("getOrderBook() — Alpaca", () => {
 
     // Emit a quote update
     ws.simulateMessage(
-      JSON.stringify([{ T: "q", S: "AAPL", bp: 189.83, bs: 10, ap: 189.85, as: 5, t: "2024-07-01T14:00:00Z" }]),
+      JSON.stringify([
+        { T: "q", S: "AAPL", bp: 189.83, bs: 10, ap: 189.85, as: 5, t: "2024-07-01T14:00:00Z" },
+      ]),
     );
     const e = await p;
     controller.abort();
 
     expect(e.value).toMatchObject({ symbol: "AAPL" });
-    expect(e.value!.bids[0]).toEqual({ price: 189.83, size: 10 });
-    expect(e.value!.asks[0]).toEqual({ price: 189.85, size: 5 });
+    expect(e.value?.bids[0]).toEqual({ price: 189.83, size: 10 });
+    expect(e.value?.asks[0]).toEqual({ price: 189.85, size: 5 });
   });
 });
 
@@ -289,15 +306,27 @@ describe("getOrderBook() — IB TWS", () => {
 
     const p = gen.next();
     const ws = MockWebSocket.latest;
-    ws.simulateMessage(JSON.stringify({ topic: "sts", args: { authenticated: true, competing: false, message: "" } }));
-    ws.simulateMessage(JSON.stringify({ topic: "smd+265598", "84": "189.83", "86": "189.85", _updated: 1712345678000 }));
+    ws.simulateMessage(
+      JSON.stringify({
+        topic: "sts",
+        args: { authenticated: true, competing: false, message: "" },
+      }),
+    );
+    ws.simulateMessage(
+      JSON.stringify({
+        topic: "smd+265598",
+        "84": "189.83",
+        "86": "189.85",
+        _updated: 1712345678000,
+      }),
+    );
 
     const e = await p;
     controller.abort();
 
     expect(e.value).toMatchObject({ symbol: "AAPL" });
-    expect(e.value!.bids[0]!.price).toBe(189.83);
-    expect(e.value!.asks[0]!.price).toBe(189.85);
+    expect(e.value?.bids[0]?.price).toBe(189.83);
+    expect(e.value?.asks[0]?.price).toBe(189.85);
   });
 
   it("closes queue when sts is not authenticated", async () => {
@@ -306,7 +335,12 @@ describe("getOrderBook() — IB TWS", () => {
 
     const p = gen.next();
     const ws = MockWebSocket.latest;
-    ws.simulateMessage(JSON.stringify({ topic: "sts", args: { authenticated: false, competing: false, message: "" } }));
+    ws.simulateMessage(
+      JSON.stringify({
+        topic: "sts",
+        args: { authenticated: false, competing: false, message: "" },
+      }),
+    );
 
     await expect(p).rejects.toThrow("not authenticated");
   });

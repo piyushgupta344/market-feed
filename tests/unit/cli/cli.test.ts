@@ -21,11 +21,18 @@ describe("CLI parseArgs()", () => {
 
   it("parses API key flags", () => {
     const args = parseArgs([
-      "node", "cli.js", "quote", "AAPL",
-      "--av-key", "av123",
-      "--polygon-key", "poly456",
-      "--finnhub-key", "fh789",
-      "--td-key", "td000",
+      "node",
+      "cli.js",
+      "quote",
+      "AAPL",
+      "--av-key",
+      "av123",
+      "--polygon-key",
+      "poly456",
+      "--finnhub-key",
+      "fh789",
+      "--td-key",
+      "td000",
     ]);
     expect(args.avKey).toBe("av123");
     expect(args.polygonKey).toBe("poly456");
@@ -34,7 +41,16 @@ describe("CLI parseArgs()", () => {
   });
 
   it("parses --limit and --interval", () => {
-    const args = parseArgs(["node", "cli.js", "historical", "AAPL", "--limit", "20", "--interval", "1wk"]);
+    const args = parseArgs([
+      "node",
+      "cli.js",
+      "historical",
+      "AAPL",
+      "--limit",
+      "20",
+      "--interval",
+      "1wk",
+    ]);
     expect(args.limit).toBe(20);
     expect(args.interval).toBe("1wk");
   });
@@ -47,9 +63,14 @@ describe("CLI parseArgs()", () => {
 
   it("parses --period1 and --period2", () => {
     const args = parseArgs([
-      "node", "cli.js", "historical", "AAPL",
-      "--period1", "2024-01-01",
-      "--period2", "2024-12-31",
+      "node",
+      "cli.js",
+      "historical",
+      "AAPL",
+      "--period1",
+      "2024-01-01",
+      "--period2",
+      "2024-12-31",
     ]);
     expect(args.period1).toBe("2024-01-01");
     expect(args.period2).toBe("2024-12-31");
@@ -86,9 +107,14 @@ describe("CLI parseArgs()", () => {
 
   it("parses dividends command with --from and --to", () => {
     const args = parseArgs([
-      "node", "cli.js", "dividends", "AAPL",
-      "--from", "2020-01-01",
-      "--to", "2024-12-31",
+      "node",
+      "cli.js",
+      "dividends",
+      "AAPL",
+      "--from",
+      "2020-01-01",
+      "--to",
+      "2024-12-31",
     ]);
     expect(args.command).toBe("dividends");
     expect(args.positionals).toEqual(["AAPL"]);

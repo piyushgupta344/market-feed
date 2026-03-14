@@ -81,3 +81,9 @@ jobs:
       - run: pnpm build
       - name: Check dist size
         run: ls -lh dist/
+      - name: Verify package contents (npm pack smoke test)
+        run: |
+          pnpm pack --pack-destination /tmp
+          tar -tzf /tmp/market-feed-*.tgz | grep -E "^package/dist/" | head -20
+          tar -tzf /tmp/market-feed-*.tgz | grep "package/dist/index.js"
+          tar -tzf /tmp/market-feed-*.tgz | grep "package/dist/index.d.ts"

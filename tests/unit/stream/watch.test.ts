@@ -426,9 +426,9 @@ describe("watch()", () => {
       const earningsEv = events.find((e) => (e as { type: string }).type === "earnings_released");
       expect(earningsEv).toBeDefined();
       expect((earningsEv as { type: string; symbol: string }).symbol).toBe("AAPL");
-      expect(
-        (earningsEv as { earnings: { date: Date } }).earnings.date.getTime(),
-      ).toBe(d2.getTime());
+      expect((earningsEv as { earnings: { date: Date } }).earnings.date.getTime()).toBe(
+        d2.getTime(),
+      );
     });
 
     it("does not emit earnings_released when date is unchanged", async () => {

@@ -195,8 +195,7 @@ export class TiingoProvider implements MarketProvider {
 
     if ("detail" in data || !("name" in data) || !data.name) {
       throw new ProviderError(
-        ("detail" in data ? data.detail : undefined) ??
-          `No company data for symbol "${s}"`,
+        ("detail" in data ? data.detail : undefined) ?? `No company data for symbol "${s}"`,
         this.name,
       );
     }
@@ -225,10 +224,7 @@ export class TiingoProvider implements MarketProvider {
     );
   }
 
-  async cashFlows(
-    symbol: string,
-    options?: FundamentalsOptions,
-  ): Promise<CashFlowStatement[]> {
+  async cashFlows(symbol: string, options?: FundamentalsOptions): Promise<CashFlowStatement[]> {
     const stmts = await this.fetchStatements(symbol, options);
     return stmts.map((s) =>
       transformCashFlowStatement(s, symbol.toUpperCase(), options?.raw ? s : undefined),

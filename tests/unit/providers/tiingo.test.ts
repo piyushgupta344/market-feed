@@ -12,10 +12,7 @@ const unlimitedLimiter = new RateLimiter("tiingo", 9999, 9999);
 
 // For quote(), the provider hits two endpoints in parallel — IEX + meta
 // We route by URL to return the right fixture for each.
-function mockFetchByUrl(
-  routes: Record<string, unknown>,
-  ok = true,
-) {
+function mockFetchByUrl(routes: Record<string, unknown>, ok = true) {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockImplementation(async (url: string) => {
@@ -274,7 +271,14 @@ describe("TiingoProvider", () => {
     });
 
     it("throws ProviderError when name is empty", async () => {
-      mockFetch({ ticker: "XYZ", name: "", description: "", startDate: "", endDate: "", exchangeCode: "NYSE" });
+      mockFetch({
+        ticker: "XYZ",
+        name: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        exchangeCode: "NYSE",
+      });
       const provider = new TiingoProvider({ apiKey: "demo", rateLimiter: unlimitedLimiter });
       await expect(provider.company("XYZ")).rejects.toThrow(ProviderError);
       vi.unstubAllGlobals();

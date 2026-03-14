@@ -193,7 +193,9 @@ describe("consensus()", () => {
     expect(result.providers["polygon"]?.stale).toBe(true);
     expect(result.providers["yahoo"]?.stale).toBe(false);
     // Stale provider gets lower weight → fresh provider has more influence
-    expect(result.providers["yahoo"]?.weight).toBeGreaterThan(result.providers["polygon"]?.weight ?? 0);
+    expect(result.providers["yahoo"]?.weight).toBeGreaterThan(
+      result.providers["polygon"]?.weight ?? 0,
+    );
   });
 
   it("flags OUTLIER_EXCLUDED when one provider is way off", async () => {

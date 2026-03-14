@@ -1,5 +1,4 @@
 import type { CompanyOptions, CompanyProfile } from "./company.js";
-import type { OptionChain, OptionChainOptions } from "./options.js";
 import type { DividendEvent, DividendOptions } from "./dividends.js";
 import type { EarningsEvent, EarningsOptions } from "./earnings.js";
 import type {
@@ -11,6 +10,7 @@ import type {
 import type { HistoricalBar, HistoricalOptions } from "./historical.js";
 import type { MarketStatus, MarketStatusOptions } from "./market.js";
 import type { NewsItem, NewsOptions } from "./news.js";
+import type { OptionChain, OptionChainOptions } from "./options.js";
 import type { Quote, QuoteOptions } from "./quote.js";
 import type { SearchOptions, SearchResult } from "./search.js";
 import type { SplitEvent, SplitOptions } from "./splits.js";

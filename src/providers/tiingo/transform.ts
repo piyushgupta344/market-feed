@@ -70,10 +70,7 @@ export function transformSearch(item: TiingoSearchResultItem, raw?: unknown): Se
   };
 }
 
-export function transformCompany(
-  meta: TiingoMetaResponse,
-  raw?: unknown,
-): CompanyProfile {
+export function transformCompany(meta: TiingoMetaResponse, raw?: unknown): CompanyProfile {
   return {
     symbol: meta.ticker.toUpperCase(),
     name: meta.name,

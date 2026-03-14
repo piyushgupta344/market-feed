@@ -152,7 +152,12 @@ describe("FinnhubProvider", () => {
         count: 2,
         result: [
           { description: "APPLE INC", displaySymbol: "AAPL", symbol: "AAPL", type: "Common Stock" },
-          { description: "APPLE INC CDR", displaySymbol: "AAPL.NE", symbol: "AAPL.NE", type: "Common Stock" },
+          {
+            description: "APPLE INC CDR",
+            displaySymbol: "AAPL.NE",
+            symbol: "AAPL.NE",
+            type: "Common Stock",
+          },
         ],
       });
 
@@ -171,9 +176,7 @@ describe("FinnhubProvider", () => {
     it("maps ETP to etf type", async () => {
       mockFetch({
         count: 1,
-        result: [
-          { description: "SPDR S&P 500", displaySymbol: "SPY", symbol: "SPY", type: "ETP" },
-        ],
+        result: [{ description: "SPDR S&P 500", displaySymbol: "SPY", symbol: "SPY", type: "ETP" }],
       });
 
       const provider = new FinnhubProvider({ apiKey: "demo", rateLimiter: unlimitedLimiter });

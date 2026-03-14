@@ -124,6 +124,11 @@
       "types": "./dist/trpc.d.ts",
       "import": "./dist/trpc.js",
       "require": "./dist/trpc.cjs"
+    },
+    "./cache": {
+      "types": "./dist/cache.d.ts",
+      "import": "./dist/cache.js",
+      "require": "./dist/cache.cjs"
     }
   },
   "peerDependencies": {

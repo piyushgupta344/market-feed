@@ -34,6 +34,7 @@ export default defineConfig([
       macro:        "src/macro/index.ts",
       browser:      "src/browser/index.ts",
       trpc:         "src/trpc/index.ts",
+      cache:        "src/cache/index.ts",
     },
     format: ["esm", "cjs"],
     dts: true,

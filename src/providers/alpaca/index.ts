@@ -91,10 +91,9 @@ export class AlpacaProvider implements MarketProvider {
 
   async quote(symbols: string[]): Promise<Quote[]> {
     if (symbols.length === 0) return [];
-    const data = await this.http.get<AlpacaLatestTradesResponse>(
-      "/v2/stocks/trades/latest",
-      { params: { symbols: symbols.join(","), feed: this.feed } },
-    );
+    const data = await this.http.get<AlpacaLatestTradesResponse>("/v2/stocks/trades/latest", {
+      params: { symbols: symbols.join(","), feed: this.feed },
+    });
     return symbols.flatMap((sym) => {
       const trade = data.trades[sym];
       if (!trade) return [];
@@ -121,10 +120,7 @@ export class AlpacaProvider implements MarketProvider {
   }
 
   async historical(_symbol: string, _options?: HistoricalOptions): Promise<HistoricalBar[]> {
-    throw new ProviderError(
-      "historical() is not yet supported by AlpacaProvider",
-      this.name,
-    );
+    throw new ProviderError("historical() is not yet supported by AlpacaProvider", this.name);
   }
 
   async search(_query: string): Promise<SearchResult[]> {

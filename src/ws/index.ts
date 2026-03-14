@@ -4,8 +4,8 @@ import type { MarketProvider } from "../types/provider.js";
 import { connectAlpaca } from "./adapters/alpaca.js";
 import { connectFinnhub } from "./adapters/finnhub.js";
 import { connectIbTws } from "./adapters/ibtws.js";
-import { connectPolygon } from "./adapters/polygon.js";
 import { connectPolling } from "./adapters/polling.js";
+import { connectPolygon } from "./adapters/polygon.js";
 import { AsyncQueue } from "./queue.js";
 import type { WsCapableProvider, WsEvent, WsOptions } from "./types.js";
 
@@ -19,8 +19,7 @@ export type { OrderBookEvent, OrderBookLevel, OrderBookOptions } from "./orderbo
 
 function hasWsApiKey(provider: MarketProvider): provider is MarketProvider & WsCapableProvider {
   return (
-    "wsApiKey" in provider &&
-    typeof (provider as Record<string, unknown>)["wsApiKey"] === "string"
+    "wsApiKey" in provider && typeof (provider as Record<string, unknown>)["wsApiKey"] === "string"
   );
 }
 

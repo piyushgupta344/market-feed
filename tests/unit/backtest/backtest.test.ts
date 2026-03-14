@@ -32,7 +32,12 @@ function makeBars(closes: number[], startDate = "2023-01-02"): HistoricalBar[] {
 describe("backtest() — no trades", () => {
   it("returns zero totalReturn with no signals", () => {
     const bars = makeBars([100, 101, 102, 103, 104]);
-    const result = backtest("TEST", bars, () => false, () => false);
+    const result = backtest(
+      "TEST",
+      bars,
+      () => false,
+      () => false,
+    );
 
     expect(result.totalReturn).toBe(0);
     expect(result.totalTrades).toBe(0);
@@ -41,12 +46,22 @@ describe("backtest() — no trades", () => {
 
   it("returns correct symbol", () => {
     const bars = makeBars([100]);
-    const result = backtest("AAPL", bars, () => false, () => false);
+    const result = backtest(
+      "AAPL",
+      bars,
+      () => false,
+      () => false,
+    );
     expect(result.symbol).toBe("AAPL");
   });
 
   it("returns 'unknown' symbol for empty bars", () => {
-    const result = backtest("AAPL", [], () => false, () => false);
+    const result = backtest(
+      "AAPL",
+      [],
+      () => false,
+      () => false,
+    );
     expect(result.totalTrades).toBe(0);
   });
 });
@@ -79,7 +94,7 @@ describe("backtest() — single winning trade", () => {
   });
 
   it("profit factor is Infinity (no losses)", () => {
-    expect(result.profitFactor).toBe(Infinity);
+    expect(result.profitFactor).toBe(Number.POSITIVE_INFINITY);
   });
 
   it("totalReturn reflects final equity", () => {
@@ -219,7 +234,12 @@ describe("backtest() — sharpeRatio", () => {
   const flatBars = makeBars([100, 100, 100, 100, 100]);
 
   it("returns 0 sharpe for flat equity curve", () => {
-    const result = backtest("TEST", flatBars, () => false, () => false);
+    const result = backtest(
+      "TEST",
+      flatBars,
+      () => false,
+      () => false,
+    );
     expect(result.sharpeRatio).toBe(0);
   });
 

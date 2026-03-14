@@ -77,7 +77,7 @@ One interface. Six providers. Zero API key required for Yahoo Finance.
 
 ## Subpath modules
 
-`market-feed` ships fifteen optional subpath modules alongside the core client.
+`market-feed` ships sixteen optional subpath modules alongside the core client.
 
 ### `market-feed/ws`
 
@@ -951,6 +951,20 @@ Works via CDN without a bundler:
 
 ---
 
+### `market-feed/cache`
+
+Three official persistent cache drivers — drop-in replacements for the default LRU cache:
+
+| Driver | Use case |
+|--------|----------|
+| `createRedisCacheDriver(client)` | Redis via ioredis, redis@4, or @upstash/redis |
+| `createUpstashCacheDriver({ url, token })` | Upstash REST API — edge-compatible |
+| `createSqliteCacheDriver(db)` | SQLite — local persistence (better-sqlite3, bun:sqlite, node:sqlite) |
+
+See [Persistent Cache Drivers](https://piyushgupta344.github.io/market-feed/modules/cache) for full docs.
+
+---
+
 ### CLI (`npx market-feed`)
 
 A zero-config CLI powered by Yahoo Finance (no API key needed). Add keys to unlock more providers.
@@ -1123,29 +1137,29 @@ const feed = new MarketFeed({
 const feed = new MarketFeed({ cache: false });
 ```
 
-### Custom cache driver (Redis, Upstash, filesystem...)
+### Persistent cache drivers
+
+`market-feed/cache` ships three official persistent drivers:
 
 ```ts
-import type { CacheDriver } from "market-feed";
-import { createClient } from "redis";
+// Redis (ioredis / redis@4 / @upstash/redis)
+import Redis from "ioredis";
+import { createRedisCacheDriver } from "market-feed/cache";
+const feed = new MarketFeed({ cache: { driver: createRedisCacheDriver(new Redis(process.env.REDIS_URL)) } });
 
-const redis = createClient();
-await redis.connect();
+// Upstash REST (edge-compatible — Cloudflare Workers, Vercel Edge, Deno)
+import { createUpstashCacheDriver } from "market-feed/cache";
+const feed = new MarketFeed({
+  cache: { driver: createUpstashCacheDriver({ url: process.env.UPSTASH_URL!, token: process.env.UPSTASH_TOKEN! }) },
+});
 
-const driver: CacheDriver = {
-  async get<T>(key: string) {
-    const val = await redis.get(key);
-    return val ? (JSON.parse(val) as T) : undefined;
-  },
-  async set<T>(key: string, value: T, ttl = 60) {
-    await redis.set(key, JSON.stringify(value), { EX: ttl });
-  },
-  async delete(key: string) { await redis.del(key); },
-  async clear() { await redis.flushDb(); },
-};
-
-const feed = new MarketFeed({ cache: { driver } });
+// SQLite (better-sqlite3 / bun:sqlite / node:sqlite)
+import Database from "better-sqlite3";
+import { createSqliteCacheDriver } from "market-feed/cache";
+const feed = new MarketFeed({ cache: { driver: createSqliteCacheDriver(new Database("./cache.db")) } });
 ```
+
+See the [Persistent Cache Drivers](https://piyushgupta344.github.io/market-feed/modules/cache) documentation for full details.
 
 ---
 

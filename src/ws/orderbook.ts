@@ -88,12 +88,9 @@ function resolveWsImpl(options: WsOptions): typeof globalThis.WebSocket | undefi
   return undefined;
 }
 
-function hasWsApiKey(
-  provider: MarketProvider,
-): provider is MarketProvider & WsCapableProvider {
+function hasWsApiKey(provider: MarketProvider): provider is MarketProvider & WsCapableProvider {
   return (
-    "wsApiKey" in provider &&
-    typeof (provider as Record<string, unknown>)["wsApiKey"] === "string"
+    "wsApiKey" in provider && typeof (provider as Record<string, unknown>)["wsApiKey"] === "string"
   );
 }
 
@@ -109,12 +106,7 @@ function connectPolygonOrderBook(
 ): void {
   const WS = resolveWsImpl(options);
   if (!WS) {
-    queue.close(
-      new ProviderError(
-        "WebSocket is not available. Pass a wsImpl option.",
-        "polygon",
-      ),
-    );
+    queue.close(new ProviderError("WebSocket is not available. Pass a wsImpl option.", "polygon"));
     return;
   }
 
@@ -123,10 +115,14 @@ function connectPolygonOrderBook(
   let attempt = 0;
   let aborted = false;
 
-  options.signal?.addEventListener("abort", () => {
-    aborted = true;
-    queue.close();
-  }, { once: true });
+  options.signal?.addEventListener(
+    "abort",
+    () => {
+      aborted = true;
+      queue.close();
+    },
+    { once: true },
+  );
 
   function connect(): void {
     if (aborted || queue.isClosing) return;
@@ -141,7 +137,10 @@ function connectPolygonOrderBook(
       }
       let messages: (PolygonStatusMessage | PolygonQuoteMessage)[];
       try {
-        messages = JSON.parse(event.data as string) as (PolygonStatusMessage | PolygonQuoteMessage)[];
+        messages = JSON.parse(event.data as string) as (
+          | PolygonStatusMessage
+          | PolygonQuoteMessage
+        )[];
       } catch {
         return;
       }
@@ -180,7 +179,12 @@ function connectPolygonOrderBook(
       attempt++;
       const reconnecting = attempt <= maxAttempts;
       if (!reconnecting) {
-        queue.close(new ProviderError(`Polygon order book disconnected after ${maxAttempts} attempts`, "polygon"));
+        queue.close(
+          new ProviderError(
+            `Polygon order book disconnected after ${maxAttempts} attempts`,
+            "polygon",
+          ),
+        );
         return;
       }
       const delay = Math.min(baseDelay * 2 ** (attempt - 1), 30_000);
@@ -203,9 +207,7 @@ function connectAlpacaOrderBook(
 ): void {
   const WS = resolveWsImpl(options);
   if (!WS) {
-    queue.close(
-      new ProviderError("WebSocket is not available. Pass a wsImpl option.", "alpaca"),
-    );
+    queue.close(new ProviderError("WebSocket is not available. Pass a wsImpl option.", "alpaca"));
     return;
   }
 
@@ -214,10 +216,14 @@ function connectAlpacaOrderBook(
   let attempt = 0;
   let aborted = false;
 
-  options.signal?.addEventListener("abort", () => {
-    aborted = true;
-    queue.close();
-  }, { once: true });
+  options.signal?.addEventListener(
+    "abort",
+    () => {
+      aborted = true;
+      queue.close();
+    },
+    { once: true },
+  );
 
   function connect(): void {
     if (aborted || queue.isClosing) return;
@@ -239,13 +245,24 @@ function connectAlpacaOrderBook(
       }
       for (const msg of messages) {
         if (msg.T === "success" && msg.msg === "connected") {
-          ws.send(JSON.stringify({ action: "auth", key: provider.wsApiKey, secret: provider.wsApiSecret }));
+          ws.send(
+            JSON.stringify({
+              action: "auth",
+              key: provider.wsApiKey,
+              secret: provider.wsApiSecret,
+            }),
+          );
         } else if (msg.T === "success" && msg.msg === "authenticated") {
           attempt = 0;
           ws.send(JSON.stringify({ action: "subscribe", quotes: [symbol] }));
         } else if (msg.T === "error") {
           intentionalClose = true;
-          queue.close(new ProviderError(`Alpaca order book error ${msg.code as number}: ${msg.msg as string}`, "alpaca"));
+          queue.close(
+            new ProviderError(
+              `Alpaca order book error ${msg.code as number}: ${msg.msg as string}`,
+              "alpaca",
+            ),
+          );
           ws.close();
         } else if (msg.T === "q") {
           const q = msg as unknown as AlpacaQuoteMessage;
@@ -259,14 +276,21 @@ function connectAlpacaOrderBook(
       }
     };
 
-    ws.onerror = () => { /* reconnect via onclose */ };
+    ws.onerror = () => {
+      /* reconnect via onclose */
+    };
 
     ws.onclose = () => {
       if (intentionalClose || aborted || queue.isClosing) return;
       attempt++;
       const reconnecting = attempt <= maxAttempts;
       if (!reconnecting) {
-        queue.close(new ProviderError(`Alpaca order book disconnected after ${maxAttempts} attempts`, "alpaca"));
+        queue.close(
+          new ProviderError(
+            `Alpaca order book disconnected after ${maxAttempts} attempts`,
+            "alpaca",
+          ),
+        );
         return;
       }
       const delay = Math.min(baseDelay * 2 ** (attempt - 1), 30_000);
@@ -289,9 +313,7 @@ function connectIbTwsOrderBook(
 ): void {
   const WS = resolveWsImpl(options);
   if (!WS) {
-    queue.close(
-      new ProviderError("WebSocket is not available. Pass a wsImpl option.", "ibtws"),
-    );
+    queue.close(new ProviderError("WebSocket is not available. Pass a wsImpl option.", "ibtws"));
     return;
   }
 
@@ -311,10 +333,14 @@ function connectIbTwsOrderBook(
   let attempt = 0;
   let aborted = false;
 
-  options.signal?.addEventListener("abort", () => {
-    aborted = true;
-    queue.close();
-  }, { once: true });
+  options.signal?.addEventListener(
+    "abort",
+    () => {
+      aborted = true;
+      queue.close();
+    },
+    { once: true },
+  );
 
   function connect(): void {
     if (aborted || queue.isClosing) return;
@@ -365,14 +391,21 @@ function connectIbTwsOrderBook(
       }
     };
 
-    ws.onerror = () => { /* reconnect via onclose */ };
+    ws.onerror = () => {
+      /* reconnect via onclose */
+    };
 
     ws.onclose = () => {
       if (intentionalClose || aborted || queue.isClosing) return;
       attempt++;
       const reconnecting = attempt <= maxAttempts;
       if (!reconnecting) {
-        queue.close(new ProviderError(`IB TWS order book disconnected after ${maxAttempts} attempts`, "ibtws"));
+        queue.close(
+          new ProviderError(
+            `IB TWS order book disconnected after ${maxAttempts} attempts`,
+            "ibtws",
+          ),
+        );
         return;
       }
       const delay = Math.min(baseDelay * 2 ** (attempt - 1), 30_000);
@@ -397,11 +430,15 @@ function connectOrderBookPolling(
   let aborted = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
 
-  options.signal?.addEventListener("abort", () => {
-    aborted = true;
-    if (timer !== null) clearTimeout(timer);
-    queue.close();
-  }, { once: true });
+  options.signal?.addEventListener(
+    "abort",
+    () => {
+      aborted = true;
+      if (timer !== null) clearTimeout(timer);
+      queue.close();
+    },
+    { once: true },
+  );
 
   async function poll(): Promise<void> {
     if (aborted || queue.isClosing) return;
@@ -426,7 +463,9 @@ function connectOrderBookPolling(
       }
     }
     if (!aborted && !queue.isClosing) {
-      timer = setTimeout(() => { void poll(); }, intervalMs);
+      timer = setTimeout(() => {
+        void poll();
+      }, intervalMs);
     }
   }
 
